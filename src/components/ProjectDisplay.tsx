@@ -47,10 +47,10 @@ export default function ProjectDisplay({name, small=false, className=""}: Projec
 	);
 }
 
-function ProjectActionButton({ children}: PropsWithChildren<{}>) {
+function ProjectActionButton({href, children}: PropsWithChildren<{href?: string}>) {
 	return (
-		<a>
-			{children}
+		<a className="py-1.5 flex items-center gap-2 cursor-pointer" href={href}>
+				{children}
 		</a>
 	);
 }
