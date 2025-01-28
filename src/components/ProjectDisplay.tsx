@@ -1,4 +1,5 @@
 import { PropsWithChildren } from "preact/compat";
+import Icon from "./Icon";
 
 type ProjectDisplayProps = {
 	name: string;
@@ -39,8 +40,8 @@ export default function ProjectDisplay({name, small=false, className=""}: Projec
 				</div>
 
 				<div className="pt-4 flex flex-wrap gap-8">
-					<ProjectActionButton>Source</ProjectActionButton>
-					<ProjectActionButton>Live</ProjectActionButton>
+					<ProjectActionButton><Icon icon="github" />Source</ProjectActionButton>
+					<ProjectActionButton><Icon icon="location-arrow" />Live</ProjectActionButton>
 				</div>
 			</section>
 		</div>
