@@ -1,11 +1,10 @@
 import { JSX } from "preact/jsx-runtime"
-import { App } from "./pages/app"
 import { compileSync, runSync } from "@mdx-js/mdx";
 import * as runtime from "preact/jsx-runtime";
 import { useMDXComponents } from "@mdx-js/preact";
 
 export const routes: Record<string, JSX.Element> = {
-	'/': <App />,
+	'/': <div>Hello World</div>,
 }
 
 /**
@@ -13,7 +12,7 @@ export const routes: Record<string, JSX.Element> = {
  * Is managed based on the routes object defined in this file
  * */
 export async function getRoute(path: string) {
-	let html: JSX.Element;
+	let html: preact.ComponentChildren;
 	if(!path.startsWith('/resource')) {
 		html = routes[path] ?? routes['/'];
 	} else {
