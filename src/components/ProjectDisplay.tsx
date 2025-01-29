@@ -1,5 +1,5 @@
 import { PropsWithChildren } from "preact/compat";
-import Icon from "./Icon";
+import Icon, { IconName } from "./Icon";
 
 type ProjectDisplayProps = {
 	name: string;
@@ -49,18 +49,24 @@ export default function ProjectDisplay({name, small=false, className=""}: Projec
 				</div>
 
 				<div className="pt-4 flex flex-wrap gap-8">
-					<ProjectActionButton><Icon icon="github" />Source</ProjectActionButton>
-					<ProjectActionButton><Icon icon="location-arrow" />Live</ProjectActionButton>
+					<ProjectActionButton icon="github">Source</ProjectActionButton>
+					<ProjectActionButton icon="location-arrow">Live</ProjectActionButton>
 				</div>
 			</section>
 		</div>
 	);
 }
 
-function ProjectActionButton({href, children}: PropsWithChildren<{href?: string}>) {
+function ProjectActionButton({href, icon, children}: PropsWithChildren<{href?: string, icon?: IconName}>) {
+
 	return (
-		<a className="py-1.5 font-medium flex items-center gap-2 cursor-pointer" href={href}>
+		<a className="group/action py-1.5 flex flex-col items-center font-medium cursor-pointer hover:text-blue-200" href={href}>
+			<div className="flex items-center gap-2 group-hover/action:translate-y-[-20%] transition-transform ease-out">
+				{icon && <Icon icon={icon} colorFill="fill-white group-hover/action:fill-blue-100 transition-color" />}
 				{children}
+			</div>
+
+			<div className="w-0 group-hover/action:w-[75%] h-[2px] bg-blue-200 transition-all ease-out"></div>
 		</a>
 	);
 }
