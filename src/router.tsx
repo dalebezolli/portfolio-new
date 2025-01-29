@@ -2,9 +2,10 @@ import { JSX } from "preact/jsx-runtime"
 import { compileSync, runSync } from "@mdx-js/mdx";
 import * as runtime from "preact/jsx-runtime";
 import { useMDXComponents } from "@mdx-js/preact";
+import { Index } from "./pages/Index";
 
 export const routes: Record<string, JSX.Element> = {
-	'/': <div>Hello World</div>,
+	'/': <Index />,
 }
 
 /**
