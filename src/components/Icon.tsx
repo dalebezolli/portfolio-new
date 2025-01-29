@@ -1,13 +1,15 @@
-type IconProps = {
-	icon: keyof typeof IconTypes;
-	size?: number;
-	colorFill?: string;
-	colorStroke?: string;
-};
+export type IconName = keyof typeof IconTypes;
 
 export default function Icon({icon, size=16, colorFill="fill-white", colorStroke="stroke-white"}: IconProps) {
 	return IconTypes[icon](size, colorFill, colorStroke);
 }
+
+type IconProps = {
+	icon: IconName;
+	size?: number;
+	colorFill?: string;
+	colorStroke?: string;
+};
 
 const IconTypes = {
 	"github": (size: number, colorFill: string, ___: string) => (
