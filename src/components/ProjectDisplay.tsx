@@ -18,14 +18,15 @@ export default function ProjectDisplay({name, small=false, className=""}: Projec
 	return (
 		<div className={`
 			group relative
-			${small ? 'h-[260px]' : 'h-[536px]'}
+			h-[260px] ${small ? '' : 'md:h-[536px]'}
+			xs:min-w-[360px]
 			overflow-clip
 			flex flex-col justify-end
 			rounded-xl
 			bg-zinc-900 font-primary
 			${className}`}>
 
-			<div className={`absolute inset-0 transition-all ${small ? 'group-hover:brightness-50' : ''}`}>
+			<div className={`absolute inset-0 transition-all md:group-hover:brightness-50 ${small ? '' : 'md:group-hover:brightness-100'}`}>
 				<div className="absolute top-[10%] left-[10%] w-[80px] h-[80px] rotate-3 bg-blue-600 rounded-md shadow-2xl"></div>
 				<div className="absolute top-[40%] left-[20%] w-[200px] h-[200px] rotate-12 bg-blue-400 rounded-md shadow-2xl"></div>
 				<div className="absolute top-[20%] right-[10%] w-[150px] h-[150px] rotate-45 bg-purple-400 rounded-md shadow-2xl"></div>
@@ -35,12 +36,12 @@ export default function ProjectDisplay({name, small=false, className=""}: Projec
 			<section className={`
 				p-8
 				flex flex-col gap-1
-				${small ? 'h-full justify-end' :''}
-				${small ? '' : 'bg-linear-60 from-zinc-950/10 to-zinc-600/10'}
-				opacity-0 group-hover:opacity-100
+				h-full justify-end ${small ? '' :'md:h-auto md:justify-stretch'}
+				${small ? '' : 'md:bg-linear-60 from-zinc-950/10 to-zinc-600/10'}
+				md:opacity-0 group-hover:opacity-100
 				backdrop-blur-2xl
 
-				${small ? '' :'translate-y-20 group-hover:translate-y-0'}
+				${small ? '' :'md:translate-y-20 md:group-hover:translate-y-0'}
 
 				transition-all ease-out duration-[250ms]`}>
 				<p className="font-semibold text-2xl">{name}</p>
