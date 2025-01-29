@@ -5,6 +5,8 @@ export function Index() {
 	return (
 		<CenterContainer>
 			<SectionWork />
+			<SectionWork />
+			<SectionWork />
 		</CenterContainer>
 	);
 }
