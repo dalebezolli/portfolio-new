@@ -1,4 +1,4 @@
-import { Fragment, PropsWithChildren } from "preact/compat";
+import { Fragment, PropsWithChildren, useState } from "preact/compat";
 import { CenterContainer } from "./components/CenteredContainer";
 
 export function App({children}: PropsWithChildren) {
@@ -11,6 +11,8 @@ export function App({children}: PropsWithChildren) {
 }
 
 function Header() {
+	const [mobileHidden, setMobileHidden] = useState(true);
+
 	return (
 		<Fragment>
 			<div className="h-[56px]"></div>
@@ -21,8 +23,16 @@ function Header() {
 						w-fit pb-4 text-2xl font-semibold text-transparent 
 						bg-clip-text bg-linear-to-r from-white to-white/20 transition-colors hover:from-blue-200 hover:to-slate-600 hover:from-50%">Dale Bezolli</a></h1>
 
-					<nav>
-						<ul className="flex gap-2">
+					<nav className="flex items-center">
+						<button className="md:hidden cursor-pointer" onClick={() => setMobileHidden(!mobileHidden)}>
+							<div className="relative flex w-[24px] h-[24px] flex flex-col justify-around items-end group/hamburger">
+								<div className="w-[80%] group-hover/hamburger:w-full h-[2px] rounded-full bg-gray-400 group-hover/hamburger:bg-white transition-all ease-in-out duration-300"></div>
+								<div className="w-[40%] group-hover/hamburger:w-full h-[2px] rounded-full bg-gray-400 group-hover/hamburger:bg-white transition-all ease-in-out duration-300"></div>
+								<div className="w-[90%] group-hover/hamburger:w-full h-[2px] rounded-full bg-gray-400 group-hover/hamburger:bg-white transition-all ease-in-out duration-300"></div>
+							</div>
+						</button>
+
+						<ul className="max-md:aria-hidden:hidden max-md:absolute max-md:top-[64px] max-md:inset-x-0 max-md:backdrop-blur-2xl max-md:bg-black/75 md:flex gap-2" aria-hidden={mobileHidden}>
 							<li><HeadingLink text="Work" /></li>
 							<li><HeadingLink text="Aritcles" /></li>
 							<li><HeadingLink text="About Me" /></li>
