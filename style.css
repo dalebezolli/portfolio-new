@@ -1,5 +1,9 @@
 @import 'tailwindcss';
 
+html {
+	background-color: var(--color-black, black);
+}
+
 @theme {
 	--font-primary: "Poppins", var(--default-font-family);
 }
