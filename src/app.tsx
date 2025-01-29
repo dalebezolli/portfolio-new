@@ -1,4 +1,4 @@
-import { PropsWithChildren } from "preact/compat";
+import { Fragment, PropsWithChildren } from "preact/compat";
 import { CenterContainer } from "./components/CenteredContainer";
 
 export function App({children}: PropsWithChildren) {
@@ -12,22 +12,26 @@ export function App({children}: PropsWithChildren) {
 
 function Header() {
 	return (
-		<CenterContainer>
-			<header className="flex justify-between pt-16 pb-8">
-				<h1><a href="/#top" className="
-					w-fit pb-4 text-2xl font-semibold text-transparent 
-					bg-clip-text bg-linear-to-r from-white to-white/20 transition-colors hover:from-blue-200 hover:to-slate-600 hover:from-50%">Dale Bezolli</a></h1>
+		<Fragment>
+			<div className="h-[56px]"></div>
 
-				<nav>
-					<ul className="flex gap-2">
-						<li><HeadingLink text="Work" /></li>
-						<li><HeadingLink text="Aritcles" /></li>
-						<li><HeadingLink text="About Me" /></li>
-						<li><HeadingLink text="Let's Connect" /></li>
-					</ul>
-				</nav>
-			</header>
-		</CenterContainer>
+			<CenterContainer className="sticky top-0 z-50 backdrop-blur-2xl bg-black/75">
+				<header className="flex justify-between pt-4 pb-4 mb-4">
+					<h1><a href="/#top" className="
+						w-fit pb-4 text-2xl font-semibold text-transparent 
+						bg-clip-text bg-linear-to-r from-white to-white/20 transition-colors hover:from-blue-200 hover:to-slate-600 hover:from-50%">Dale Bezolli</a></h1>
+
+					<nav>
+						<ul className="flex gap-2">
+							<li><HeadingLink text="Work" /></li>
+							<li><HeadingLink text="Aritcles" /></li>
+							<li><HeadingLink text="About Me" /></li>
+							<li><HeadingLink text="Let's Connect" /></li>
+						</ul>
+					</nav>
+				</header>
+			</CenterContainer>
+		</Fragment>
 	);
 }
 
