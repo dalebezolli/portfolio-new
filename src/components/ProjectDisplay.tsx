@@ -42,7 +42,7 @@ export default function ProjectDisplay({name, small=false, className=""}: Projec
 
 				${small ? '' :'translate-y-20 group-hover:translate-y-0'}
 
-				transition-all ease-out duration-300`}>
+				transition-all ease-out duration-[250ms]`}>
 				<p className="font-bold text-2xl">{name}</p>
 
 				<div className="h-[24px]">
