@@ -43,7 +43,7 @@ export default function ProjectDisplay({name, small=false, className=""}: Projec
 				${small ? '' :'translate-y-20 group-hover:translate-y-0'}
 
 				transition-all ease-out duration-[250ms]`}>
-				<p className="font-bold text-2xl">{name}</p>
+				<p className="font-semibold text-2xl">{name}</p>
 
 				<div className="h-[24px]">
 				</div>
@@ -59,7 +59,7 @@ export default function ProjectDisplay({name, small=false, className=""}: Projec
 
 function ProjectActionButton({href, children}: PropsWithChildren<{href?: string}>) {
 	return (
-		<a className="py-1.5 flex items-center gap-2 cursor-pointer" href={href}>
+		<a className="py-1.5 font-medium flex items-center gap-2 cursor-pointer" href={href}>
 				{children}
 		</a>
 	);
