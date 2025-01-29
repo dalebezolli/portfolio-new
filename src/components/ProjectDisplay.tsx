@@ -60,7 +60,7 @@ export default function ProjectDisplay({name, small=false, className=""}: Projec
 function ProjectActionButton({href, icon, children}: PropsWithChildren<{href?: string, icon?: IconName}>) {
 
 	return (
-		<a className="group/action py-1.5 flex flex-col items-center font-medium cursor-pointer hover:text-blue-200" href={href}>
+		<a className="group/action py-1.5 flex flex-col items-center font-medium cursor-pointer hover:text-blue-200" href={href} target="_blank">
 			<div className="flex items-center gap-2 group-hover/action:translate-y-[-20%] transition-transform ease-out">
 				{icon && <Icon icon={icon} colorFill="fill-white group-hover/action:fill-blue-100 transition-color" />}
 				{children}
