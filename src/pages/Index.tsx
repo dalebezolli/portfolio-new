@@ -34,11 +34,11 @@ function SectionAbout() {
 			<div>
 				<h2 className="w-fit pb-4 text-4xl md:text-5xl font-heading font-semibold text-transparent bg-clip-text bg-linear-to-r from-white to-white/40 transition-colors">About Me</h2>
 				<p className="pb-4 text-zinc-500 max-w-[60ch]">
-					I started working with computers early in my life, programming games and learning all about these complex machines. Now, I get to study about them at IHU as a Computer Engineer, but I haven’t stopped there...
+					I started working with computers early in my life, programming games and learning all about these complex machines. Now, I get to study about them at IHU as a <span className="text-blue-300">Computer Engineer</span>, but I haven’t stopped there...
 				</p>
 
 				<p className="text-zinc-500 max-w-[60ch]">
-					Engineering is my love. I enjoy solving problems and packing them in elegant and functional programs that have the user in the forefront.
+					<span className="text-blue-300">Engineering is my love.</span> I enjoy solving problems and packing them in elegant and functional programs that have the <span className="text-blue-300">user in the forefront.</span>
 				</p>
 			</div>
 
@@ -79,8 +79,8 @@ function SectionContactMe() {
 		<div className="pt-16 pb-48">
 			<h2 className="w-fit pb-4 text-4xl md:text-5xl font-heading font-semibold text-transparent bg-clip-text bg-linear-to-r from-white to-white/40 transition-colors">Let's Connect</h2>
 			
-			<p className="text-zinc-500">I’m always on the lookout for new exciting adventures to follow.</p>
-			<p className="text-zinc-500">If you’re following one and you want me to be a part of it, contact me.</p>
+			<p className="text-zinc-500">I’m always on the lookout for new <span className="text-blue-300">exciting adventures</span> to follow.</p>
+			<p className="text-zinc-500">If you’re following one and you want me to be a part of it, <span className="text-blue-300">contact me.</span></p>
 
 			<section className="flex gap-4 pt-4">
 				<a href="https://www.linkedin.com/in/dale-bezolli/" className="group" target="_blank"><Icon icon="linkedin" size={28} colorFill="fill-zinc-400 group-hover:fill-blue-300" /></a>
