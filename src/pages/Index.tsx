@@ -13,7 +13,7 @@ export function Index() {
 function SectionWork() {
 	return (
 		<div className="pt-16 pb-48">
-			<h2 className="w-fit pb-4 text-4xl md:text-5xl font-heading font-semibold text-transparent bg-clip-text bg-linear-to-r from-white to-white/20 transition-colors">Work</h2>
+			<h2 className="w-fit pb-4 text-4xl md:text-5xl font-heading font-semibold text-transparent bg-clip-text bg-linear-to-r from-white to-white/40 transition-colors">Work</h2>
 
 			<div className="flex flex-wrap gap-2 sm:gap-4 justify-center items-center">
 				<ProjectDisplay name="Cool Project" img="test" className="grow" />
@@ -30,7 +30,7 @@ function SectionAbout() {
 	return (
 		<div className="pt-16 pb-48">
 			<div>
-				<h2 className="w-fit pb-4 text-4xl md:text-5xl font-heading font-semibold text-transparent bg-clip-text bg-linear-to-r from-white to-white/20 transition-colors">About Me</h2>
+				<h2 className="w-fit pb-4 text-4xl md:text-5xl font-heading font-semibold text-transparent bg-clip-text bg-linear-to-r from-white to-white/40 transition-colors">About Me</h2>
 				<p className="pb-4 text-zinc-500 max-w-[60ch]">
 					I started working with computers early in my life, programming games and learning all about these complex machines. Now, I get to study about them at IHU as a Computer Engineer, but I haven’t stopped there...
 				</p>
