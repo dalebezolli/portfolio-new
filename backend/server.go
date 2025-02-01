@@ -20,6 +20,15 @@ const (
 type ResponseMessage struct {
 	Status  StatusCode `json:"status"`
 	Message string     `json:"message"`
+	Data    any        `json:"data"`
+}
+
+type Misses map[string]string
+
+type Validator interface {
+	// A validator is valid only when len(errors) === 0
+	// Each miss should be mapped to the corresponding validator field if it's related to one
+	Validate() Misses
 }
 
 func WriteJSON[T any](w http.ResponseWriter, httpStatus int, data T) {
@@ -43,6 +52,18 @@ func ReadJSON[T any](s string) (T, error) {
 	var data T
 	err := json.Unmarshal([]byte(s), &data)
 	return data, err
+}
+
+func ReadBodyJSON[T Validator](r *http.Request) (*T, Misses, error) {
+	var data T
+	err := json.NewDecoder(r.Body).Decode(&data)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	misses := data.Validate()
+	return &data, misses, nil
 }
 
 const (
