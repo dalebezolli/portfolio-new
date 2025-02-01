@@ -88,16 +88,15 @@ func createCollection(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var bodyString string
-	_, err = fmt.Fscan(r.Body, &bodyString)
-	if err != nil {
-		fmt.Println("Error while reading body:", err.Error())
-		return
-	}
+	newCollection, misses, err := ReadBodyJSON[Collection](r)
+	if err != nil || len(misses) != 0 {
+		response := ResponseMessage{Status: StatusCodeError, Message: "Expected {slug: string, basePath: string}"}
 
-	newCollection, err := ReadJSON[Collection](bodyString)
-	if err != nil {
-		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Expected {slug: string, basePath: string}"})
+		if len(misses) != 0 {
+			response.Data = misses
+		}
+
+		WriteJSON(w, http.StatusBadRequest, response)
 		log.Println("Error while parsing body:", err)
 		return
 	}
@@ -112,4 +111,18 @@ func createCollection(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Println("Response:", newCollection)
+}
+
+func (c Collection) Validate() Misses {
+	misses := make(Misses, 0)
+
+	if c.Slug == "" {
+		misses["slug"] = "slug cannot be empty"
+	}
+
+	if c.BasePath == "" {
+		misses["basePath"] = "basePath cannot be empty"
+	}
+
+	return misses
 }
