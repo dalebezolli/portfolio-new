@@ -20,6 +20,13 @@ func handleCollectionRoutes() *http.ServeMux {
 
 	mux.HandleFunc("GET /collections", getCollections)
 
+	mux.HandleFunc("/*", func(w http.ResponseWriter, r *http.Request) {
+		WriteJSON(w, http.StatusNotFound, ResponseMessage{
+			Status:  StatusCodeError,
+			Message: fmt.Sprintf("Collection or action with path %q doesn't exist", r.URL.Path),
+		})
+	})
+
 	return mux
 }
 
