@@ -6,6 +6,8 @@ import (
 )
 
 func addRoutes(mux *http.ServeMux) {
+	mux.Handle("/v1/api/", http.StripPrefix("/v1/api", handleCollectionRoutes()))
+
 	mux.HandleFunc("/*", func(w http.ResponseWriter, r *http.Request) {
 		WriteJSON(w, http.StatusNotFound, ResponseMessage{
 			Status:  StatusCodeError,
