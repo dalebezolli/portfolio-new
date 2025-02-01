@@ -39,6 +39,12 @@ func WriteJSON[T any](w http.ResponseWriter, httpStatus int, data T) {
 	}
 }
 
+func ReadJSON[T any](s string) (T, error) {
+	var data T
+	err := json.Unmarshal([]byte(s), &data)
+	return data, err
+}
+
 const (
 	QUERY_CREATE_COLLECTIONS = `CREATE TABLE IF NOT EXISTS collections (
 		id INTEGER PRIMARY KEY NOT NULL,
