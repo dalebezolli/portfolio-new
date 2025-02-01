@@ -3,7 +3,7 @@ type ArticleProps = {
 };
 export function ArticleCard({metadata}: ArticleProps) {
 	return (
-		<a className="flex bg-zinc-900 rounded-xl">
+		<a className="flex max-md:grow bg-zinc-900 rounded-xl">
 			<div className="w-[100px]">
 				Img
 			</div>

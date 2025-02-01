@@ -35,7 +35,7 @@ function SectionArticles() {
 		<div className="pt-16 pb-48">
 			<h2 className="w-fit pb-4 text-4xl md:text-5xl font-heading font-semibold text-transparent bg-clip-text bg-linear-to-r from-white to-white/40 transition-colors">Articles</h2>
 
-			<div className="after:pointer-events-none relative after:contents after:absolute after:inset-0 after:bg-linear-to-r after:from-black/0 after:from-90% after:to-black/100">
+			<div className="after:pointer-events-none relative after:contents after:absolute after:inset-0 md:after:bg-linear-to-r after:from-black/0 after:from-90% after:to-black/100">
 				<div className="flex max-md:flex-wrap gap-2 sm:gap-4 overflow-y-auto">
 					<ArticleCard metadata={{title: "Hello World Title that is kinda long to fit in one line", description: "Silly Description", releaseDate: new Date()}} />
 					<ArticleCard metadata={{title: "Hello World", description: "Supendously long description that will be so annoying to write but so satisfying to reat because I love reading supendously long article descriptions that make me wonder if I'll ever repeat this again", releaseDate: new Date()}} />
