@@ -1,5 +1,5 @@
 import { PropsWithChildren } from "preact/compat";
-import Icon, { IconName } from "./Icon";
+import Icon, { IconName, IconNameTech } from "./Icon";
 
 type ProjectDisplayProps = {
 	name: string;
@@ -46,7 +46,12 @@ export default function ProjectDisplay({name, small=false, className=""}: Projec
 				transition-all ease-out duration-[250ms]`}>
 				<p className="font-semibold text-2xl">{name}</p>
 
-				<div className="h-[24px]">
+				<div className="h-[24px] flex gap-2">
+					<TechIcon icon="tech-js" />
+					<TechIcon icon="tech-ts" />
+					<TechIcon icon="tech-go" />
+					<TechIcon icon="tech-react" />
+					<TechIcon icon="tech-tailwind" />
 				</div>
 
 				<div className="pt-4 flex flex-wrap gap-8">
@@ -56,6 +61,10 @@ export default function ProjectDisplay({name, small=false, className=""}: Projec
 			</section>
 		</div>
 	);
+}
+
+function TechIcon({icon}: {icon: IconNameTech}) {
+	return <div className="flex justify-center items-center p-1 bg-white/5 rounded-xs"><Icon icon={icon} size={16} /></div>;
 }
 
 function ProjectActionButton({href, icon, children}: PropsWithChildren<{href?: string, icon?: IconName}>) {
