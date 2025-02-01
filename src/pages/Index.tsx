@@ -60,7 +60,7 @@ function SectionAbout() {
 				</p>
 			</div>
 
-			<div className="flex flex-col lg:items-end max-lg:mt-8">
+			<div className="hidden flex-col lg:items-end max-lg:mt-8">
 				<div>
 					<h3 className="w-fit pb-2 text-4xl md:text-2xl font-heading font-bold text-zinc-600">What I excel at</h3>
 
