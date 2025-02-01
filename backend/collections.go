@@ -97,7 +97,7 @@ func createCollection(w http.ResponseWriter, r *http.Request) {
 		}
 
 		WriteJSON(w, http.StatusBadRequest, response)
-		log.Println("Error while parsing body:", err)
+		log.Println("Error while creating new collection:", err, misses)
 		return
 	}
 
@@ -106,7 +106,7 @@ func createCollection(w http.ResponseWriter, r *http.Request) {
 	_, err = db.Exec("INSERT INTO collections (createdAt, slug, basePath) VALUES (?, ?, ?)", newCollection.CreatedAt, newCollection.Slug, newCollection.BasePath)
 	if err != nil {
 		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Expected {slug: string, basePath: string}"})
-		log.Println("Error while parsing body:", err)
+		log.Println("Error while creating new collection:", err)
 		return
 	}
 
