@@ -6,12 +6,20 @@ import (
 )
 
 const (
-	ADDRESS string = ":9000"
+	ADDRESS  string = ":9000"
+	DATABASE string = "database.db"
 )
 
 func main() {
+	mux := http.NewServeMux()
+
+	err := initializeDB()
+	if err != nil {
+		log.Fatalln("There was an error while opening the database:", err.Error())
+	}
+
 	log.Println("Listening on:", ADDRESS)
-	err := http.ListenAndServe(ADDRESS, nil)
+	err = http.ListenAndServe(ADDRESS, mux)
 	if err != nil {
 		log.Fatalln("There was an error while serving:", err.Error())
 	}
