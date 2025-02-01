@@ -18,6 +18,8 @@ func main() {
 		log.Fatalln("There was an error while opening the database:", err.Error())
 	}
 
+	addRoutes(mux)
+
 	log.Println("Listening on:", ADDRESS)
 	err = http.ListenAndServe(ADDRESS, mux)
 	if err != nil {
