@@ -12,8 +12,8 @@ import (
 type Collection struct {
 	Id        int       `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
+	Name      string    `json:"name"`
 	Slug      string    `json:"slug"`
-	BasePath  string    `json:"basePath"`
 }
 
 func handleCollectionRoutes() *http.ServeMux {
@@ -58,10 +58,9 @@ func getCollections(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	data := make([]Collection, 0, 5)
-
 	for rows.Next() {
 		var collection Collection
-		if err := rows.Scan(&collection.Id, &collection.CreatedAt, &collection.Slug, &collection.BasePath); err != nil {
+		if err := rows.Scan(&collection.Id, &collection.CreatedAt, &collection.Name, &collection.Slug); err != nil {
 			continue
 		}
 
@@ -103,9 +102,9 @@ func createCollection(w http.ResponseWriter, r *http.Request) {
 
 	newCollection.CreatedAt = time.Now()
 
-	_, err = db.Exec("INSERT INTO collections (createdAt, slug, basePath) VALUES (?, ?, ?)", newCollection.CreatedAt, newCollection.Slug, newCollection.BasePath)
+	_, err = db.Exec("INSERT INTO collections (createdAt, name, slug) VALUES (?, ?, ?)", newCollection.CreatedAt, newCollection.Name, newCollection.Slug)
 	if err != nil {
-		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Expected {slug: string, basePath: string}"})
+		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Expected {slug: string, name: string}"})
 		log.Println("Error while creating new collection:", err)
 		return
 	}
@@ -120,8 +119,8 @@ func (c Collection) Validate() Misses {
 		misses["slug"] = "slug cannot be empty"
 	}
 
-	if c.BasePath == "" {
-		misses["basePath"] = "basePath cannot be empty"
+	if c.Name == "" {
+		misses["name"] = "name cannot be empty"
 	}
 
 	return misses
