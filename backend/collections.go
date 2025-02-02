@@ -41,6 +41,7 @@ func handleCollectionRoutes() *http.ServeMux {
 	mux.HandleFunc("GET /collections", getCollections)
 	mux.HandleFunc("GET /collections/{id}", getCollectionSingle)
 	mux.HandleFunc("POST /collections", createCollection)
+	mux.HandleFunc("PUT /collections/{id}", updateCollection)
 	mux.HandleFunc("DELETE /collections/{id}", deleteCollection)
 
 	mux.HandleFunc("/*", func(w http.ResponseWriter, r *http.Request) {
@@ -223,6 +224,59 @@ func createCollection(w http.ResponseWriter, r *http.Request) {
 	}
 
 	WriteJSON(w, http.StatusOK, newCollection)
+}
+
+func updateCollection(w http.ResponseWriter, r *http.Request) {
+	db, err := sql.Open("sqlite3", DATABASE)
+	if err != nil {
+		errorMessage := fmt.Sprintf("Error while updating collections: %v", err.Error())
+		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
+			Status:  StatusCodeError,
+			Message: errorMessage,
+		})
+		log.Println(errorMessage)
+		return
+	}
+
+	row := db.QueryRow("SELECT * FROM collections WHERE id = ?", r.PathValue("id"))
+	var oldData Collection
+	if err := row.Scan(&oldData.Id, &oldData.CreatedAt, &oldData.Name, &oldData.Slug); err != nil {
+		errorMessage := fmt.Sprintf("Error while updating collections: %v", err.Error())
+		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
+			Status:  StatusCodeError,
+			Message: errorMessage,
+		})
+		log.Println(errorMessage)
+		return
+	}
+
+	newData, misses, err := ReadBodyJSON[Collection](r)
+	if err == io.EOF {
+		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "No body was provided"})
+		return
+	}
+
+	if err != nil {
+		response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax", Data: err.Error()}
+		if len(misses) != 0 {
+			response.Data = misses
+		}
+
+		WriteJSON(w, http.StatusBadRequest, response)
+		log.Println("Error while updating collection:", err)
+		return
+	}
+
+	_, err = db.Exec("UPDATE collections SET name = ?, slug = ? WHERE id = ?", newData.Name, newData.Slug, r.PathValue("id"))
+	if err != nil {
+		response := ResponseMessage{Status: StatusCodeError, Message: err.Error()}
+
+		WriteJSON(w, http.StatusBadRequest, response)
+		log.Println("Error while updating collection:", err)
+		return
+	}
+
+	WriteJSON(w, http.StatusOK, newData)
 }
 
 func deleteCollection(w http.ResponseWriter, r *http.Request) {
