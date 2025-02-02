@@ -21,6 +21,11 @@ type CollectionAttr struct {
 	Type CollectionAttrType `json:"type"`
 }
 
+type CollectionWithAttrs struct {
+	Collection           Collection       `json:"collection"`
+	CollectionAttributes []CollectionAttr `json:"attributes"`
+}
+
 type CollectionAttrType string
 
 const (
@@ -71,22 +76,38 @@ func getCollections(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
-	data := make([]Collection, 0, 5)
+	collections := make([]Collection, 0, 5)
 	for rows.Next() {
 		var collection Collection
 		if err := rows.Scan(&collection.Id, &collection.CreatedAt, &collection.Name, &collection.Slug); err != nil {
 			continue
 		}
 
-		data = append(data, collection)
+		collections = append(collections, collection)
 	}
 
-	WriteJSON(w, http.StatusOK, data)
-}
+	collectionWithAttrs := make([]CollectionWithAttrs, 0, len(collections))
+	for _, c := range collections {
+		fullCollection := CollectionWithAttrs{Collection: c}
+		rows, err := db.Query("SELECT name, type FROM collection_attributes WHERE collection = ?", c.Id)
+		if err == nil {
+			collectionAttrs := make([]CollectionAttr, 0, 5)
+			for rows.Next() {
+				var attr CollectionAttr
+				if err := rows.Scan(&attr.Name, &attr.Type); err != nil {
+					continue
+				}
 
-type RequestBodyCreateCollection struct {
-	Collection           Collection       `json:"collection"`
-	CollectionAttributes []CollectionAttr `json:"attributes"`
+				collectionAttrs = append(collectionAttrs, attr)
+			}
+
+			fullCollection.CollectionAttributes = collectionAttrs
+		}
+
+		collectionWithAttrs = append(collectionWithAttrs, fullCollection)
+	}
+
+	WriteJSON(w, http.StatusOK, collectionWithAttrs)
 }
 
 func createCollection(w http.ResponseWriter, r *http.Request) {
@@ -106,7 +127,7 @@ func createCollection(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newCollection, misses, err := ReadBodyJSON[RequestBodyCreateCollection](r)
+	newCollection, misses, err := ReadBodyJSON[CollectionWithAttrs](r)
 	if err != nil {
 		response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax", Data: err.Error()}
 		if len(misses) != 0 {
@@ -172,7 +193,7 @@ func (c Collection) Validate() Misses {
 	return misses
 }
 
-func (request RequestBodyCreateCollection) Validate() Misses {
+func (request CollectionWithAttrs) Validate() Misses {
 	misses := request.Collection.Validate()
 
 	for k, v := range misses {
