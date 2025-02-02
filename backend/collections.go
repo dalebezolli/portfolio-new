@@ -44,6 +44,10 @@ func handleCollectionRoutes() *http.ServeMux {
 	mux.HandleFunc("PUT /collections/{id}", updateCollection)
 	mux.HandleFunc("DELETE /collections/{id}", deleteCollection)
 
+	mux.HandleFunc("POST /collections/{id}/attributes", createCollectionAttribute)
+	// mux.HandleFunc("PUT /collections/{id}/attributes/{name}", )
+	// mux.HandleFunc("DELETE /collections/{id}/attributes/{name}", )
+
 	mux.HandleFunc("/*", func(w http.ResponseWriter, r *http.Request) {
 		WriteJSON(w, http.StatusNotFound, ResponseMessage{
 			Status:  StatusCodeError,
@@ -315,6 +319,68 @@ func deleteCollection(w http.ResponseWriter, r *http.Request) {
 	WriteJSON(w, http.StatusOK, ResponseMessage{Status: StatusCodeOk, Message: response})
 }
 
+func createCollectionAttribute(w http.ResponseWriter, r *http.Request) {
+	db, err := sql.Open("sqlite3", DATABASE)
+	if err != nil {
+		errorMessage := fmt.Sprintf("Error while deleting collection: %v", err.Error())
+		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
+			Status:  StatusCodeError,
+			Message: errorMessage,
+		})
+		log.Println(errorMessage)
+		return
+	}
+
+	attribute, misses, err := ReadBodyJSON[CollectionAttr](r)
+	if err == io.EOF {
+		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "No body was provided"})
+		return
+	}
+
+	if err != nil {
+		response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax", Data: err.Error()}
+		WriteJSON(w, http.StatusBadRequest, response)
+		log.Println("Error while creating new collection attribute:", err)
+		return
+	}
+
+	if len(misses) != 0 {
+		response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax", Data: misses}
+		if len(misses) != 0 {
+			response.Data = misses
+		}
+
+		WriteJSON(w, http.StatusBadRequest, response)
+		log.Println("Error while creating new collection:", misses)
+		return
+	}
+
+	row := db.QueryRow("SELECT * FROM collections WHERE id = ?", r.PathValue("id"))
+	var oldData Collection
+	if err := row.Scan(&oldData.Id, &oldData.CreatedAt, &oldData.Name, &oldData.Slug); err != nil {
+		errorMessage := fmt.Sprintf("Error while creating new collection attribute: %v", err.Error())
+		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
+			Status:  StatusCodeError,
+			Message: errorMessage,
+		})
+		log.Println(errorMessage)
+		return
+	}
+
+	_, err = db.Exec("INSERT INTO collection_attributes VALUES (?, ?, ?)", r.PathValue("id"), attribute.Name, attribute.Type)
+	if err != nil {
+		errorMessage := fmt.Sprintf("Error while creating new collection attribute: %v", err.Error())
+		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
+			Status:  StatusCodeError,
+			Message: errorMessage,
+		})
+		log.Println(errorMessage)
+		return
+	}
+
+	WriteJSON(w, http.StatusOK, attribute)
+}
+
 func (c Collection) Validate() Misses {
 	misses := make(Misses, 0)
 
@@ -327,6 +393,16 @@ func (c Collection) Validate() Misses {
 	}
 
 	return misses
+}
+
+func (attr CollectionAttr) Validate() Misses {
+	misses := make(Misses, 0)
+	if attr.Type != CollectionAttrTypeString && attr.Type != CollectionAttrTypeImage && attr.Type != CollectionAttrTypeDate && attr.Type != CollectionAttrTypeMDX {
+		misses["attributes."+attr.Name] = "Type \"" + string(attr.Type) + "\" is not one of the valid types"
+	}
+
+	return misses
+
 }
 
 func (request CollectionWithAttrs) Validate() Misses {
