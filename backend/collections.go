@@ -45,7 +45,7 @@ func handleCollectionRoutes() *http.ServeMux {
 	mux.HandleFunc("DELETE /collections/{id}", deleteCollection)
 
 	mux.HandleFunc("POST /collections/{id}/attributes", createCollectionAttribute)
-	// mux.HandleFunc("PUT /collections/{id}/attributes/{name}", )
+	mux.HandleFunc("PUT /collections/{id}/attributes/{name}", updateCollectionAttribute)
 	mux.HandleFunc("DELETE /collections/{id}/attributes/{name}", deleteCollectionAttribute)
 
 	mux.HandleFunc("/*", func(w http.ResponseWriter, r *http.Request) {
@@ -379,6 +379,59 @@ func createCollectionAttribute(w http.ResponseWriter, r *http.Request) {
 	}
 
 	WriteJSON(w, http.StatusOK, attribute)
+}
+
+func updateCollectionAttribute(w http.ResponseWriter, r *http.Request) {
+	db, err := sql.Open("sqlite3", DATABASE)
+	if err != nil {
+		errorMessage := fmt.Sprintf("Error while updating collection attribute: %v", err.Error())
+		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
+			Status:  StatusCodeError,
+			Message: errorMessage,
+		})
+		log.Println(errorMessage)
+		return
+	}
+
+	row := db.QueryRow("SELECT name, type FROM collection_attributes WHERE collection = ? AND name = ?", r.PathValue("id"), r.PathValue("name"))
+	var oldData CollectionAttr
+	if err := row.Scan(&oldData.Name, &oldData.Type); err != nil {
+		errorMessage := fmt.Sprintf("Error while updating collection attribute: %v", err.Error())
+		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
+			Status:  StatusCodeError,
+			Message: errorMessage,
+		})
+		log.Println(errorMessage)
+		return
+	}
+
+	newData, misses, err := ReadBodyJSON[CollectionAttr](r)
+	if err == io.EOF {
+		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "No body was provided"})
+		return
+	}
+
+	if err != nil {
+		response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax", Data: err.Error()}
+		if len(misses) != 0 {
+			response.Data = misses
+		}
+
+		WriteJSON(w, http.StatusBadRequest, response)
+		log.Println("Error while updating collection attribute:", err)
+		return
+	}
+
+	_, err = db.Exec("UPDATE collection_attributes SET name = ?, type = ? WHERE collection = ? AND name = ?", newData.Name, newData.Type, r.PathValue("id"), r.PathValue("name"))
+	if err != nil {
+		response := ResponseMessage{Status: StatusCodeError, Message: err.Error()}
+
+		WriteJSON(w, http.StatusBadRequest, response)
+		log.Println("Error while updating collection attributes:", err)
+		return
+	}
+
+	WriteJSON(w, http.StatusOK, newData)
 }
 
 func deleteCollectionAttribute(w http.ResponseWriter, r *http.Request) {
