@@ -46,7 +46,7 @@ func handleCollectionRoutes() *http.ServeMux {
 
 	mux.HandleFunc("POST /collections/{id}/attributes", createCollectionAttribute)
 	// mux.HandleFunc("PUT /collections/{id}/attributes/{name}", )
-	// mux.HandleFunc("DELETE /collections/{id}/attributes/{name}", )
+	mux.HandleFunc("DELETE /collections/{id}/attributes/{name}", deleteCollectionAttribute)
 
 	mux.HandleFunc("/*", func(w http.ResponseWriter, r *http.Request) {
 		WriteJSON(w, http.StatusNotFound, ResponseMessage{
@@ -379,6 +379,34 @@ func createCollectionAttribute(w http.ResponseWriter, r *http.Request) {
 	}
 
 	WriteJSON(w, http.StatusOK, attribute)
+}
+
+func deleteCollectionAttribute(w http.ResponseWriter, r *http.Request) {
+	db, err := sql.Open("sqlite3", DATABASE)
+	if err != nil {
+		errorMessage := fmt.Sprintf("Error while deleting collection attribute: %v", err.Error())
+		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
+			Status:  StatusCodeError,
+			Message: errorMessage,
+		})
+		log.Println(errorMessage)
+		return
+	}
+
+	res, err := db.Exec("DELETE FROM collection_attributes WHERE collection = ? AND name = ?", r.PathValue("id"), r.PathValue("name"))
+	if err != nil {
+		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: err.Error()})
+		log.Println("Error while deleting collection:", err)
+		return
+	}
+	rowsDeleted, _ := res.RowsAffected()
+
+	response := fmt.Sprintf("Collection attribute with name %q in collection %q could not be found", r.PathValue("name"), r.PathValue("id"))
+	if rowsDeleted != 0 {
+		response = fmt.Sprintf("Collection attribute with name %q in collection %q deleted successfully", r.PathValue("name"), r.PathValue("id"))
+	}
+
+	WriteJSON(w, http.StatusOK, ResponseMessage{Status: StatusCodeOk, Message: response})
 }
 
 func (c Collection) Validate() Misses {
