@@ -41,6 +41,7 @@ func handleCollectionRoutes() *http.ServeMux {
 	mux.HandleFunc("GET /collections", getCollections)
 	mux.HandleFunc("GET /collections/{id}", getCollectionSingle)
 	mux.HandleFunc("POST /collections", createCollection)
+	mux.HandleFunc("DELETE /collections/{id}", deleteCollection)
 
 	mux.HandleFunc("/*", func(w http.ResponseWriter, r *http.Request) {
 		WriteJSON(w, http.StatusNotFound, ResponseMessage{
@@ -222,6 +223,42 @@ func createCollection(w http.ResponseWriter, r *http.Request) {
 	}
 
 	WriteJSON(w, http.StatusOK, newCollection)
+}
+
+func deleteCollection(w http.ResponseWriter, r *http.Request) {
+	db, err := sql.Open("sqlite3", DATABASE)
+	if err != nil {
+		errorMessage := fmt.Sprintf("Error while deleting collection: %v", err.Error())
+		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
+			Status:  StatusCodeError,
+			Message: errorMessage,
+		})
+		log.Println(errorMessage)
+		return
+	}
+
+	res, err := db.Exec("DELETE FROM collections WHERE id = ?", r.PathValue("id"))
+	if err != nil {
+		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax: " + err.Error()})
+		log.Println("Error while deleting collection:", err)
+		return
+	}
+
+	rowsDeleted, _ := res.RowsAffected()
+
+	_, err = db.Exec("DELETE FROM collection_attributes WHERE collection = ?", r.PathValue("id"))
+	if err != nil {
+		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: err.Error()})
+		log.Println("Error while deleting collection:", err)
+		return
+	}
+
+	response := fmt.Sprintf("Collection with id %q could not be found", r.PathValue("id"))
+	if rowsDeleted != 0 {
+		response = fmt.Sprintf("Collection with id %q deleted successfully", r.PathValue("id"))
+	}
+
+	WriteJSON(w, http.StatusOK, ResponseMessage{Status: StatusCodeOk, Message: response})
 }
 
 func (c Collection) Validate() Misses {
