@@ -168,12 +168,12 @@ func createCollection(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	newCollection, misses, err := ReadBodyJSON[CollectionWithAttrs](r)
 	if err == io.EOF {
 		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "No body was provided"})
 		return
 	}
 
-	newCollection, misses, err := ReadBodyJSON[CollectionWithAttrs](r)
 	if err != nil {
 		response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax", Data: err.Error()}
 		if len(misses) != 0 {
