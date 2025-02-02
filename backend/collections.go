@@ -10,11 +10,25 @@ import (
 )
 
 type Collection struct {
-	Id        int       `json:"id"`
+	Id        int64     `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
 	Name      string    `json:"name"`
 	Slug      string    `json:"slug"`
 }
+
+type CollectionAttr struct {
+	Name string             `json:"name"`
+	Type CollectionAttrType `json:"type"`
+}
+
+type CollectionAttrType string
+
+const (
+	CollectionAttrTypeString CollectionAttrType = "string"
+	CollectionAttrTypeDate                      = "date"
+	CollectionAttrTypeImage                     = "image"
+	CollectionAttrTypeMDX                       = "mdx"
+)
 
 func handleCollectionRoutes() *http.ServeMux {
 	mux := http.NewServeMux()
@@ -70,6 +84,11 @@ func getCollections(w http.ResponseWriter, _ *http.Request) {
 	WriteJSON(w, http.StatusOK, data)
 }
 
+type RequestBodyCreateCollection struct {
+	Collection           Collection       `json:"collection"`
+	CollectionAttributes []CollectionAttr `json:"attributes"`
+}
+
 func createCollection(w http.ResponseWriter, r *http.Request) {
 	db, err := sql.Open("sqlite3", DATABASE)
 	if err != nil {
@@ -83,33 +102,55 @@ func createCollection(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err == io.EOF {
-		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Expected {slug: string, basePath: string}"})
+		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "No body was provided"})
 		return
 	}
 
-	newCollection, misses, err := ReadBodyJSON[Collection](r)
-	if err != nil || len(misses) != 0 {
-		response := ResponseMessage{Status: StatusCodeError, Message: "Expected {slug: string, basePath: string}"}
-
+	newCollection, misses, err := ReadBodyJSON[RequestBodyCreateCollection](r)
+	if err != nil {
+		response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax", Data: err.Error()}
 		if len(misses) != 0 {
 			response.Data = misses
 		}
 
 		WriteJSON(w, http.StatusBadRequest, response)
-		log.Println("Error while creating new collection:", err, misses)
-		return
-	}
-
-	newCollection.CreatedAt = time.Now()
-
-	_, err = db.Exec("INSERT INTO collections (createdAt, name, slug) VALUES (?, ?, ?)", newCollection.CreatedAt, newCollection.Name, newCollection.Slug)
-	if err != nil {
-		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Expected {slug: string, name: string}"})
 		log.Println("Error while creating new collection:", err)
 		return
 	}
 
-	fmt.Println("Response:", newCollection)
+	if len(misses) != 0 {
+		response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax", Data: misses}
+		if len(misses) != 0 {
+			response.Data = misses
+		}
+
+		WriteJSON(w, http.StatusBadRequest, response)
+		log.Println("Error while creating new collection:", misses)
+		return
+	}
+
+	newCollection.Collection.CreatedAt = time.Now()
+
+	res, err := db.Exec("INSERT INTO collections (createdAt, name, slug) VALUES (?, ?, ?)", newCollection.Collection.CreatedAt, newCollection.Collection.Name, newCollection.Collection.Slug)
+	if err != nil {
+		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax: " + err.Error()})
+		log.Println("Error while creating new collection:", err)
+		return
+	}
+
+	id, err := res.LastInsertId()
+	if err != nil {
+		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: err.Error()})
+		log.Println("Error while creating new collection:", err)
+		return
+	}
+
+	newCollection.Collection.Id = id
+	for _, attr := range newCollection.CollectionAttributes {
+		_, err = db.Exec("INSERT INTO collection_attributes VALUES (?, ?, ?)", newCollection.Collection.Id, attr.Name, attr.Type)
+	}
+
+	WriteJSON(w, http.StatusOK, newCollection)
 }
 
 func (c Collection) Validate() Misses {
@@ -121,6 +162,33 @@ func (c Collection) Validate() Misses {
 
 	if c.Name == "" {
 		misses["name"] = "name cannot be empty"
+	}
+
+	return misses
+}
+
+func (request RequestBodyCreateCollection) Validate() Misses {
+	misses := request.Collection.Validate()
+
+	for k, v := range misses {
+		delete(misses, k)
+		misses["collection."+k] = v
+	}
+
+	nameSet := make(map[string]bool)
+
+	for _, attr := range request.CollectionAttributes {
+		_, exists := nameSet[attr.Name]
+		if exists {
+			misses["attributes."+attr.Name] = "Names must be unique"
+			continue
+		}
+
+		if attr.Type != CollectionAttrTypeString && attr.Type != CollectionAttrTypeImage && attr.Type != CollectionAttrTypeDate && attr.Type != CollectionAttrTypeMDX {
+			misses["attributes."+attr.Name] = "Type \"" + string(attr.Type) + "\" is not one of the valid types"
+		}
+
+		nameSet[attr.Name] = true
 	}
 
 	return misses
