@@ -39,6 +39,7 @@ func handleCollectionRoutes() *http.ServeMux {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /collections", getCollections)
+	mux.HandleFunc("GET /collections/{id}", getCollectionSingle)
 	mux.HandleFunc("POST /collections", createCollection)
 
 	mux.HandleFunc("/*", func(w http.ResponseWriter, r *http.Request) {
@@ -108,6 +109,50 @@ func getCollections(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	WriteJSON(w, http.StatusOK, collectionWithAttrs)
+}
+
+func getCollectionSingle(w http.ResponseWriter, r *http.Request) {
+	db, err := sql.Open("sqlite3", DATABASE)
+	if err != nil {
+		errorMessage := fmt.Sprintf("Error while getting collections: %v", err.Error())
+		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
+			Status:  StatusCodeError,
+			Message: errorMessage,
+		})
+		log.Println(errorMessage)
+		return
+	}
+
+	row := db.QueryRow("SELECT * FROM collections WHERE id = ?", r.PathValue("id"))
+
+	var collection Collection
+	if err := row.Scan(&collection.Id, &collection.CreatedAt, &collection.Name, &collection.Slug); err != nil {
+		errorMessage := fmt.Sprintf("Error while getting collections: %v", err.Error())
+		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
+			Status:  StatusCodeError,
+			Message: errorMessage,
+		})
+		log.Println(errorMessage)
+		return
+	}
+
+	fullCollection := CollectionWithAttrs{Collection: collection}
+	rows, err := db.Query("SELECT name, type FROM collection_attributes WHERE collection = ?", collection.Id)
+	if err == nil {
+		collectionAttrs := make([]CollectionAttr, 0, 5)
+		for rows.Next() {
+			var attr CollectionAttr
+			if err := rows.Scan(&attr.Name, &attr.Type); err != nil {
+				continue
+			}
+
+			collectionAttrs = append(collectionAttrs, attr)
+		}
+
+		fullCollection.CollectionAttributes = collectionAttrs
+	}
+
+	WriteJSON(w, http.StatusOK, fullCollection)
 }
 
 func createCollection(w http.ResponseWriter, r *http.Request) {
