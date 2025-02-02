@@ -148,6 +148,11 @@ func createCollection(w http.ResponseWriter, r *http.Request) {
 	newCollection.Collection.Id = id
 	for _, attr := range newCollection.CollectionAttributes {
 		_, err = db.Exec("INSERT INTO collection_attributes VALUES (?, ?, ?)", newCollection.Collection.Id, attr.Name, attr.Type)
+		if err != nil {
+			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: err.Error()})
+			log.Println("Error while creating new collection:", err)
+			return
+		}
 	}
 
 	WriteJSON(w, http.StatusOK, newCollection)
