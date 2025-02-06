@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -59,106 +60,64 @@ func handleCollectionRoutes() *http.ServeMux {
 }
 
 func getCollections(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Add("Content-Type", "application/json")
-
-	db, err := sql.Open("sqlite3", DATABASE)
+	collections, err := Select[Collection]("")
 	if err != nil {
-		errorMessage := fmt.Sprintf("Error while getting collections: %v", err.Error())
 		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
 			Status:  StatusCodeError,
-			Message: errorMessage,
+			Message: err.Error(),
 		})
-		log.Println(errorMessage)
+		log.Println(err.Error())
 		return
 	}
 
-	rows, err := db.Query("SELECT * FROM collections")
-	if err != nil {
-		errorMessage := fmt.Sprintf("Error while getting collections: %v", err.Error())
-		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
-			Status:  StatusCodeError,
-			Message: errorMessage,
-		})
-		log.Println(errorMessage)
-		return
-	}
+	response := make([]CollectionWithAttrs, 0, 0)
 
-	collections := make([]Collection, 0, 5)
-	for rows.Next() {
-		var collection Collection
-		if err := rows.Scan(&collection.Id, &collection.CreatedAt, &collection.Name, &collection.Slug); err != nil {
-			continue
+	// Kinda inefficient but that's ok for now
+	for _, row := range collections {
+		attributes, err := Select[CollectionAttr]("collection = " + strconv.FormatInt(row.Id, 10))
+		if err != nil {
+			log.Println("Error while getting attribute of collections getCollections:", err.Error())
 		}
 
-		collections = append(collections, collection)
+		response = append(response, CollectionWithAttrs{Collection: row, CollectionAttributes: attributes})
 	}
 
-	collectionWithAttrs := make([]CollectionWithAttrs, 0, len(collections))
-	for _, c := range collections {
-		fullCollection := CollectionWithAttrs{Collection: c}
-		rows, err := db.Query("SELECT name, type FROM collection_attributes WHERE collection = ?", c.Id)
-		if err == nil {
-			collectionAttrs := make([]CollectionAttr, 0, 5)
-			for rows.Next() {
-				var attr CollectionAttr
-				if err := rows.Scan(&attr.Name, &attr.Type); err != nil {
-					continue
-				}
-
-				collectionAttrs = append(collectionAttrs, attr)
-			}
-
-			fullCollection.CollectionAttributes = collectionAttrs
-		}
-
-		collectionWithAttrs = append(collectionWithAttrs, fullCollection)
-	}
-
-	WriteJSON(w, http.StatusOK, collectionWithAttrs)
+	WriteJSON(w, http.StatusOK, ResponseMessage{
+		Status: StatusCodeOk,
+		Data:   response,
+	})
 }
 
 func getCollectionSingle(w http.ResponseWriter, r *http.Request) {
-	db, err := sql.Open("sqlite3", DATABASE)
+	collectionId := r.PathValue("id")
+
+	collection, err := Select[Collection]("Id = " + collectionId)
 	if err != nil {
-		errorMessage := fmt.Sprintf("Error while getting collections: %v", err.Error())
 		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
 			Status:  StatusCodeError,
-			Message: errorMessage,
+			Message: err.Error(),
 		})
-		log.Println(errorMessage)
+		log.Println(err.Error())
 		return
 	}
 
-	row := db.QueryRow("SELECT * FROM collections WHERE id = ?", r.PathValue("id"))
-
-	var collection Collection
-	if err := row.Scan(&collection.Id, &collection.CreatedAt, &collection.Name, &collection.Slug); err != nil {
-		errorMessage := fmt.Sprintf("Error while getting collections: %v", err.Error())
-		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
-			Status:  StatusCodeError,
-			Message: errorMessage,
+	if len(collection) == 0 {
+		WriteJSON(w, http.StatusOK, ResponseMessage{
+			Status: StatusCodeOk,
 		})
-		log.Println(errorMessage)
 		return
 	}
 
-	fullCollection := CollectionWithAttrs{Collection: collection}
-	rows, err := db.Query("SELECT name, type FROM collection_attributes WHERE collection = ?", collection.Id)
-	if err == nil {
-		collectionAttrs := make([]CollectionAttr, 0, 5)
-		for rows.Next() {
-			var attr CollectionAttr
-			if err := rows.Scan(&attr.Name, &attr.Type); err != nil {
-				continue
-			}
-
-			collectionAttrs = append(collectionAttrs, attr)
-		}
-
-		fullCollection.CollectionAttributes = collectionAttrs
+	attributes, err := Select[CollectionAttr]("collection = " + collectionId)
+	if err != nil {
+		log.Println("Error while getting attribute of collections getCollections:", err.Error())
 	}
 
-	WriteJSON(w, http.StatusOK, fullCollection)
+	response := CollectionWithAttrs{Collection: collection[0], CollectionAttributes: attributes}
+	WriteJSON(w, http.StatusOK, ResponseMessage{
+		Status: StatusCodeOk,
+		Data:   response,
+	})
 }
 
 func createCollection(w http.ResponseWriter, r *http.Request) {
@@ -476,6 +435,18 @@ func (c Collection) Validate() Misses {
 	return misses
 }
 
+func (c *Collection) ParamPtrList() []any {
+	return []any{&c.Id, &c.CreatedAt, &c.Name, &c.Slug}
+}
+
+func (c Collection) ParamList() []string {
+	return []string{"id", "createdAt", "name", "slug"}
+}
+
+func (c Collection) GetTableName() string {
+	return "collections"
+}
+
 func (attr CollectionAttr) Validate() Misses {
 	misses := make(Misses, 0)
 	if attr.Type != CollectionAttrTypeString && attr.Type != CollectionAttrTypeImage && attr.Type != CollectionAttrTypeDate && attr.Type != CollectionAttrTypeMDX {
@@ -483,7 +454,18 @@ func (attr CollectionAttr) Validate() Misses {
 	}
 
 	return misses
+}
 
+func (attr *CollectionAttr) ParamPtrList() []any {
+	return []any{&attr.Name, &attr.Type}
+}
+
+func (attr CollectionAttr) ParamList() []string {
+	return []string{"name", "type"}
+}
+
+func (attr CollectionAttr) GetTableName() string {
+	return "collection_attributes"
 }
 
 func (request CollectionWithAttrs) Validate() Misses {

@@ -2,9 +2,10 @@ package main
 
 import (
 	"database/sql"
+	"strings"
+
 	_ "github.com/mattn/go-sqlite3"
 )
-
 
 const (
 	QUERY_CREATE_COLLECTIONS = `CREATE TABLE IF NOT EXISTS collections (
@@ -38,4 +39,45 @@ func initializeDB() error {
 	}
 
 	return nil
+}
+
+type Selectable[T any] interface {
+	ParamPtrList() []any
+	ParamList() []string
+	GetTableName() string
+	*T
+}
+
+func Select[T any, PT Selectable[T]](where string) ([]T, error) {
+	var obj T
+	ptr := PT(&obj)
+
+	db, err := sql.Open("sqlite3", DATABASE)
+	if err != nil {
+		return nil, err
+	}
+
+	query := "SELECT " + strings.Join(ptr.ParamList(), ", ")
+	query += " FROM " + ptr.GetTableName()
+	if where != "" {
+		query += " WHERE " + where
+	}
+
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+
+	results := make([]T, 0, 0)
+	for rows.Next() {
+		var row T
+		currPtr := PT(&row)
+		if err := rows.Scan(currPtr.ParamPtrList()...); err != nil {
+			return nil, err
+		}
+
+		results = append(results, row)
+	}
+
+	return results, nil
 }
