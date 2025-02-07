@@ -121,17 +121,6 @@ func getCollectionSingle(w http.ResponseWriter, r *http.Request) {
 }
 
 func createCollection(w http.ResponseWriter, r *http.Request) {
-	db, err := sql.Open("sqlite3", DATABASE)
-	if err != nil {
-		errorMessage := fmt.Sprintf("Error while getting collections: %v", err.Error())
-		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
-			Status:  StatusCodeError,
-			Message: errorMessage,
-		})
-		log.Println(errorMessage)
-		return
-	}
-
 	newCollection, misses, err := ReadBodyJSON[CollectionWithAttrs](r)
 	if err == io.EOF {
 		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "No body was provided"})
@@ -149,39 +138,29 @@ func createCollection(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(misses) != 0 {
-		response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax", Data: misses}
-		if len(misses) != 0 {
-			response.Data = misses
-		}
-
-		WriteJSON(w, http.StatusBadRequest, response)
-		log.Println("Error while creating new collection:", misses)
-		return
-	}
-
 	newCollection.Collection.CreatedAt = time.Now()
-
-	res, err := db.Exec("INSERT INTO collections (createdAt, name, slug) VALUES (?, ?, ?)", newCollection.Collection.CreatedAt, newCollection.Collection.Name, newCollection.Collection.Slug)
+	newCollectionId, err := Insert(newCollection.Collection, map[string]any{
+		"name":      newCollection.Collection.Name,
+		"slug":      newCollection.Collection.Slug,
+		"createdAt": newCollection.Collection.CreatedAt,
+	})
 	if err != nil {
 		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax: " + err.Error()})
 		log.Println("Error while creating new collection:", err)
 		return
 	}
 
-	id, err := res.LastInsertId()
-	if err != nil {
-		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: err.Error()})
-		log.Println("Error while creating new collection:", err)
-		return
-	}
+	newCollection.Collection.Id = newCollectionId
 
-	newCollection.Collection.Id = id
 	for _, attr := range newCollection.CollectionAttributes {
-		_, err = db.Exec("INSERT INTO collection_attributes VALUES (?, ?, ?)", newCollection.Collection.Id, attr.Name, attr.Type)
+		_, err := Insert(attr, map[string]any{
+			"collection": newCollectionId,
+			"name":       attr.Name,
+			"type":       attr.Type,
+		})
 		if err != nil {
-			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: err.Error()})
-			log.Println("Error while creating new collection:", err)
+			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax: " + err.Error()})
+			log.Println("Error while creating new collection attribute:", err)
 			return
 		}
 	}

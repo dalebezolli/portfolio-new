@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -80,4 +81,37 @@ func Select[T any, PT Selectable[T]](where string) ([]T, error) {
 	}
 
 	return results, nil
+}
+
+type Insertable interface {
+	GetTableName() string
+}
+
+func Insert[T Insertable](entry T, fields map[string]any) (int64, error) {
+	db, err := sql.Open("sqlite3", DATABASE)
+	if err != nil {
+		return -1, err
+	}
+
+	if len(fields) == 0 {
+		return -1, errors.New("No data specified")
+	}
+
+	keys := make([]string, 0, len(fields))
+	values := make([]any, 0, len(fields))
+	for key, value := range fields {
+		keys = append(keys, key)
+		values = append(values, value)
+	}
+
+	query := "INSERT INTO " + entry.GetTableName()
+	query += " ( " + strings.Join(keys, ", ") + " ) "
+	query += "VALUES ( " + strings.Repeat("?, ", len(values)-1) + "?" + " )"
+	res, err := db.Exec(query, values...)
+	if err != nil {
+		return -1, err
+	}
+
+	insertedId, _ := res.LastInsertId()
+	return insertedId, nil
 }
