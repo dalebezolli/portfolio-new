@@ -256,18 +256,7 @@ func deleteCollection(w http.ResponseWriter, r *http.Request) {
 }
 
 func createCollectionAttribute(w http.ResponseWriter, r *http.Request) {
-	db, err := sql.Open("sqlite3", DATABASE)
-	if err != nil {
-		errorMessage := fmt.Sprintf("Error while deleting collection: %v", err.Error())
-		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
-			Status:  StatusCodeError,
-			Message: errorMessage,
-		})
-		log.Println(errorMessage)
-		return
-	}
-
-	attribute, misses, err := ReadBodyJSON[CollectionAttr](r)
+	attr, misses, err := ReadBodyJSON[CollectionAttr](r)
 	if err == io.EOF {
 		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "No body was provided"})
 		return
@@ -291,19 +280,8 @@ func createCollectionAttribute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	row := db.QueryRow("SELECT * FROM collections WHERE id = ?", r.PathValue("id"))
-	var oldData Collection
-	if err := row.Scan(&oldData.Id, &oldData.CreatedAt, &oldData.Name, &oldData.Slug); err != nil {
-		errorMessage := fmt.Sprintf("Error while creating new collection attribute: %v", err.Error())
-		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
-			Status:  StatusCodeError,
-			Message: errorMessage,
-		})
-		log.Println(errorMessage)
-		return
-	}
-
-	_, err = db.Exec("INSERT INTO collection_attributes VALUES (?, ?, ?)", r.PathValue("id"), attribute.Name, attribute.Type)
+	collectionId := r.PathValue("id")
+	rows, err := Select("SELECT * FROM collections WHERE id = ?", collectionId)
 	if err != nil {
 		errorMessage := fmt.Sprintf("Error while creating new collection attribute: %v", err.Error())
 		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
@@ -314,7 +292,32 @@ func createCollectionAttribute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	WriteJSON(w, http.StatusOK, attribute)
+	if len(rows) == 0 {
+		errorMessage := fmt.Sprintf("Error while creating new collection attribute: Collection with id (%v) doesn't exist", collectionId)
+		WriteJSON(w, http.StatusBadRequest, ResponseMessage{
+			Status:  StatusCodeError,
+			Message: errorMessage,
+		})
+		log.Println(errorMessage)
+		return
+	}
+
+	_, err = Insert(attr, map[string]any{
+		"collection": collectionId,
+		"name":       attr.Name,
+		"type":       attr.Type,
+	})
+	if err != nil {
+		errorMessage := fmt.Sprintf("Error while inserting new collection attribute to db: %v", err.Error())
+		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
+			Status:  StatusCodeError,
+			Message: errorMessage,
+		})
+		log.Println(errorMessage)
+		return
+	}
+
+	WriteJSON(w, http.StatusOK, attr)
 }
 
 func updateCollectionAttribute(w http.ResponseWriter, r *http.Request) {
