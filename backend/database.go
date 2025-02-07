@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -51,7 +52,7 @@ type Selectable[T any] interface {
 
 type DBObject map[string]any
 
-func Select(query string, args ...any) ([]DBObject, error) {
+func DBQuery(query string, args ...any) ([]DBObject, error) {
 	db, err := sql.Open("sqlite3", DATABASE)
 	if err != nil {
 		return nil, err
@@ -122,32 +123,20 @@ func Insert[T Insertable](entry T, fields map[string]any) (int64, error) {
 	return insertedId, nil
 }
 
-func Delete(query string, args ...any) (rowsAffected int64, err error) {
+func DBExecute(query string, args ...any) (insertedId, rowsAffected int64, err error) {
 	db, err := sql.Open("sqlite3", DATABASE)
 	if err != nil {
-		return 0, err
+		return -1, 0, err
 	}
+
+	fmt.Println("Data:", args)
 
 	res, err := db.Exec(query, args...)
 	if err != nil {
-		return 0, err
+		return -1, 0, err
 	}
 
-	rowsDeleted, _ := res.RowsAffected()
-	return rowsDeleted, nil
-}
-
-func Update(query string, args ...any) (rowsAffected int64, err error) {
-	db, err := sql.Open("sqlite3", DATABASE)
-	if err != nil {
-		return 0, err
-	}
-
-	res, err := db.Exec(query, args...)
-	if err != nil {
-		return 0, err
-	}
-
-	rowsUpdated, _ := res.RowsAffected()
-	return rowsUpdated, nil
+	rowId, _ := res.LastInsertId()
+	rowCount, _ := res.RowsAffected()
+	return rowId, rowCount, nil
 }

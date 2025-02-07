@@ -58,7 +58,7 @@ func handleCollectionRoutes() *http.ServeMux {
 }
 
 func getCollections(w http.ResponseWriter, _ *http.Request) {
-	collections, err := Select("SELECT * FROM collections")
+	collections, err := DBQuery("SELECT * FROM collections")
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
 			Status:  StatusCodeError,
@@ -70,7 +70,7 @@ func getCollections(w http.ResponseWriter, _ *http.Request) {
 
 	for _, row := range collections {
 		collectionId := row["id"]
-		attributes, err := Select("SELECT * FROM collection_attributes WHERE collection = ?", collectionId)
+		attributes, err := DBQuery("SELECT * FROM collection_attributes WHERE collection = ?", collectionId)
 		if err != nil {
 			log.Println("Error while getting attribute of collections getCollections:", err.Error())
 		}
@@ -87,7 +87,7 @@ func getCollections(w http.ResponseWriter, _ *http.Request) {
 func getCollectionSingle(w http.ResponseWriter, r *http.Request) {
 	collectionId := r.PathValue("id")
 
-	collection, err := Select("SELECT * FROM collections WHERE id = ?", collectionId)
+	collection, err := DBQuery("SELECT * FROM collections WHERE id = ?", collectionId)
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
 			Status:  StatusCodeError,
@@ -104,7 +104,7 @@ func getCollectionSingle(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	attributes, err := Select("SELECT * FROM collection_attributes WHERE collection = ?", collectionId)
+	attributes, err := DBQuery("SELECT * FROM collection_attributes WHERE collection = ?", collectionId)
 	if err != nil {
 		log.Println("Error while getting attribute of collections getCollections:", err.Error())
 	}
@@ -136,11 +136,7 @@ func createCollection(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newCollection.Collection.CreatedAt = time.Now()
-	newCollectionId, err := Insert(newCollection.Collection, map[string]any{
-		"name":      newCollection.Collection.Name,
-		"slug":      newCollection.Collection.Slug,
-		"createdAt": newCollection.Collection.CreatedAt,
-	})
+	newCollectionId, _, err := DBExecute("INSERT INTO collections (name, slug, createdAt) VALUES (?, ?, ?)", newCollection.Collection.Name, newCollection.Collection.Slug, newCollection.Collection.CreatedAt)
 	if err != nil {
 		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax: " + err.Error()})
 		log.Println("Error while creating new collection:", err)
@@ -150,11 +146,7 @@ func createCollection(w http.ResponseWriter, r *http.Request) {
 	newCollection.Collection.Id = newCollectionId
 
 	for _, attr := range newCollection.CollectionAttributes {
-		_, err := Insert(attr, map[string]any{
-			"collection": newCollectionId,
-			"name":       attr.Name,
-			"type":       attr.Type,
-		})
+		_, _, err := DBExecute("INSERT INTO collection_attributes (name, type) VALUES (?, ?)", attr.Name, attr.Type)
 		if err != nil {
 			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax: " + err.Error()})
 			log.Println("Error while creating new collection attribute:", err)
@@ -167,7 +159,7 @@ func createCollection(w http.ResponseWriter, r *http.Request) {
 
 func updateCollection(w http.ResponseWriter, r *http.Request) {
 	collectionId := r.PathValue("id")
-	rows, err := Select("Select * FROM collections WHERE id = ?", collectionId)
+	rows, err := DBQuery("Select * FROM collections WHERE id = ?", collectionId)
 	if err != nil {
 		errorMessage := fmt.Sprintf("Error while updating collections: %v", err.Error())
 		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
@@ -213,7 +205,7 @@ func updateCollection(w http.ResponseWriter, r *http.Request) {
 		rows[0]["slug"] = newData.Slug
 	}
 
-	_, err = Update("UPDATE collections SET name = ?, slug = ? WHERE id = ?", rows[0]["name"], rows[0]["slug"], collectionId)
+	_, _, err = DBExecute("UPDATE collections SET name = ?, slug = ? WHERE id = ?", rows[0]["name"], rows[0]["slug"], collectionId)
 	if err != nil {
 		response := ResponseMessage{Status: StatusCodeError, Message: err.Error()}
 
@@ -227,14 +219,14 @@ func updateCollection(w http.ResponseWriter, r *http.Request) {
 
 func deleteCollection(w http.ResponseWriter, r *http.Request) {
 	collectionId := r.PathValue("id")
-	rowsDeleted, err := Delete("DELETE FROM collections WHERE id = ?", collectionId)
+	_, rowsDeleted, err := DBExecute("DELETE FROM collections WHERE id = ?", collectionId)
 	if err != nil {
 		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax: " + err.Error()})
 		log.Println("Error while deleting collection:", err)
 		return
 	}
 
-	_, err = Delete("DELETE FROM collection_attributes WHERE collection = ?", collectionId)
+	_, _, err = DBExecute("DELETE FROM collection_attributes WHERE collection = ?", collectionId)
 	if err != nil {
 		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: err.Error()})
 		log.Println("Error while deleting collection:", err)
@@ -275,7 +267,7 @@ func createCollectionAttribute(w http.ResponseWriter, r *http.Request) {
 	}
 
 	collectionId := r.PathValue("id")
-	rows, err := Select("SELECT * FROM collections WHERE id = ?", collectionId)
+	rows, err := DBQuery("SELECT * FROM collections WHERE id = ?", collectionId)
 	if err != nil {
 		errorMessage := fmt.Sprintf("Error while creating new collection attribute: %v", err.Error())
 		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
@@ -296,11 +288,7 @@ func createCollectionAttribute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = Insert(attr, map[string]any{
-		"collection": collectionId,
-		"name":       attr.Name,
-		"type":       attr.Type,
-	})
+	_, _, err = DBExecute("INSERT INTO collection_attributes (name, type) VALUES (?, ?)", attr.Name, attr.Type)
 	if err != nil {
 		errorMessage := fmt.Sprintf("Error while inserting new collection attribute to db: %v", err.Error())
 		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
@@ -317,7 +305,7 @@ func createCollectionAttribute(w http.ResponseWriter, r *http.Request) {
 func updateCollectionAttribute(w http.ResponseWriter, r *http.Request) {
 	collectionId := r.PathValue("id")
 	attributeName := r.PathValue("name")
-	rows, err := Select("SELECT name, type FROM collection_attributes WHERE collection = ? AND name = ?", collectionId, attributeName)
+	rows, err := DBQuery("SELECT name, type FROM collection_attributes WHERE collection = ? AND name = ?", collectionId, attributeName)
 	if err != nil {
 		errorMessage := fmt.Sprintf("Error while updating collection attribute: %v", err.Error())
 		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
@@ -363,7 +351,7 @@ func updateCollectionAttribute(w http.ResponseWriter, r *http.Request) {
 		rows[0]["type"] = newData.Type
 	}
 
-	_, err = Update("UPDATE collection_attributes SET name = ?, type = ? WHERE collection = ? AND name = ?", rows[0]["name"], rows[0]["type"], collectionId, attributeName)
+	_, _, err = DBExecute("UPDATE collection_attributes SET name = ?, type = ? WHERE collection = ? AND name = ?", rows[0]["name"], rows[0]["type"], collectionId, attributeName)
 	if err != nil {
 		response := ResponseMessage{Status: StatusCodeError, Message: err.Error()}
 
@@ -376,7 +364,7 @@ func updateCollectionAttribute(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteCollectionAttribute(w http.ResponseWriter, r *http.Request) {
-	rowsDeleted, err := Delete("DELETE FROM collection_attributes WHERE collection = ? AND name = ?", r.PathValue("id"), r.PathValue("name"))
+	_, rowsDeleted, err := DBExecute("DELETE FROM collection_attributes WHERE collection = ? AND name = ?", r.PathValue("id"), r.PathValue("name"))
 	if err != nil {
 		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: err.Error()})
 		log.Println("Error while deleting collection attrbute:", err)
