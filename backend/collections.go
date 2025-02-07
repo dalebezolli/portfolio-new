@@ -220,27 +220,15 @@ func updateCollection(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteCollection(w http.ResponseWriter, r *http.Request) {
-	db, err := sql.Open("sqlite3", DATABASE)
-	if err != nil {
-		errorMessage := fmt.Sprintf("Error while deleting collection: %v", err.Error())
-		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
-			Status:  StatusCodeError,
-			Message: errorMessage,
-		})
-		log.Println(errorMessage)
-		return
-	}
-
-	res, err := db.Exec("DELETE FROM collections WHERE id = ?", r.PathValue("id"))
+	collectionId := r.PathValue("id")
+	rowsDeleted, err := Delete("DELETE FROM collections WHERE id = ?", collectionId)
 	if err != nil {
 		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax: " + err.Error()})
 		log.Println("Error while deleting collection:", err)
 		return
 	}
 
-	rowsDeleted, _ := res.RowsAffected()
-
-	_, err = db.Exec("DELETE FROM collection_attributes WHERE collection = ?", r.PathValue("id"))
+	_, err = Delete("DELETE FROM collection_attributes WHERE collection = ?", collectionId)
 	if err != nil {
 		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: err.Error()})
 		log.Println("Error while deleting collection:", err)
@@ -374,24 +362,12 @@ func updateCollectionAttribute(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteCollectionAttribute(w http.ResponseWriter, r *http.Request) {
-	db, err := sql.Open("sqlite3", DATABASE)
-	if err != nil {
-		errorMessage := fmt.Sprintf("Error while deleting collection attribute: %v", err.Error())
-		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
-			Status:  StatusCodeError,
-			Message: errorMessage,
-		})
-		log.Println(errorMessage)
-		return
-	}
-
-	res, err := db.Exec("DELETE FROM collection_attributes WHERE collection = ? AND name = ?", r.PathValue("id"), r.PathValue("name"))
+	rowsDeleted, err := Delete("DELETE FROM collection_attributes WHERE collection = ? AND name = ?", r.PathValue("id"), r.PathValue("name"))
 	if err != nil {
 		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: err.Error()})
-		log.Println("Error while deleting collection:", err)
+		log.Println("Error while deleting collection attrbute:", err)
 		return
 	}
-	rowsDeleted, _ := res.RowsAffected()
 
 	response := fmt.Sprintf("Collection attribute with name %q in collection %q could not be found", r.PathValue("name"), r.PathValue("id"))
 	if rowsDeleted != 0 {
