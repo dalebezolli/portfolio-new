@@ -49,35 +49,41 @@ type Selectable[T any] interface {
 	*T
 }
 
-func Select[T any, PT Selectable[T]](where string) ([]T, error) {
-	var obj T
-	ptr := PT(&obj)
+type DBObject map[string]any
 
+func Select(query string, args ...any) ([]DBObject, error) {
 	db, err := sql.Open("sqlite3", DATABASE)
 	if err != nil {
 		return nil, err
 	}
 
-	query := "SELECT " + strings.Join(ptr.ParamList(), ", ")
-	query += " FROM " + ptr.GetTableName()
-	if where != "" {
-		query += " WHERE " + where
-	}
-
-	rows, err := db.Query(query)
+	rows, err := db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
 
-	results := make([]T, 0, 0)
+	columns, err := rows.Columns()
+	if err != nil {
+		return nil, err
+	}
+
+	results := make([]DBObject, 0, 0)
 	for rows.Next() {
-		var row T
-		currPtr := PT(&row)
-		if err := rows.Scan(currPtr.ParamPtrList()...); err != nil {
+		row := make([]any, len(columns))
+
+		for i := range row {
+			row[i] = new(any)
+		}
+
+		if err := rows.Scan(row...); err != nil {
 			return nil, err
 		}
 
-		results = append(results, row)
+		result := make(DBObject, len(columns))
+		for i, col := range columns {
+			result[col] = *row[i].(*interface{})
+		}
+		results = append(results, result)
 	}
 
 	return results, nil

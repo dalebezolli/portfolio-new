@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strconv"
 	"time"
 )
 
@@ -60,7 +59,7 @@ func handleCollectionRoutes() *http.ServeMux {
 }
 
 func getCollections(w http.ResponseWriter, _ *http.Request) {
-	collections, err := Select[Collection]("")
+	collections, err := Select("SELECT * FROM collections")
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
 			Status:  StatusCodeError,
@@ -70,28 +69,26 @@ func getCollections(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
-	response := make([]CollectionWithAttrs, 0, 0)
-
-	// Kinda inefficient but that's ok for now
 	for _, row := range collections {
-		attributes, err := Select[CollectionAttr]("collection = " + strconv.FormatInt(row.Id, 10))
+		collectionId := row["id"]
+		attributes, err := Select("SELECT * FROM collection_attributes WHERE collection = ?", collectionId)
 		if err != nil {
 			log.Println("Error while getting attribute of collections getCollections:", err.Error())
 		}
 
-		response = append(response, CollectionWithAttrs{Collection: row, CollectionAttributes: attributes})
+		row["attributes"] = attributes
 	}
 
 	WriteJSON(w, http.StatusOK, ResponseMessage{
 		Status: StatusCodeOk,
-		Data:   response,
+		Data:   collections,
 	})
 }
 
 func getCollectionSingle(w http.ResponseWriter, r *http.Request) {
 	collectionId := r.PathValue("id")
 
-	collection, err := Select[Collection]("Id = " + collectionId)
+	collection, err := Select("SELECT * FROM collections WHERE id = ?", collectionId)
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
 			Status:  StatusCodeError,
@@ -103,20 +100,21 @@ func getCollectionSingle(w http.ResponseWriter, r *http.Request) {
 
 	if len(collection) == 0 {
 		WriteJSON(w, http.StatusOK, ResponseMessage{
-			Status: StatusCodeOk,
+			Status:  StatusCodeOk,
+			Message: fmt.Sprintf("No collection with the specified id (%v)", collectionId),
 		})
 		return
 	}
-
-	attributes, err := Select[CollectionAttr]("collection = " + collectionId)
+	attributes, err := Select("SELECT * FROM collection_attributes WHERE collection = ?", collectionId)
 	if err != nil {
 		log.Println("Error while getting attribute of collections getCollections:", err.Error())
 	}
 
-	response := CollectionWithAttrs{Collection: collection[0], CollectionAttributes: attributes}
+	collection[0]["attributes"] = attributes
+
 	WriteJSON(w, http.StatusOK, ResponseMessage{
 		Status: StatusCodeOk,
-		Data:   response,
+		Data:   collection[0],
 	})
 }
 
