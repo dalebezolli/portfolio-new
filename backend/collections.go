@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"io"
 	"log"
@@ -167,7 +166,8 @@ func createCollection(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateCollection(w http.ResponseWriter, r *http.Request) {
-	db, err := sql.Open("sqlite3", DATABASE)
+	collectionId := r.PathValue("id")
+	rows, err := Select("Select * FROM collections WHERE id = ?", collectionId)
 	if err != nil {
 		errorMessage := fmt.Sprintf("Error while updating collections: %v", err.Error())
 		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
@@ -178,10 +178,8 @@ func updateCollection(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	row := db.QueryRow("SELECT * FROM collections WHERE id = ?", r.PathValue("id"))
-	var oldData Collection
-	if err := row.Scan(&oldData.Id, &oldData.CreatedAt, &oldData.Name, &oldData.Slug); err != nil {
-		errorMessage := fmt.Sprintf("Error while updating collections: %v", err.Error())
+	if len(rows) == 0 {
+		errorMessage := fmt.Sprintf("Error while updating collections: Entry with id (%v) doesn't exist", collectionId)
 		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
 			Status:  StatusCodeError,
 			Message: errorMessage,
@@ -207,7 +205,15 @@ func updateCollection(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = db.Exec("UPDATE collections SET name = ?, slug = ? WHERE id = ?", newData.Name, newData.Slug, r.PathValue("id"))
+	if newData.Name != "" {
+		rows[0]["name"] = newData.Name
+	}
+
+	if newData.Slug != "" {
+		rows[0]["slug"] = newData.Slug
+	}
+
+	_, err = Update("UPDATE collections SET name = ?, slug = ? WHERE id = ?", rows[0]["name"], rows[0]["slug"], collectionId)
 	if err != nil {
 		response := ResponseMessage{Status: StatusCodeError, Message: err.Error()}
 
@@ -309,7 +315,9 @@ func createCollectionAttribute(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateCollectionAttribute(w http.ResponseWriter, r *http.Request) {
-	db, err := sql.Open("sqlite3", DATABASE)
+	collectionId := r.PathValue("id")
+	attributeName := r.PathValue("name")
+	rows, err := Select("SELECT name, type FROM collection_attributes WHERE collection = ? AND name = ?", collectionId, attributeName)
 	if err != nil {
 		errorMessage := fmt.Sprintf("Error while updating collection attribute: %v", err.Error())
 		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
@@ -320,10 +328,8 @@ func updateCollectionAttribute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	row := db.QueryRow("SELECT name, type FROM collection_attributes WHERE collection = ? AND name = ?", r.PathValue("id"), r.PathValue("name"))
-	var oldData CollectionAttr
-	if err := row.Scan(&oldData.Name, &oldData.Type); err != nil {
-		errorMessage := fmt.Sprintf("Error while updating collection attribute: %v", err.Error())
+	if len(rows) == 0 {
+		errorMessage := fmt.Sprintf("Error while updating collections: Collection Attribute (%v) in collection (%v) doesn't exist", attributeName, collectionId)
 		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
 			Status:  StatusCodeError,
 			Message: errorMessage,
@@ -349,7 +355,15 @@ func updateCollectionAttribute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = db.Exec("UPDATE collection_attributes SET name = ?, type = ? WHERE collection = ? AND name = ?", newData.Name, newData.Type, r.PathValue("id"), r.PathValue("name"))
+	if newData.Name != "" {
+		rows[0]["name"] = newData.Name
+	}
+
+	if newData.Type != "" {
+		rows[0]["type"] = newData.Type
+	}
+
+	_, err = Update("UPDATE collection_attributes SET name = ?, type = ? WHERE collection = ? AND name = ?", rows[0]["name"], rows[0]["type"], collectionId, attributeName)
 	if err != nil {
 		response := ResponseMessage{Status: StatusCodeError, Message: err.Error()}
 
@@ -358,7 +372,7 @@ func updateCollectionAttribute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	WriteJSON(w, http.StatusOK, newData)
+	WriteJSON(w, http.StatusOK, rows[0])
 }
 
 func deleteCollectionAttribute(w http.ResponseWriter, r *http.Request) {

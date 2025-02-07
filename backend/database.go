@@ -136,3 +136,18 @@ func Delete(query string, args ...any) (rowsAffected int64, err error) {
 	rowsDeleted, _ := res.RowsAffected()
 	return rowsDeleted, nil
 }
+
+func Update(query string, args ...any) (rowsAffected int64, err error) {
+	db, err := sql.Open("sqlite3", DATABASE)
+	if err != nil {
+		return 0, err
+	}
+
+	res, err := db.Exec(query, args...)
+	if err != nil {
+		return 0, err
+	}
+
+	rowsUpdated, _ := res.RowsAffected()
+	return rowsUpdated, nil
+}
