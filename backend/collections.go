@@ -289,12 +289,3 @@ func (c Collection) Validate() Misses {
 
 	return misses
 }
-
-func (attr CollectionAttr) Validate() Misses {
-	misses := make(Misses, 0)
-	if attr.Type != CollectionAttrTypeString && attr.Type != CollectionAttrTypeImage && attr.Type != CollectionAttrTypeDate && attr.Type != CollectionAttrTypeMDX {
-		misses["attributes."+attr.Name] = "Type \"" + string(attr.Type) + "\" is not one of the valid types"
-	}
-
-	return misses
-}
