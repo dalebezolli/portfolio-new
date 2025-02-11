@@ -51,14 +51,14 @@ func ReadJSON[T any](s string) (T, error) {
 	return data, err
 }
 
-func ReadBodyJSON[T Validator](r *http.Request) (*T, Misses, error) {
+func ReadBodyJSON[T Validator](r *http.Request) (T, Misses, error) {
 	var data T
 	err := json.NewDecoder(r.Body).Decode(&data)
 
 	if err != nil {
-		return nil, nil, err
+		return data, nil, err
 	}
 
 	misses := data.Validate()
-	return &data, misses, nil
+	return data, misses, nil
 }

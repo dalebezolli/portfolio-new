@@ -10,22 +10,10 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-type Collection struct {
-	Id         bson.ObjectID `json:"_id"`
-	ModifiedAt time.Time     `json:"modifiedAt"`
-
-	Name string `json:"name"`
-	Path string `json:"path"`
-
-	Attributes []CollectionAttr `json:"attributes"`
-}
-
-type CollectionAttr struct {
-	Name string             `json:"name"`
-	Type CollectionAttrType `json:"type"`
-}
+type Collection map[string]any
 
 type CollectionAttrType string
 
@@ -60,7 +48,7 @@ func getCollections(db *mongo.Client) http.HandlerFunc {
 	cmsCollections := db.Database(CMS_DATABASE).Collection(CMS_COLLECTIONS)
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		response, err := cmsCollections.Find(context.TODO(), bson.D{})
+		response, err := cmsCollections.Find(context.TODO(), bson.D{}, options.Find().SetProjection(publicProjection))
 		if err != nil {
 			WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
 				Status:  StatusCodeError,
@@ -155,17 +143,18 @@ func createCollection(db *mongo.Client) http.HandlerFunc {
 			return
 		}
 
-		newCollection.Path = StringToPath(newCollection.Name)
-		newCollection.ModifiedAt = time.Now()
+		name, _ := (newCollection["name"]).(string)
+		newCollection["path"] = StringToPath(name)
+		newCollection["modifiedAt"] = time.Now()
 
-		response, err := cmsCollections.InsertOne(context.TODO(), newCollection.GetPublic())
+		response, err := cmsCollections.InsertOne(context.TODO(), newCollection)
 		if err != nil {
 			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax: " + err.Error()})
 			log.Println("Error while creating new collection:", err)
 			return
 		}
 
-		newCollection.Id = (response.InsertedID).(bson.ObjectID)
+		newCollection["_id"] = (response.InsertedID).(bson.ObjectID)
 
 		WriteJSON(w, http.StatusOK, newCollection)
 	}
@@ -182,7 +171,7 @@ func updateCollection(db *mongo.Client) http.HandlerFunc {
 			return
 		}
 
-		newData, misses, err := ReadBodyJSON[Collection](r)
+		collectionChanges, misses, err := ReadBodyJSON[Collection](r)
 		if err == io.EOF {
 			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "No body was provided"})
 			return
@@ -199,18 +188,7 @@ func updateCollection(db *mongo.Client) http.HandlerFunc {
 			return
 		}
 
-		changes := bson.M{}
-		if newData.Name != "" {
-			changes["name"] = newData.Name
-		}
-
-		if newData.Path != "" {
-			changes["path"] = newData.Path
-		}
-
-		changes["attributes"] = newData.Attributes
-
-		response, err := cmsCollections.UpdateByID(context.TODO(), collectionId, bson.M{"$set": changes})
+		response, err := cmsCollections.UpdateByID(context.TODO(), collectionId, bson.M{"$set": collectionChanges})
 		if err != nil {
 			errorMessage := fmt.Sprintf("Error while updating collections: %v", err.Error())
 			WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
@@ -260,48 +238,15 @@ func deleteCollection(db *mongo.Client) http.HandlerFunc {
 	}
 }
 
-type PublicCollection struct {
-	Name string `json:"name"`
-	Path string `json:"path"`
-
-	Attributes []CollectionAttr `json:"attributes"`
-}
-
-func (c Collection) GetPublic() PublicCollection {
-	return PublicCollection{
-		Name:       c.Name,
-		Path:       c.Path,
-		Attributes: c.Attributes,
-	}
+var publicProjection = bson.M{
+	"_id":        false,
+	"createdAt":  bson.M{"$toDate": "$_id"},
+	"modifiedAt": true,
+	"name":       true,
+	"path":       true,
+	"attributes": true,
 }
 
 func (c Collection) Validate() Misses {
-	misses := make(Misses, 0)
-
-	if c.Name == "" {
-		misses["name"] = "name cannot be empty"
-	}
-
-	for k, v := range misses {
-		delete(misses, k)
-		misses["collection."+k] = v
-	}
-
-	nameSet := make(map[string]bool)
-
-	for _, attr := range c.Attributes {
-		_, exists := nameSet[attr.Name]
-		if exists {
-			misses["attributes."+attr.Name] = "Names must be unique"
-			continue
-		}
-
-		if attr.Type != CollectionAttrTypeString && attr.Type != CollectionAttrTypeImage && attr.Type != CollectionAttrTypeDate && attr.Type != CollectionAttrTypeMDX {
-			misses["attributes."+attr.Name] = "Type \"" + string(attr.Type) + "\" is not one of the valid types"
-		}
-
-		nameSet[attr.Name] = true
-	}
-
-	return misses
+	return nil
 }
