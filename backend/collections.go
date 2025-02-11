@@ -158,7 +158,7 @@ func createCollection(db *mongo.Client) http.HandlerFunc {
 		newCollection.Path = StringToPath(newCollection.Name)
 		newCollection.ModifiedAt = time.Now()
 
-		response, err := cmsCollections.InsertOne(context.TODO(), newCollection)
+		response, err := cmsCollections.InsertOne(context.TODO(), newCollection.GetPublic())
 		if err != nil {
 			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax: " + err.Error()})
 			log.Println("Error while creating new collection:", err)
@@ -257,6 +257,21 @@ func deleteCollection(db *mongo.Client) http.HandlerFunc {
 		}
 
 		WriteJSON(w, http.StatusOK, ResponseMessage{Status: StatusCodeOk, Message: message})
+	}
+}
+
+type PublicCollection struct {
+	Name string `json:"name"`
+	Path string `json:"path"`
+
+	Attributes []CollectionAttr `json:"attributes"`
+}
+
+func (c Collection) GetPublic() PublicCollection {
+	return PublicCollection{
+		Name:       c.Name,
+		Path:       c.Path,
+		Attributes: c.Attributes,
 	}
 }
 
