@@ -142,17 +142,21 @@ func createCollection(db *mongo.Client) http.HandlerFunc {
 		}
 
 		if err != nil {
-			response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax", Data: err.Error()}
-			if len(misses) != 0 {
-				response.Data = misses
-			}
+			response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax: " + err.Error()}
+			WriteJSON(w, http.StatusBadRequest, response)
+			log.Println("Error while creating new collection:", err)
+			return
+		}
 
+		if len(misses) != 0 {
+			response := ResponseMessage{Status: StatusCodeError, Message: fmt.Sprintf("Invalid Syntax: %v", misses)}
 			WriteJSON(w, http.StatusBadRequest, response)
 			log.Println("Error while creating new collection:", err)
 			return
 		}
 
 		newCollection.ModifiedAt = time.Now()
+
 		response, err := cmsCollections.InsertOne(context.TODO(), newCollection)
 		if err != nil {
 			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax: " + err.Error()})
