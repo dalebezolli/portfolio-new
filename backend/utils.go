@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 )
 
 func GetStructure(elem any) error {
@@ -29,4 +30,8 @@ func GetStructure(elem any) error {
 	}
 
 	return nil
+}
+
+func StringToPath(str string) string {
+	return strings.ReplaceAll(strings.ToLower(str), " ", "_")
 }

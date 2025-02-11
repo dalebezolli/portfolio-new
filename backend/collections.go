@@ -155,6 +155,7 @@ func createCollection(db *mongo.Client) http.HandlerFunc {
 			return
 		}
 
+		newCollection.Path = StringToPath(newCollection.Name)
 		newCollection.ModifiedAt = time.Now()
 
 		response, err := cmsCollections.InsertOne(context.TODO(), newCollection)
@@ -261,10 +262,6 @@ func deleteCollection(db *mongo.Client) http.HandlerFunc {
 
 func (c Collection) Validate() Misses {
 	misses := make(Misses, 0)
-
-	if c.Path == "" {
-		misses["path"] = "path cannot be empty"
-	}
 
 	if c.Name == "" {
 		misses["name"] = "name cannot be empty"
