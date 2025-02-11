@@ -28,11 +28,11 @@ func handleCollectionRoutes(db *mongo.Client) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /collections", getCollections(db))
-	mux.HandleFunc("GET /collections/{id}", getCollectionSingle(db))
+	mux.HandleFunc("GET /collections/{collection}", getCollectionSingle(db))
 	mux.HandleFunc("POST /collections", createCollection(db))
 	// WARN: Do we want to manage this in a more precise way?
-	mux.HandleFunc("PUT /collections/{id}", updateCollection(db))
-	mux.HandleFunc("DELETE /collections/{id}", deleteCollection(db))
+	mux.HandleFunc("PUT /collections/{collection}", updateCollection(db))
+	mux.HandleFunc("DELETE /collections/{collection}", deleteCollection(db))
 
 	mux.HandleFunc("/*", func(w http.ResponseWriter, r *http.Request) {
 		WriteJSON(w, http.StatusNotFound, ResponseMessage{
@@ -84,25 +84,19 @@ func getCollectionSingle(db *mongo.Client) http.HandlerFunc {
 	cmsCollections := db.Database(CMS_DATABASE).Collection(CMS_COLLECTIONS)
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		collectionId, err := bson.ObjectIDFromHex(r.PathValue("id"))
-		if err != nil {
-			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Bad Id: " + err.Error()})
-			log.Println("Error while selecting single collection:", err)
-			return
-		}
-
-		result := cmsCollections.FindOne(context.TODO(), bson.M{"_id": collectionId})
+		collectionPath := r.PathValue("collection")
+		result := cmsCollections.FindOne(context.TODO(), bson.M{"path": collectionPath})
 
 		if result.Err() == mongo.ErrNoDocuments {
 			WriteJSON(w, http.StatusOK, ResponseMessage{
 				Status:  StatusCodeOk,
-				Message: fmt.Sprintf("Failed to find collection with id (%v)", collectionId),
+				Message: fmt.Sprintf("Failed to find collection with path (%v)", collectionPath),
 			})
 			return
 		}
 
 		collection := bson.M{}
-		err = result.Decode(&collection)
+		err := result.Decode(&collection)
 		if err != nil {
 			WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
 				Status:  StatusCodeError,
@@ -120,6 +114,7 @@ func getCollectionSingle(db *mongo.Client) http.HandlerFunc {
 }
 
 func createCollection(db *mongo.Client) http.HandlerFunc {
+	cmsDatabase := db.Database(CMS_DATABASE)
 	cmsCollections := db.Database(CMS_DATABASE).Collection(CMS_COLLECTIONS)
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -156,6 +151,13 @@ func createCollection(db *mongo.Client) http.HandlerFunc {
 
 		newCollection["_id"] = (response.InsertedID).(bson.ObjectID)
 
+		err = cmsDatabase.CreateCollection(context.TODO(), (newCollection["path"]).(string))
+		if err != nil {
+			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Error while creating collection: " + err.Error()})
+			log.Println("Error while creating new collection:", err)
+			return
+		}
+
 		WriteJSON(w, http.StatusOK, newCollection)
 	}
 }
@@ -164,13 +166,7 @@ func updateCollection(db *mongo.Client) http.HandlerFunc {
 	cmsCollections := db.Database(CMS_DATABASE).Collection(CMS_COLLECTIONS)
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		collectionId, err := bson.ObjectIDFromHex(r.PathValue("id"))
-		if err != nil {
-			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Bad Id: " + err.Error()})
-			log.Println("Error while updating collection:", err)
-			return
-		}
-
+		collectionPath := r.PathValue("collection")
 		collectionChanges, misses, err := ReadBodyJSON[Collection](r)
 		if err == io.EOF {
 			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "No body was provided"})
@@ -188,7 +184,7 @@ func updateCollection(db *mongo.Client) http.HandlerFunc {
 			return
 		}
 
-		response, err := cmsCollections.UpdateByID(context.TODO(), collectionId, bson.M{"$set": collectionChanges})
+		response, err := cmsCollections.UpdateOne(context.TODO(), bson.M{"path": collectionPath}, bson.M{"$set": collectionChanges})
 		if err != nil {
 			errorMessage := fmt.Sprintf("Error while updating collections: %v", err.Error())
 			WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
@@ -199,11 +195,10 @@ func updateCollection(db *mongo.Client) http.HandlerFunc {
 			return
 		}
 
-		message := fmt.Sprintf("Updated collection with id (%v)", collectionId)
+		message := fmt.Sprintf("Updated collection with path (%v)", collectionPath)
 		if response.MatchedCount == 0 {
-			message = fmt.Sprintf("Failed to find collection with id (%v)", collectionId)
+			message = fmt.Sprintf("Failed to find collection with path (%v)", collectionPath)
 		}
-
 		WriteJSON(w, http.StatusOK, ResponseMessage{
 			Status:  StatusCodeOk,
 			Message: message,
@@ -212,26 +207,22 @@ func updateCollection(db *mongo.Client) http.HandlerFunc {
 }
 
 func deleteCollection(db *mongo.Client) http.HandlerFunc {
+	cmsDatabase := db.Database(CMS_DATABASE)
 	cmsCollections := db.Database(CMS_DATABASE).Collection(CMS_COLLECTIONS)
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		collectionId, err := bson.ObjectIDFromHex(r.PathValue("id"))
-		if err != nil {
-			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Bad Id: " + err.Error()})
-			log.Println("Error while deleting collection:", err)
-			return
-		}
-
-		result, err := cmsCollections.DeleteOne(context.TODO(), bson.M{"_id": collectionId})
+		collectionPath := r.PathValue("collection")
+		result, err := cmsCollections.DeleteOne(context.TODO(), bson.M{"path": collectionPath})
 		if err != nil {
 			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax: " + err.Error()})
 			log.Println("Error while deleting collection:", err)
 			return
 		}
 
-		message := fmt.Sprintf("Deleted document with id (%v) successfully", collectionId)
+		message := fmt.Sprintf("Deleted document with path (%v) successfully", collectionPath)
 		if result.DeletedCount == 0 {
-			message = fmt.Sprintf("Failed to find document with id (%v)", collectionId)
+			message = fmt.Sprintf("Failed to find document with path (%v)", collectionPath)
+			cmsDatabase.Collection(collectionPath).Drop(context.TODO())
 		}
 
 		WriteJSON(w, http.StatusOK, ResponseMessage{Status: StatusCodeOk, Message: message})
