@@ -203,9 +203,7 @@ func updateCollection(db *mongo.Client) http.HandlerFunc {
 			changes["path"] = newData.Path
 		}
 
-		if len(newData.Attributes) != 0 {
-			changes["attributes"] = newData.Attributes
-		}
+		changes["attributes"] = newData.Attributes
 
 		response, err := cmsCollections.UpdateByID(context.TODO(), collectionId, bson.M{"$set": changes})
 		if err != nil {
