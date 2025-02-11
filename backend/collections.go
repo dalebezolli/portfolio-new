@@ -1,18 +1,25 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"time"
+
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 type Collection struct {
-	Id        int64     `json:"id"`
-	CreatedAt time.Time `json:"createdAt"`
-	Name      string    `json:"name"`
-	Slug      string    `json:"slug"`
+	Id         bson.ObjectID `json:"_id"`
+	ModifiedAt time.Time     `json:"modifiedAt"`
+
+	Name string `json:"name"`
+	Path string `json:"path"`
+
+	Attributes []CollectionAttr `json:"attributes"`
 }
 
 type CollectionAttr struct {
@@ -20,32 +27,24 @@ type CollectionAttr struct {
 	Type CollectionAttrType `json:"type"`
 }
 
-type CollectionWithAttrs struct {
-	Collection           Collection       `json:"collection"`
-	CollectionAttributes []CollectionAttr `json:"attributes"`
-}
-
 type CollectionAttrType string
 
 const (
 	CollectionAttrTypeString CollectionAttrType = "string"
-	CollectionAttrTypeDate                      = "date"
-	CollectionAttrTypeImage                     = "image"
-	CollectionAttrTypeMDX                       = "mdx"
+	CollectionAttrTypeDate   CollectionAttrType = "date"
+	CollectionAttrTypeImage  CollectionAttrType = "image"
+	CollectionAttrTypeMDX    CollectionAttrType = "mdx"
 )
 
-func handleCollectionRoutes() *http.ServeMux {
+func handleCollectionRoutes(db *mongo.Client) *http.ServeMux {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /collections", getCollections)
-	mux.HandleFunc("GET /collections/{id}", getCollectionSingle)
-	mux.HandleFunc("POST /collections", createCollection)
-	mux.HandleFunc("PUT /collections/{id}", updateCollection)
-	mux.HandleFunc("DELETE /collections/{id}", deleteCollection)
-
-	mux.HandleFunc("POST /collections/{id}/attributes", createCollectionAttribute)
-	mux.HandleFunc("PUT /collections/{id}/attributes/{name}", updateCollectionAttribute)
-	mux.HandleFunc("DELETE /collections/{id}/attributes/{name}", deleteCollectionAttribute)
+	mux.HandleFunc("GET /collections", getCollections(db))
+	mux.HandleFunc("GET /collections/{id}", getCollectionSingle(db))
+	mux.HandleFunc("POST /collections", createCollection(db))
+	// WARN: Do we want to manage this in a more precise way?
+	mux.HandleFunc("PUT /collections/{id}", updateCollection(db))
+	mux.HandleFunc("DELETE /collections/{id}", deleteCollection(db))
 
 	mux.HandleFunc("/*", func(w http.ResponseWriter, r *http.Request) {
 		WriteJSON(w, http.StatusNotFound, ResponseMessage{
@@ -57,377 +56,217 @@ func handleCollectionRoutes() *http.ServeMux {
 	return mux
 }
 
-func getCollections(w http.ResponseWriter, _ *http.Request) {
-	collections, err := DBQuery("SELECT * FROM collections")
-	if err != nil {
-		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
-			Status:  StatusCodeError,
-			Message: err.Error(),
-		})
-		log.Println(err.Error())
-		return
-	}
+func getCollections(db *mongo.Client) http.HandlerFunc {
+	cmsCollections := db.Database(CMS_DATABASE).Collection(CMS_COLLECTIONS)
 
-	for _, row := range collections {
-		collectionId := row["id"]
-		attributes, err := DBQuery("SELECT * FROM collection_attributes WHERE collection = ?", collectionId)
+	return func(w http.ResponseWriter, r *http.Request) {
+		response, err := cmsCollections.Find(context.TODO(), bson.D{})
 		if err != nil {
-			log.Println("Error while getting attribute of collections getCollections:", err.Error())
-		}
-
-		row["attributes"] = attributes
-	}
-
-	WriteJSON(w, http.StatusOK, ResponseMessage{
-		Status: StatusCodeOk,
-		Data:   collections,
-	})
-}
-
-func getCollectionSingle(w http.ResponseWriter, r *http.Request) {
-	collectionId := r.PathValue("id")
-
-	collection, err := DBQuery("SELECT * FROM collections WHERE id = ?", collectionId)
-	if err != nil {
-		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
-			Status:  StatusCodeError,
-			Message: err.Error(),
-		})
-		log.Println(err.Error())
-		return
-	}
-
-	if len(collection) == 0 {
-		WriteJSON(w, http.StatusOK, ResponseMessage{
-			Status:  StatusCodeOk,
-			Message: fmt.Sprintf("No collection with the specified id (%v)", collectionId),
-		})
-		return
-	}
-	attributes, err := DBQuery("SELECT * FROM collection_attributes WHERE collection = ?", collectionId)
-	if err != nil {
-		log.Println("Error while getting attribute of collections getCollections:", err.Error())
-	}
-
-	collection[0]["attributes"] = attributes
-
-	WriteJSON(w, http.StatusOK, ResponseMessage{
-		Status: StatusCodeOk,
-		Data:   collection[0],
-	})
-}
-
-func createCollection(w http.ResponseWriter, r *http.Request) {
-	newCollection, misses, err := ReadBodyJSON[CollectionWithAttrs](r)
-	if err == io.EOF {
-		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "No body was provided"})
-		return
-	}
-
-	if err != nil {
-		response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax", Data: err.Error()}
-		if len(misses) != 0 {
-			response.Data = misses
-		}
-
-		WriteJSON(w, http.StatusBadRequest, response)
-		log.Println("Error while creating new collection:", err)
-		return
-	}
-
-	newCollection.Collection.CreatedAt = time.Now()
-	newCollectionId, _, err := DBExecute("INSERT INTO collections (name, slug, createdAt) VALUES (?, ?, ?)", newCollection.Collection.Name, newCollection.Collection.Slug, newCollection.Collection.CreatedAt)
-	if err != nil {
-		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax: " + err.Error()})
-		log.Println("Error while creating new collection:", err)
-		return
-	}
-
-	newCollection.Collection.Id = newCollectionId
-
-	for _, attr := range newCollection.CollectionAttributes {
-		_, _, err := DBExecute("INSERT INTO collection_attributes (name, type) VALUES (?, ?)", attr.Name, attr.Type)
-		if err != nil {
-			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax: " + err.Error()})
-			log.Println("Error while creating new collection attribute:", err)
+			WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
+				Status:  StatusCodeError,
+				Message: err.Error(),
+			})
+			log.Println(err.Error())
 			return
 		}
-	}
 
-	WriteJSON(w, http.StatusOK, newCollection)
-}
+		results := []bson.M{}
+		for response.Next(context.TODO()) {
+			result := bson.M{}
+			err = response.Decode(&result)
+			if err != nil {
+				WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
+					Status:  StatusCodeError,
+					Message: err.Error(),
+				})
+				log.Println(err.Error())
+			}
 
-func updateCollection(w http.ResponseWriter, r *http.Request) {
-	collectionId := r.PathValue("id")
-	rows, err := DBQuery("Select * FROM collections WHERE id = ?", collectionId)
-	if err != nil {
-		errorMessage := fmt.Sprintf("Error while updating collections: %v", err.Error())
-		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
-			Status:  StatusCodeError,
-			Message: errorMessage,
-		})
-		log.Println(errorMessage)
-		return
-	}
-
-	if len(rows) == 0 {
-		errorMessage := fmt.Sprintf("Error while updating collections: Entry with id (%v) doesn't exist", collectionId)
-		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
-			Status:  StatusCodeError,
-			Message: errorMessage,
-		})
-		log.Println(errorMessage)
-		return
-	}
-
-	newData, misses, err := ReadBodyJSON[Collection](r)
-	if err == io.EOF {
-		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "No body was provided"})
-		return
-	}
-
-	if err != nil {
-		response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax", Data: err.Error()}
-		if len(misses) != 0 {
-			response.Data = misses
+			results = append(results, result)
 		}
 
-		WriteJSON(w, http.StatusBadRequest, response)
-		log.Println("Error while updating collection:", err)
-		return
+		WriteJSON(w, http.StatusOK, ResponseMessage{
+			Status: StatusCodeOk,
+			Data:   results,
+		})
 	}
-
-	if newData.Name != "" {
-		rows[0]["name"] = newData.Name
-	}
-
-	if newData.Slug != "" {
-		rows[0]["slug"] = newData.Slug
-	}
-
-	_, _, err = DBExecute("UPDATE collections SET name = ?, slug = ? WHERE id = ?", rows[0]["name"], rows[0]["slug"], collectionId)
-	if err != nil {
-		response := ResponseMessage{Status: StatusCodeError, Message: err.Error()}
-
-		WriteJSON(w, http.StatusBadRequest, response)
-		log.Println("Error while updating collection:", err)
-		return
-	}
-
-	WriteJSON(w, http.StatusOK, newData)
 }
 
-func deleteCollection(w http.ResponseWriter, r *http.Request) {
-	collectionId := r.PathValue("id")
-	_, rowsDeleted, err := DBExecute("DELETE FROM collections WHERE id = ?", collectionId)
-	if err != nil {
-		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax: " + err.Error()})
-		log.Println("Error while deleting collection:", err)
-		return
-	}
+func getCollectionSingle(db *mongo.Client) http.HandlerFunc {
+	cmsCollections := db.Database(CMS_DATABASE).Collection(CMS_COLLECTIONS)
 
-	_, _, err = DBExecute("DELETE FROM collection_attributes WHERE collection = ?", collectionId)
-	if err != nil {
-		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: err.Error()})
-		log.Println("Error while deleting collection:", err)
-		return
-	}
-
-	response := fmt.Sprintf("Collection with id %q could not be found", r.PathValue("id"))
-	if rowsDeleted != 0 {
-		response = fmt.Sprintf("Collection with id %q deleted successfully", r.PathValue("id"))
-	}
-
-	WriteJSON(w, http.StatusOK, ResponseMessage{Status: StatusCodeOk, Message: response})
-}
-
-func createCollectionAttribute(w http.ResponseWriter, r *http.Request) {
-	attr, misses, err := ReadBodyJSON[CollectionAttr](r)
-	if err == io.EOF {
-		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "No body was provided"})
-		return
-	}
-
-	if err != nil {
-		response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax", Data: err.Error()}
-		WriteJSON(w, http.StatusBadRequest, response)
-		log.Println("Error while creating new collection attribute:", err)
-		return
-	}
-
-	if len(misses) != 0 {
-		response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax", Data: misses}
-		if len(misses) != 0 {
-			response.Data = misses
+	return func(w http.ResponseWriter, r *http.Request) {
+		collectionId, err := bson.ObjectIDFromHex(r.PathValue("id"))
+		if err != nil {
+			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Bad Id: " + err.Error()})
+			log.Println("Error while selecting single collection:", err)
+			return
 		}
 
-		WriteJSON(w, http.StatusBadRequest, response)
-		log.Println("Error while creating new collection:", misses)
-		return
-	}
+		result := cmsCollections.FindOne(context.TODO(), bson.M{"_id": collectionId})
 
-	collectionId := r.PathValue("id")
-	rows, err := DBQuery("SELECT * FROM collections WHERE id = ?", collectionId)
-	if err != nil {
-		errorMessage := fmt.Sprintf("Error while creating new collection attribute: %v", err.Error())
-		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
-			Status:  StatusCodeError,
-			Message: errorMessage,
-		})
-		log.Println(errorMessage)
-		return
-	}
-
-	if len(rows) == 0 {
-		errorMessage := fmt.Sprintf("Error while creating new collection attribute: Collection with id (%v) doesn't exist", collectionId)
-		WriteJSON(w, http.StatusBadRequest, ResponseMessage{
-			Status:  StatusCodeError,
-			Message: errorMessage,
-		})
-		log.Println(errorMessage)
-		return
-	}
-
-	_, _, err = DBExecute("INSERT INTO collection_attributes (name, type) VALUES (?, ?)", attr.Name, attr.Type)
-	if err != nil {
-		errorMessage := fmt.Sprintf("Error while inserting new collection attribute to db: %v", err.Error())
-		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
-			Status:  StatusCodeError,
-			Message: errorMessage,
-		})
-		log.Println(errorMessage)
-		return
-	}
-
-	WriteJSON(w, http.StatusOK, attr)
-}
-
-func updateCollectionAttribute(w http.ResponseWriter, r *http.Request) {
-	collectionId := r.PathValue("id")
-	attributeName := r.PathValue("name")
-	rows, err := DBQuery("SELECT name, type FROM collection_attributes WHERE collection = ? AND name = ?", collectionId, attributeName)
-	if err != nil {
-		errorMessage := fmt.Sprintf("Error while updating collection attribute: %v", err.Error())
-		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
-			Status:  StatusCodeError,
-			Message: errorMessage,
-		})
-		log.Println(errorMessage)
-		return
-	}
-
-	if len(rows) == 0 {
-		errorMessage := fmt.Sprintf("Error while updating collections: Collection Attribute (%v) in collection (%v) doesn't exist", attributeName, collectionId)
-		WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
-			Status:  StatusCodeError,
-			Message: errorMessage,
-		})
-		log.Println(errorMessage)
-		return
-	}
-
-	newData, misses, err := ReadBodyJSON[CollectionAttr](r)
-	if err == io.EOF {
-		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "No body was provided"})
-		return
-	}
-
-	if err != nil {
-		response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax", Data: err.Error()}
-		if len(misses) != 0 {
-			response.Data = misses
+		if result.Err() == mongo.ErrNoDocuments {
+			WriteJSON(w, http.StatusOK, ResponseMessage{
+				Status:  StatusCodeOk,
+				Message: fmt.Sprintf("Failed to find collection with id (%v)", collectionId),
+			})
+			return
 		}
 
-		WriteJSON(w, http.StatusBadRequest, response)
-		log.Println("Error while updating collection attribute:", err)
-		return
+		collection := bson.M{}
+		err = result.Decode(&collection)
+		if err != nil {
+			WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
+				Status:  StatusCodeError,
+				Message: err.Error(),
+			})
+			log.Println(err.Error())
+			return
+		}
+
+		WriteJSON(w, http.StatusOK, ResponseMessage{
+			Status: StatusCodeOk,
+			Data:   collection,
+		})
 	}
-
-	if newData.Name != "" {
-		rows[0]["name"] = newData.Name
-	}
-
-	if newData.Type != "" {
-		rows[0]["type"] = newData.Type
-	}
-
-	_, _, err = DBExecute("UPDATE collection_attributes SET name = ?, type = ? WHERE collection = ? AND name = ?", rows[0]["name"], rows[0]["type"], collectionId, attributeName)
-	if err != nil {
-		response := ResponseMessage{Status: StatusCodeError, Message: err.Error()}
-
-		WriteJSON(w, http.StatusBadRequest, response)
-		log.Println("Error while updating collection attributes:", err)
-		return
-	}
-
-	WriteJSON(w, http.StatusOK, rows[0])
 }
 
-func deleteCollectionAttribute(w http.ResponseWriter, r *http.Request) {
-	_, rowsDeleted, err := DBExecute("DELETE FROM collection_attributes WHERE collection = ? AND name = ?", r.PathValue("id"), r.PathValue("name"))
-	if err != nil {
-		WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: err.Error()})
-		log.Println("Error while deleting collection attrbute:", err)
-		return
-	}
+func createCollection(db *mongo.Client) http.HandlerFunc {
+	cmsCollections := db.Database(CMS_DATABASE).Collection(CMS_COLLECTIONS)
 
-	response := fmt.Sprintf("Collection attribute with name %q in collection %q could not be found", r.PathValue("name"), r.PathValue("id"))
-	if rowsDeleted != 0 {
-		response = fmt.Sprintf("Collection attribute with name %q in collection %q deleted successfully", r.PathValue("name"), r.PathValue("id"))
-	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		newCollection, misses, err := ReadBodyJSON[Collection](r)
+		if err == io.EOF {
+			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "No body was provided"})
+			return
+		}
 
-	WriteJSON(w, http.StatusOK, ResponseMessage{Status: StatusCodeOk, Message: response})
+		if err != nil {
+			response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax", Data: err.Error()}
+			if len(misses) != 0 {
+				response.Data = misses
+			}
+
+			WriteJSON(w, http.StatusBadRequest, response)
+			log.Println("Error while creating new collection:", err)
+			return
+		}
+
+		newCollection.ModifiedAt = time.Now()
+		response, err := cmsCollections.InsertOne(context.TODO(), newCollection)
+		if err != nil {
+			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax: " + err.Error()})
+			log.Println("Error while creating new collection:", err)
+			return
+		}
+
+		newCollection.Id = (response.InsertedID).(bson.ObjectID)
+
+		WriteJSON(w, http.StatusOK, newCollection)
+	}
+}
+
+func updateCollection(db *mongo.Client) http.HandlerFunc {
+	cmsCollections := db.Database(CMS_DATABASE).Collection(CMS_COLLECTIONS)
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		collectionId, err := bson.ObjectIDFromHex(r.PathValue("id"))
+		if err != nil {
+			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Bad Id: " + err.Error()})
+			log.Println("Error while updating collection:", err)
+			return
+		}
+
+		newData, misses, err := ReadBodyJSON[Collection](r)
+		if err == io.EOF {
+			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "No body was provided"})
+			return
+		}
+
+		if err != nil {
+			response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax", Data: err.Error()}
+			if len(misses) != 0 {
+				response.Data = misses
+			}
+
+			WriteJSON(w, http.StatusBadRequest, response)
+			log.Println("Error while updating collection:", err)
+			return
+		}
+
+		changes := bson.M{}
+		if newData.Name != "" {
+			changes["name"] = newData.Name
+		}
+
+		if newData.Path != "" {
+			changes["path"] = newData.Path
+		}
+
+		if len(newData.Attributes) != 0 {
+			changes["attributes"] = newData.Attributes
+		}
+
+		response, err := cmsCollections.UpdateByID(context.TODO(), collectionId, bson.M{"$set": changes})
+		if err != nil {
+			errorMessage := fmt.Sprintf("Error while updating collections: %v", err.Error())
+			WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
+				Status:  StatusCodeError,
+				Message: errorMessage,
+			})
+			log.Println(errorMessage)
+			return
+		}
+
+		message := fmt.Sprintf("Updated collection with id (%v)", collectionId)
+		if response.MatchedCount == 0 {
+			message = fmt.Sprintf("Failed to find collection with id (%v)", collectionId)
+		}
+
+		WriteJSON(w, http.StatusOK, ResponseMessage{
+			Status:  StatusCodeOk,
+			Message: message,
+		})
+	}
+}
+
+func deleteCollection(db *mongo.Client) http.HandlerFunc {
+	cmsCollections := db.Database(CMS_DATABASE).Collection(CMS_COLLECTIONS)
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		collectionId, err := bson.ObjectIDFromHex(r.PathValue("id"))
+		if err != nil {
+			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Bad Id: " + err.Error()})
+			log.Println("Error while deleting collection:", err)
+			return
+		}
+
+		result, err := cmsCollections.DeleteOne(context.TODO(), bson.M{"_id": collectionId})
+		if err != nil {
+			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax: " + err.Error()})
+			log.Println("Error while deleting collection:", err)
+			return
+		}
+
+		message := fmt.Sprintf("Deleted document with id (%v) successfully", collectionId)
+		if result.DeletedCount == 0 {
+			message = fmt.Sprintf("Failed to find document with id (%v)", collectionId)
+		}
+
+		WriteJSON(w, http.StatusOK, ResponseMessage{Status: StatusCodeOk, Message: message})
+	}
 }
 
 func (c Collection) Validate() Misses {
 	misses := make(Misses, 0)
 
-	if c.Slug == "" {
-		misses["slug"] = "slug cannot be empty"
+	if c.Path == "" {
+		misses["path"] = "path cannot be empty"
 	}
 
 	if c.Name == "" {
 		misses["name"] = "name cannot be empty"
 	}
-
-	return misses
-}
-
-func (c *Collection) ParamPtrList() []any {
-	return []any{&c.Id, &c.CreatedAt, &c.Name, &c.Slug}
-}
-
-func (c Collection) ParamList() []string {
-	return []string{"id", "createdAt", "name", "slug"}
-}
-
-func (c Collection) GetTableName() string {
-	return "collections"
-}
-
-func (attr CollectionAttr) Validate() Misses {
-	misses := make(Misses, 0)
-	if attr.Type != CollectionAttrTypeString && attr.Type != CollectionAttrTypeImage && attr.Type != CollectionAttrTypeDate && attr.Type != CollectionAttrTypeMDX {
-		misses["attributes."+attr.Name] = "Type \"" + string(attr.Type) + "\" is not one of the valid types"
-	}
-
-	return misses
-}
-
-func (attr *CollectionAttr) ParamPtrList() []any {
-	return []any{&attr.Name, &attr.Type}
-}
-
-func (attr CollectionAttr) ParamList() []string {
-	return []string{"name", "type"}
-}
-
-func (attr CollectionAttr) GetTableName() string {
-	return "collection_attributes"
-}
-
-func (request CollectionWithAttrs) Validate() Misses {
-	misses := request.Collection.Validate()
 
 	for k, v := range misses {
 		delete(misses, k)
@@ -436,7 +275,7 @@ func (request CollectionWithAttrs) Validate() Misses {
 
 	nameSet := make(map[string]bool)
 
-	for _, attr := range request.CollectionAttributes {
+	for _, attr := range c.Attributes {
 		_, exists := nameSet[attr.Name]
 		if exists {
 			misses["attributes."+attr.Name] = "Names must be unique"
@@ -448,6 +287,15 @@ func (request CollectionWithAttrs) Validate() Misses {
 		}
 
 		nameSet[attr.Name] = true
+	}
+
+	return misses
+}
+
+func (attr CollectionAttr) Validate() Misses {
+	misses := make(Misses, 0)
+	if attr.Type != CollectionAttrTypeString && attr.Type != CollectionAttrTypeImage && attr.Type != CollectionAttrTypeDate && attr.Type != CollectionAttrTypeMDX {
+		misses["attributes."+attr.Name] = "Type \"" + string(attr.Type) + "\" is not one of the valid types"
 	}
 
 	return misses
