@@ -10,8 +10,8 @@ import (
 type StatusCode string
 
 const (
-	StatusCodeOk    = "ok"
-	StatusCodeError = "error"
+	StatusCodeOk    StatusCode = "ok"
+	StatusCodeError StatusCode = "error"
 )
 
 type ResponseMessage struct {

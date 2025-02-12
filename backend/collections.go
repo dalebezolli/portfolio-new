@@ -34,12 +34,7 @@ func handleCollectionRoutes(db *mongo.Client) *http.ServeMux {
 	mux.HandleFunc("PUT /collections/{collection}", updateCollection(db))
 	mux.HandleFunc("DELETE /collections/{collection}", deleteCollection(db))
 
-	mux.HandleFunc("/*", func(w http.ResponseWriter, r *http.Request) {
-		WriteJSON(w, http.StatusNotFound, ResponseMessage{
-			Status:  StatusCodeError,
-			Message: fmt.Sprintf("Collection or action with path %q doesn't exist", r.URL.Path),
-		})
-	})
+	mux.HandleFunc("GET /{collection}", getData(db))
 
 	return mux
 }
@@ -250,6 +245,59 @@ func deleteCollection(db *mongo.Client) http.HandlerFunc {
 	}
 }
 
+func getData(db *mongo.Client) http.HandlerFunc {
+	cmsDatabase := db.Database(CMS_DATABASE)
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		collectionPath := r.PathValue("collection")
+
+		list, err := cmsDatabase.ListCollectionNames(context.TODO(), bson.M{"name": collectionPath})
+		if err != nil {
+			message := fmt.Sprintf("Error while getting data from collection (%v): %v", collectionPath, err.Error())
+			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: message})
+			log.Println(message)
+			return
+		}
+
+		if len(list) == 0 {
+			message := fmt.Sprintf("Couldn't find collection (%v)", collectionPath)
+			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: message})
+			return
+		}
+
+		cmsCollectionData := db.Database(CMS_DATABASE).Collection(collectionPath)
+		response, err := cmsCollectionData.Find(context.TODO(), bson.D{})
+		if err != nil {
+			message := fmt.Sprintf("Error while getting data from collection (%v): %v", collectionPath, err.Error())
+			WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
+				Status:  StatusCodeError,
+				Message: message,
+			})
+			log.Println(message)
+			return
+		}
+
+		results := []bson.M{}
+		for response.Next(context.TODO()) {
+			result := bson.M{}
+			err = response.Decode(&result)
+			if err != nil && (mongo.IsNetworkError(err) || mongo.IsTimeout(err)) {
+				message := fmt.Sprintf("Error while searching for entries in collection (%v): %v", collectionPath, err.Error())
+				WriteJSON(w, http.StatusInternalServerError, ResponseMessage{Status: StatusCodeError, Message: message})
+				log.Println(message)
+				return
+			}
+
+			results = append(results, result)
+		}
+
+		WriteJSON(w, http.StatusOK, ResponseMessage{
+			Status: StatusCodeOk,
+			Data:   results,
+		})
+	}
+}
+
 var publicProjection = bson.M{
 	"_id":        false,
 	"createdAt":  bson.M{"$toDate": "$_id"},
@@ -260,5 +308,11 @@ var publicProjection = bson.M{
 }
 
 func (c Collection) Validate() Misses {
+	return nil
+}
+
+type CollectionData map[string]any
+
+func (d CollectionData) Validate() Misses {
 	return nil
 }
