@@ -1,10 +1,9 @@
 module github.com/dalebezolli/portfolio-new
 
-go 1.22.5
+go 1.23.6
 
 require (
 	github.com/joho/godotenv v1.5.1
-	github.com/mattn/go-sqlite3 v1.14.24
 	go.mongodb.org/mongo-driver/v2 v2.0.0
 )
 
