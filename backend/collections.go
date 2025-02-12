@@ -36,6 +36,7 @@ func handleCollectionRoutes(db *mongo.Client) *http.ServeMux {
 
 	mux.HandleFunc("GET /{collection}", getData(db))
 	mux.HandleFunc("GET /{collection}/{id}", getDataSingle(db))
+	mux.HandleFunc("POST /{collection}", createData(db))
 
 	return mux
 }
@@ -351,6 +352,60 @@ func getDataSingle(db *mongo.Client) http.HandlerFunc {
 			Message: message,
 			Data:    result,
 		})
+	}
+}
+
+func createData(db *mongo.Client) http.HandlerFunc {
+	cmsDatabase := db.Database(CMS_DATABASE)
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		collectionPath := r.PathValue("collection")
+
+		list, err := cmsDatabase.ListCollectionNames(context.TODO(), bson.M{"name": collectionPath})
+		if err != nil {
+			message := fmt.Sprintf("Error while creating new entry for collection (%v): %v", collectionPath, err.Error())
+			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: message})
+			log.Println(message)
+			return
+		}
+
+		if len(list) == 0 {
+			message := fmt.Sprintf("Couldn't find collection (%v)", collectionPath)
+			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: message})
+			return
+		}
+
+		newCollectionData, misses, err := ReadBodyJSON[CollectionData](r)
+		if err == io.EOF {
+			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "No body was provided"})
+			return
+		}
+
+		if err != nil {
+			response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax: " + err.Error()}
+			WriteJSON(w, http.StatusBadRequest, response)
+			log.Println("Error while creating new data:", err)
+			return
+		}
+
+		if len(misses) != 0 {
+			response := ResponseMessage{Status: StatusCodeError, Message: fmt.Sprintf("Invalid Syntax: %v", misses)}
+			WriteJSON(w, http.StatusBadRequest, response)
+			log.Println("Error while creating new data:", err)
+			return
+		}
+
+		cmsCollectionData := db.Database(CMS_DATABASE).Collection(collectionPath)
+		response, err := cmsCollectionData.InsertOne(context.TODO(), newCollectionData)
+		if err != nil {
+			message := fmt.Sprintf("Error while creating data in collection (%v): %v", collectionPath, err.Error())
+			WriteJSON(w, http.StatusInternalServerError, ResponseMessage{Status: StatusCodeError, Message: message})
+			log.Println(message)
+			return
+		}
+
+		newCollectionData["_id"] = (response.InsertedID).(bson.ObjectID)
+		WriteJSON(w, http.StatusOK, ResponseMessage{Status: StatusCodeOk, Message: "Created collection successfully", Data: newCollectionData})
 	}
 }
 
