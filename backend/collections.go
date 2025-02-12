@@ -35,6 +35,7 @@ func handleCollectionRoutes(db *mongo.Client) *http.ServeMux {
 	mux.HandleFunc("DELETE /collections/{collection}", deleteCollection(db))
 
 	mux.HandleFunc("GET /{collection}", getData(db))
+	mux.HandleFunc("GET /{collection}/{id}", getDataSingle(db))
 
 	return mux
 }
@@ -294,6 +295,61 @@ func getData(db *mongo.Client) http.HandlerFunc {
 		WriteJSON(w, http.StatusOK, ResponseMessage{
 			Status: StatusCodeOk,
 			Data:   results,
+		})
+	}
+}
+
+func getDataSingle(db *mongo.Client) http.HandlerFunc {
+	cmsDatabase := db.Database(CMS_DATABASE)
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		collectionPath := r.PathValue("collection")
+
+		list, err := cmsDatabase.ListCollectionNames(context.TODO(), bson.M{"name": collectionPath})
+		if err != nil {
+			message := fmt.Sprintf("Error while getting data from collection (%v): %v", collectionPath, err.Error())
+			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: message})
+			log.Println(message)
+			return
+		}
+
+		if len(list) == 0 {
+			message := fmt.Sprintf("Couldn't find collection (%v)", collectionPath)
+			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: message})
+			return
+		}
+
+		cmsCollectionData := db.Database(CMS_DATABASE).Collection(collectionPath)
+		dataHexId := r.PathValue("id")
+		dataObjectId, err := bson.ObjectIDFromHex(dataHexId)
+		if err != nil {
+			message := fmt.Sprintf("Error while searching for (%v) in collection (%v): %v", dataHexId, collectionPath, err.Error())
+			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: message})
+			log.Println(message)
+			return
+		}
+
+		response := cmsCollectionData.FindOne(context.TODO(), bson.M{"_id": dataObjectId})
+		result := bson.M{}
+		err = response.Decode(&result)
+		if err != nil && (mongo.IsNetworkError(err) || mongo.IsTimeout(err)) {
+			message := fmt.Sprintf("Error while searching for (%v) in collection (%v): %v", dataHexId, collectionPath, err.Error())
+			WriteJSON(w, http.StatusInternalServerError, ResponseMessage{Status: StatusCodeError, Message: message})
+			log.Println(message)
+			return
+		}
+
+		status := StatusCodeOk
+		message := ""
+		if id, exists := result["_id"]; exists == false || len((id).(string)) == 0 {
+			status = StatusCodeError
+			message = fmt.Sprintf("Couldn't find (%v) in collection (%v)", dataHexId, collectionPath)
+		}
+
+		WriteJSON(w, http.StatusOK, ResponseMessage{
+			Status:  status,
+			Message: message,
+			Data:    result,
 		})
 	}
 }
