@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 type StatusCode string
@@ -25,7 +27,7 @@ type Misses map[string]string
 type Validator interface {
 	// A validator is valid only when len(errors) === 0
 	// Each miss should be mapped to the corresponding validator field if it's related to one
-	Validate() Misses
+	Validate(db *mongo.Client) Misses
 }
 
 func WriteJSON[T any](w http.ResponseWriter, httpStatus int, data T) {
@@ -51,7 +53,7 @@ func ReadJSON[T any](s string) (T, error) {
 	return data, err
 }
 
-func ReadBodyJSON[T Validator](r *http.Request) (T, Misses, error) {
+func ReadBodyJSON[T Validator](r *http.Request, db *mongo.Client) (T, Misses, error) {
 	var data T
 	err := json.NewDecoder(r.Body).Decode(&data)
 
@@ -59,6 +61,6 @@ func ReadBodyJSON[T Validator](r *http.Request) (T, Misses, error) {
 		return data, nil, err
 	}
 
-	misses := data.Validate()
+	misses := data.Validate(db)
 	return data, misses, nil
 }

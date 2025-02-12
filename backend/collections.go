@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"maps"
 	"net/http"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -117,7 +119,7 @@ func createCollection(db *mongo.Client) http.HandlerFunc {
 	cmsCollections := db.Database(CMS_DATABASE).Collection(CMS_COLLECTIONS)
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		newCollection, misses, err := ReadBodyJSON[Collection](r)
+		newCollection, misses, err := ReadBodyJSON[Collection](r, db)
 		if err == io.EOF {
 			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "No body was provided"})
 			return
@@ -131,9 +133,9 @@ func createCollection(db *mongo.Client) http.HandlerFunc {
 		}
 
 		if len(misses) != 0 {
-			response := ResponseMessage{Status: StatusCodeError, Message: fmt.Sprintf("Invalid Syntax: %v", misses)}
+			response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax", Data: misses}
 			WriteJSON(w, http.StatusBadRequest, response)
-			log.Println("Error while creating new collection:", err)
+			log.Println("Error while creating new collection:", err, misses)
 			return
 		}
 
@@ -167,7 +169,7 @@ func updateCollection(db *mongo.Client) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		collectionPath := r.PathValue("collection")
-		collectionChanges, misses, err := ReadBodyJSON[Collection](r)
+		collectionChanges, misses, err := ReadBodyJSON[Collection](r, db)
 		if err == io.EOF {
 			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "No body was provided"})
 			return
@@ -377,7 +379,7 @@ func createData(db *mongo.Client) http.HandlerFunc {
 			return
 		}
 
-		newCollectionData, misses, err := ReadBodyJSON[CollectionData](r)
+		newCollectionData, misses, err := ReadBodyJSON[CollectionData](r, db)
 		if err == io.EOF {
 			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "No body was provided"})
 			return
@@ -431,7 +433,7 @@ func updateData(db *mongo.Client) http.HandlerFunc {
 			return
 		}
 
-		newCollectionData, misses, err := ReadBodyJSON[CollectionData](r)
+		newCollectionData, misses, err := ReadBodyJSON[CollectionData](r, db)
 		if err == io.EOF {
 			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "No body was provided"})
 			return
@@ -519,12 +521,41 @@ var publicProjection = bson.M{
 	"attributes": true,
 }
 
-func (c Collection) Validate() Misses {
-	return nil
+func (c Collection) Validate(db *mongo.Client) Misses {
+	misses := make(Misses, 0)
+
+	expectOptional := map[string]bool{"name": true, "attributes": true}
+	tooMany := make([]string, 0, 0)
+	for key := range maps.Keys(c) {
+		if _, exists := expectOptional[key]; exists == false {
+			tooMany = append(tooMany, key)
+		}
+	}
+
+	if len(tooMany) > 0 {
+		misses["general.too_many_arguments"] = "The following keys are not in scope: " + strings.Join(tooMany, ", ")
+		return misses
+	}
+
+	collection := db.Database(CMS_DATABASE).Collection(CMS_COLLECTIONS)
+
+	response := collection.FindOne(context.TODO(), bson.M{"name": c["name"]})
+	result := bson.M{}
+	err := response.Decode(&result)
+	if err != nil {
+		misses["general.other"] = err.Error()
+		return misses
+	}
+
+	if _, exists := result["_id"]; exists == true {
+		misses["name"] = "Must be unique"
+	}
+
+	return misses
 }
 
 type CollectionData map[string]any
 
-func (d CollectionData) Validate() Misses {
+func (d CollectionData) Validate(db *mongo.Client) Misses {
 	return nil
 }
