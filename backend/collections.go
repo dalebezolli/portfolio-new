@@ -158,7 +158,7 @@ func createCollection(db *mongo.Client) http.HandlerFunc {
 			return
 		}
 
-		WriteJSON(w, http.StatusOK, newCollection)
+		WriteJSON(w, http.StatusOK, ResponseMessage{Status: StatusCodeOk, Message: "Created collection successfully", Data: newCollection})
 	}
 }
 
