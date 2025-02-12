@@ -37,6 +37,7 @@ func handleCollectionRoutes(db *mongo.Client) *http.ServeMux {
 	mux.HandleFunc("GET /{collection}", getData(db))
 	mux.HandleFunc("GET /{collection}/{id}", getDataSingle(db))
 	mux.HandleFunc("POST /{collection}", createData(db))
+	mux.HandleFunc("PUT /{collection}/{id}", updateData(db))
 
 	return mux
 }
@@ -406,6 +407,66 @@ func createData(db *mongo.Client) http.HandlerFunc {
 
 		newCollectionData["_id"] = (response.InsertedID).(bson.ObjectID)
 		WriteJSON(w, http.StatusOK, ResponseMessage{Status: StatusCodeOk, Message: "Created collection successfully", Data: newCollectionData})
+	}
+}
+
+func updateData(db *mongo.Client) http.HandlerFunc {
+	cmsDatabase := db.Database(CMS_DATABASE)
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		collectionPath := r.PathValue("collection")
+
+		list, err := cmsDatabase.ListCollectionNames(context.TODO(), bson.M{"path": collectionPath})
+		if err != nil {
+			message := fmt.Sprintf("Error while getting data from collection (%v): %v", collectionPath, err.Error())
+			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: message})
+			log.Println(message)
+			return
+		}
+
+		if len(list) == 0 {
+			message := fmt.Sprintf("Couldn't find collection (%v)", collectionPath)
+			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: message})
+			return
+		}
+
+		newCollectionData, misses, err := ReadBodyJSON[CollectionData](r)
+		if err == io.EOF {
+			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "No body was provided"})
+			return
+		}
+
+		if err != nil {
+			response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax: " + err.Error()}
+			WriteJSON(w, http.StatusBadRequest, response)
+			log.Println("Error while updating data:", err)
+			return
+		}
+
+		if len(misses) != 0 {
+			response := ResponseMessage{Status: StatusCodeError, Message: fmt.Sprintf("Invalid Syntax: %v", misses)}
+			WriteJSON(w, http.StatusBadRequest, response)
+			log.Println("Error while updating data:", err)
+			return
+		}
+
+		cmsCollectionData := db.Database(CMS_DATABASE).Collection(collectionPath)
+		dataHexId := r.PathValue("id")
+		dataObjectId, err := bson.ObjectIDFromHex(dataHexId)
+		response, err := cmsCollectionData.UpdateByID(context.TODO(), dataObjectId, bson.M{"$set": newCollectionData})
+		if err != nil {
+			message := fmt.Sprintf("Error while updating data for (%v) in collection (%v): %v", dataHexId, collectionPath, err.Error())
+			WriteJSON(w, http.StatusInternalServerError, ResponseMessage{Status: StatusCodeError, Message: message})
+			log.Println(message)
+			return
+		}
+
+		message := fmt.Sprintf("Updated document with id (%v) in collection (%v)", dataHexId, collectionPath)
+		if response.MatchedCount == 0 {
+			message = fmt.Sprintf("Failed to update document with id (%v) in collection (%v)", dataHexId, collectionPath)
+		}
+
+		WriteJSON(w, http.StatusOK, ResponseMessage{Status: StatusCodeOk, Message: message})
 	}
 }
 
