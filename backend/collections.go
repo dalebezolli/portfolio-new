@@ -38,6 +38,7 @@ func handleCollectionRoutes(db *mongo.Client) *http.ServeMux {
 	mux.HandleFunc("GET /{collection}/{id}", getDataSingle(db))
 	mux.HandleFunc("POST /{collection}", createData(db))
 	mux.HandleFunc("PUT /{collection}/{id}", updateData(db))
+	mux.HandleFunc("DELETE /{collection}/{id}", deleteData(db))
 
 	return mux
 }
@@ -464,6 +465,45 @@ func updateData(db *mongo.Client) http.HandlerFunc {
 		message := fmt.Sprintf("Updated document with id (%v) in collection (%v)", dataHexId, collectionPath)
 		if response.MatchedCount == 0 {
 			message = fmt.Sprintf("Failed to update document with id (%v) in collection (%v)", dataHexId, collectionPath)
+		}
+
+		WriteJSON(w, http.StatusOK, ResponseMessage{Status: StatusCodeOk, Message: message})
+	}
+}
+
+func deleteData(db *mongo.Client) http.HandlerFunc {
+	cmsDatabase := db.Database(CMS_DATABASE)
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		collectionPath := r.PathValue("collection")
+
+		list, err := cmsDatabase.ListCollectionNames(context.TODO(), bson.M{"name": collectionPath})
+		if err != nil {
+			message := fmt.Sprintf("Error while getting data from collection (%v): %v", collectionPath, err.Error())
+			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: message})
+			log.Println(message)
+			return
+		}
+
+		if len(list) == 0 {
+			message := fmt.Sprintf("Couldn't find collection (%v)", collectionPath)
+			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: message})
+			return
+		}
+
+		cmsCollectionData := db.Database(CMS_DATABASE).Collection(collectionPath)
+		dataHexId := r.PathValue("id")
+		dataObjectId, err := bson.ObjectIDFromHex(dataHexId)
+		response, err := cmsCollectionData.DeleteOne(context.TODO(), bson.M{"_id": dataObjectId})
+		if err != nil {
+			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax: " + err.Error()})
+			log.Println("Error while deleting collection:", err)
+			return
+		}
+
+		message := fmt.Sprintf("Deleted document with id (%v) in collection (%v)", dataHexId, collectionPath)
+		if response.DeletedCount == 0 {
+			message = fmt.Sprintf("Failed to delete document with id (%v) in collection (%v)", dataHexId, collectionPath)
 		}
 
 		WriteJSON(w, http.StatusOK, ResponseMessage{Status: StatusCodeOk, Message: message})
