@@ -163,6 +163,7 @@ func createCollection(db *mongo.Client) http.HandlerFunc {
 }
 
 func updateCollection(db *mongo.Client) http.HandlerFunc {
+	cmsDatabase := db.Database("admin")
 	cmsCollections := db.Database(CMS_DATABASE).Collection(CMS_COLLECTIONS)
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -182,6 +183,26 @@ func updateCollection(db *mongo.Client) http.HandlerFunc {
 			WriteJSON(w, http.StatusBadRequest, response)
 			log.Println("Error while updating collection:", err)
 			return
+		}
+
+		if _, exists := collectionChanges["name"]; exists {
+			newCollectionPath := StringToPath((collectionChanges["name"]).(string))
+			collectionChanges["path"] = newCollectionPath
+
+			renameResult := cmsDatabase.RunCommand(context.TODO(), bson.D{
+				{Key: "renameCollection", Value: CMS_DATABASE + "." + collectionPath},
+				{Key: "to", Value: CMS_DATABASE + "." + newCollectionPath},
+			})
+
+			if renameResult.Err() != nil {
+				errorMessage := fmt.Sprintf("Error while updating collections: %v", renameResult.Err().Error())
+				WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
+					Status:  StatusCodeError,
+					Message: errorMessage,
+				})
+				log.Println(errorMessage)
+				return
+			}
 		}
 
 		response, err := cmsCollections.UpdateOne(context.TODO(), bson.M{"path": collectionPath}, bson.M{"$set": collectionChanges})
