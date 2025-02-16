@@ -3,9 +3,11 @@ import { compileSync, runSync } from "@mdx-js/mdx";
 import * as runtime from "preact/jsx-runtime";
 import { useMDXComponents } from "@mdx-js/preact";
 import { Index } from "./pages/Index";
+import { Admin } from "./pages/Admin";
 
 export const routes: Record<string, JSX.Element> = {
 	'/': <Index />,
+	'/admin': <Admin />,
 }
 
 /**
