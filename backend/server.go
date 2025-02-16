@@ -27,7 +27,7 @@ type Misses map[string]string
 type Validator interface {
 	// A validator is valid only when len(errors) === 0
 	// Each miss should be mapped to the corresponding validator field if it's related to one
-	Validate(db *mongo.Client) Misses
+	Validate(r *http.Request, db *mongo.Client) Misses
 }
 
 func WriteJSON[T any](w http.ResponseWriter, httpStatus int, data T) {
@@ -61,6 +61,6 @@ func ReadBodyJSON[T Validator](r *http.Request, db *mongo.Client) (T, Misses, er
 		return data, nil, err
 	}
 
-	misses := data.Validate(db)
+	misses := data.Validate(r, db)
 	return data, misses, nil
 }

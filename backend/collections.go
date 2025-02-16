@@ -393,7 +393,7 @@ func createData(db *mongo.Client) http.HandlerFunc {
 		}
 
 		if len(misses) != 0 {
-			response := ResponseMessage{Status: StatusCodeError, Message: fmt.Sprintf("Invalid Syntax: %v", misses)}
+			response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax", Data: misses}
 			WriteJSON(w, http.StatusBadRequest, response)
 			log.Println("Error while creating new data:", err)
 			return
@@ -447,7 +447,7 @@ func updateData(db *mongo.Client) http.HandlerFunc {
 		}
 
 		if len(misses) != 0 {
-			response := ResponseMessage{Status: StatusCodeError, Message: fmt.Sprintf("Invalid Syntax: %v", misses)}
+			response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax", Data: misses}
 			WriteJSON(w, http.StatusBadRequest, response)
 			log.Println("Error while updating data:", err)
 			return
@@ -521,7 +521,7 @@ var publicProjection = bson.M{
 	"attributes": true,
 }
 
-func (c Collection) Validate(db *mongo.Client) Misses {
+func (c Collection) Validate(r *http.Request, db *mongo.Client) Misses {
 	misses := make(Misses, 0)
 
 	expectOptional := map[string]bool{"name": true, "attributes": true}
@@ -542,7 +542,7 @@ func (c Collection) Validate(db *mongo.Client) Misses {
 	response := collection.FindOne(context.TODO(), bson.M{"name": c["name"]})
 	result := bson.M{}
 	err := response.Decode(&result)
-	if err != nil {
+	if err != nil && err != mongo.ErrNoDocuments {
 		misses["general.other"] = err.Error()
 		return misses
 	}
@@ -556,6 +556,38 @@ func (c Collection) Validate(db *mongo.Client) Misses {
 
 type CollectionData map[string]any
 
-func (d CollectionData) Validate(db *mongo.Client) Misses {
-	return nil
+func (d CollectionData) Validate(r *http.Request, db *mongo.Client) Misses {
+	misses := make(Misses, 0)
+
+	collection := db.Database(CMS_DATABASE).Collection(CMS_COLLECTIONS)
+	response := collection.FindOne(context.TODO(), bson.M{"path": r.PathValue("collection")})
+	result := bson.M{}
+	err := response.Decode(&result)
+	if err != nil {
+		misses["general.other"] = err.Error()
+		return misses
+	}
+
+	fmt.Println("Rows:", result)
+
+	expectOptional := map[string]bool{}
+	for _, value := range (result["attributes"]).(bson.A) {
+		data := (value).(bson.D)
+		column := (data[0].Value).(string)
+		expectOptional[column] = true
+	}
+
+	tooMany := make([]string, 0, 0)
+	for key := range maps.Keys(d) {
+		if _, exists := expectOptional[key]; exists == false {
+			tooMany = append(tooMany, key)
+		}
+	}
+
+	if len(tooMany) > 0 {
+		misses["general.too_many_arguments"] = "The following keys are not in scope: " + strings.Join(tooMany, ", ")
+		return misses
+	}
+
+	return misses
 }
