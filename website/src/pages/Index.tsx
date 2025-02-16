@@ -1,16 +1,22 @@
 import { ArticleCard } from "../components/ArticleCard";
 import { CenterContainer } from "../components/CenteredContainer";
+import Header from "../components/Header";
 import Icon from "../components/Icon";
 import ProjectDisplay from "../components/ProjectDisplay";
 
 export function Index() {
 	return (
-		<CenterContainer>
-			<SectionWork />
-			<SectionArticles />
-			<SectionAbout />
-			<SectionContactMe />
-		</CenterContainer>
+		<div className="bg-black text-white min-w-screen min-h-screen" id="top">
+			<Header />
+			<main>
+				<CenterContainer>
+					<SectionWork />
+					<SectionArticles />
+					<SectionAbout />
+					<SectionContactMe />
+				</CenterContainer>
+			</main>
+		</div>
 	);
 }
 
