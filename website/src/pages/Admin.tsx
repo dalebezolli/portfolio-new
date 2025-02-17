@@ -17,7 +17,7 @@ function Header() {
 
 			<nav className="grow flex flex-col gap-1 bg-gray-900">
 				<Button text="Home" icon="github" disabled className="w-full" />
-				<Button text="Collections" icon="github" selected className="w-full" />
+				<Button text="Collections" icon="github" active className="w-full" />
 				<Button text="Analytics" icon="github" disabled className="w-full" />
 				<div className="flex items-end grow">
 					<Button text="Settings" icon="github" disabled className="w-full" />

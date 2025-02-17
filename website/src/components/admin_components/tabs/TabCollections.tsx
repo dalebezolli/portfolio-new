@@ -20,7 +20,7 @@ export default function TabCollections() {
 					<div className="grow flex gap-2 items-center">
 						<p className="text-lg font-semibold text-gray-600">Collections &nbsp;&nbsp;/&nbsp;&nbsp; <span className="text-gray-300">collection</span></p>
 						<Button text="Edit" className="ml-auto w-fit border-2 border-gray-800 justify-center" />
-						<Button text="New Record" className="w-fit border-2 border-gray-800 justify-center" />
+						<Button text="New Record" className="w-fit" color="highlight" />
 					</div>
 				</header>
 
@@ -37,8 +37,13 @@ export default function TabCollections() {
 						/>
 				</div>
 
-				<footer className="p-4 flex items-center gap-4 rounded-xl bg-gray-900 text-gray-400">
+				<footer className="p-4 flex justify-between items-center gap-4 rounded-xl bg-gray-900 text-gray-400">
 					<p>Total records: 5</p>
+
+					<section className="flex gap-2">
+						<Button text="Edit" color="warning" disabled />
+						<Button text="Delete" color="error" disabled />
+					</section>
 				</footer>
 			</main>
 		</div>
