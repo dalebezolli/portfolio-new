@@ -2,7 +2,7 @@ import { useContext } from "preact/compat";
 import Button from "../components/admin_components/Button";
 import { PopupProvider } from "../components/admin_components/Popup";
 import TabCollections from "../components/admin_components/tabs/TabCollections";
-import TabContext, { TabWrapper, Tabs } from "../components/Tabber";
+import TabContext, { TabWrapper, Tabs } from "../components/admin_components/Tabs";
 
 export function Admin() {
 	return (
