@@ -16,11 +16,11 @@ function Header() {
 			<h1 className="p-4 pb-10 text-lg font-bold">Dashboard</h1>
 
 			<nav className="grow flex flex-col gap-1 bg-gray-900">
-				<Button text="Home" icon="github" disabled className="w-full" />
-				<Button text="Collections" icon="github" active className="w-full" />
-				<Button text="Analytics" icon="github" disabled className="w-full" />
+				<Button text="Home" icon="home" disabled className="w-full" />
+				<Button text="Collections" icon="cube" active className="w-full" />
+				<Button text="Analytics" icon="chart" disabled className="w-full" />
 				<div className="flex items-end grow">
-					<Button text="Settings" icon="github" disabled className="w-full" />
+					<Button text="Settings" icon="gear" disabled className="w-full" />
 				</div>
 			</nav>
 		</header>

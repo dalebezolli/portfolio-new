@@ -11,7 +11,7 @@ export default function TabCollections() {
 				<section className="px-4 pt-4 gap-2">
 					<CollectionButton text="Collection A" />
 					<CollectionButton text="Collection B" />
-					<Button text="New Collection" className="w-full border-2 border-gray-800 mt-4 justify-center" />
+					<Button text="New Collection" icon="plus" className="w-full border-2 border-gray-800 mt-4 justify-center" />
 				</section>
 			</div>
 
@@ -19,15 +19,14 @@ export default function TabCollections() {
 				<header className="pb-12 flex flex-col gap-4">
 					<div className="grow flex gap-2 items-center">
 						<p className="text-lg font-semibold text-gray-600">Collections &nbsp;&nbsp;/&nbsp;&nbsp; <span className="text-gray-300">collection</span></p>
-						<Button text="Edit" className="ml-auto w-fit border-2 border-gray-800 justify-center" />
-						<Button text="New Record" className="w-fit" color="highlight" />
+						<Button text="Edit" icon="pen" className="ml-auto w-fit border-2 border-gray-800 justify-center" />
 					</div>
 				</header>
 
 				<div className="grow flex flex-col">
 					<section className="pb-4 flex gap-2">
-						<Button text="Search" className="w-fit border-2 border-gray-800 justify-center" />
-						<Button text="Filters" className="w-fit border-2 border-gray-800 justify-center" />
+						<Button text="New Record" icon="plus" className="w-fit" color="highlight" />
+						<Button text="Search" icon="magnifying-glass" className="w-fit border-2 border-gray-800 justify-center" />
 					</section>
 
 					<Table
@@ -41,8 +40,8 @@ export default function TabCollections() {
 					<p>Total records: 5</p>
 
 					<section className="flex gap-2">
-						<Button text="Edit" color="warning" disabled />
-						<Button text="Delete" color="error" disabled />
+						<Button text="Edit" icon="pen" color="warning" disabled />
+						<Button text="Delete" icon="trash-can" color="error" disabled />
 					</section>
 				</footer>
 			</main>
