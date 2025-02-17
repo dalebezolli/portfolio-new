@@ -30,9 +30,7 @@ export default function TabCollections() {
 						<Button text="Filters" className="w-fit border-2 border-gray-800 justify-center" />
 					</section>
 
-					<div className="grow rounded-xl bg-gray-900">
-						<Table columns={[{title: "ID"},{title: "Title", options:{width: ""}},{title: "Status"},{title: "Created At"}]} records={[{id: "1", title: "No", status: "status", createdAt: "1"}]} className="" />
-					</div>
+					<Table columns={[{title: "ID"},{title: "Title", options:{width: ""}},{title: "Status"},{title: "Created At"}]} records={[{id: "1", title: "No", status: "status", createdAt: "1"}]} className="" />
 				</div>
 
 				<footer className="p-4 flex items-center gap-4 rounded-xl bg-gray-900 text-gray-400">
