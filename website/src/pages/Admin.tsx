@@ -12,8 +12,9 @@ export function Admin() {
 					<Header />
 
 					<Tabs className="w-full">
+						<div>Home</div>
 						<TabCollections />
-						<TabCollections />
+						<div>Analytics</div>
 					</Tabs>
 				</TabWrapper>
 			</div>

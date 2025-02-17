@@ -17,7 +17,7 @@ export function TabWrapper({children}: PropsWithChildren) {
 	
 	const contextValue = {
 		tabIndex,
-		select: setTabIndex,
+		select: (index: number) => setTabIndex(index),
 	} as TabDetails;
 
 	return (
@@ -40,7 +40,7 @@ export function Tabs({children, ...props}: TabberProps) {
 				Children.map(children, (child, i) => (
 					<div
 						className="absolute left-0 flex w-full h-full transition-all duration-300 ease-in-out"
-						style={{top: tabIndex === i ? "0%" : "10%", opacity: tabIndex === i ? "100%" : "0%", transitionDelay: tabIndex === i ? "0.3s" : ""}}>
+						style={{zIndex: tabIndex === i ? 1 : 0, top: tabIndex === i ? "0%" : "10%", opacity: tabIndex === i ? "100%" : "0%", transitionDelay: tabIndex === i ? "0.3s" : ""}}>
 						{child}
 					</div>
 				))

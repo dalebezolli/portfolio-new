@@ -1,51 +1,88 @@
-import { ButtonHTMLAttributes } from "preact/compat";
+import { ButtonHTMLAttributes, useContext } from "preact/compat";
 import Icon, { IconName } from "../../Icon";
 import Button from "../Button";
 import Table from "../Table";
+import TabContext, { Tabs, TabWrapper } from "../Tabs";
 
 export default function TabCollections() {
 	return (
-		<div className="grow flex">
-			<div className="bg-gray-900 border-r border-gray-800">
-				<CollectionSearch />
-				<section className="px-4 pt-4 gap-2">
-					<CollectionButton text="Collection A" />
-					<CollectionButton text="Collection B" />
-					<Button text="New Collection" icon="plus" className="w-full border-2 border-gray-800 mt-4 justify-center" />
+		<TabWrapper>
+			<div className="grow flex">
+				<SideNav />
+
+				<main className="w-full h-full">
+					<Tabs className="w-full h-full">
+						<CollectionView />
+						<CollectionEditor />
+						<RecordEditor />
+					</Tabs>
+				</main>
+			</div>
+		</TabWrapper>
+	);
+}
+
+function SideNav() {
+	const {select} = useContext(TabContext);
+
+	return (
+		<div className="bg-gray-900 border-r border-gray-800">
+			<CollectionSearch />
+			<section className="px-4 pt-4 gap-2">
+				<CollectionButton text="Collection A" onClick={() => select(0)} />
+				<CollectionButton text="Collection B" onClick={() => select(0)} />
+				<Button text="New Collection" icon="plus" onClick={() => select(1)} className="w-full border-2 border-gray-800 mt-4 justify-center" />
+			</section>
+		</div>
+	);
+}
+
+function CollectionView() {
+	const {select} = useContext(TabContext);
+
+	return (
+		<div className="w-full p-8 flex flex-col gap-8">
+			<header className="pb-12 flex flex-col gap-4">
+				<div className="grow flex gap-2 items-center">
+					<p className="text-lg font-semibold text-gray-600">Collections &nbsp;&nbsp;/&nbsp;&nbsp; <span className="text-gray-300">collection</span></p>
+					<Button text="Edit" icon="pen" onClick={() => select(1)} className="ml-auto w-fit border-2 border-gray-800 justify-center" />
+				</div>
+			</header>
+
+			<div className="grow flex flex-col">
+				<section className="pb-4 flex gap-2">
+					<Button text="New Record" icon="plus" onClick={() => select(2)} className="w-fit" color="highlight" />
+					<Button text="Search" icon="magnifying-glass" className="w-fit border-2 border-gray-800 justify-center" />
 				</section>
+
+				<Table
+					columns={[{title: "ID"},{title: "Title", options:{width: ""}},{title: "Status"},{title: "Created At"}]} 
+					records={[{id: "1", title: "No", status: "status", createdAt: "1"}]}
+					onClickRow={() => select(2)}
+				/>
 			</div>
 
-			<main className="p-8 grow flex flex-col gap-8">
-				<header className="pb-12 flex flex-col gap-4">
-					<div className="grow flex gap-2 items-center">
-						<p className="text-lg font-semibold text-gray-600">Collections &nbsp;&nbsp;/&nbsp;&nbsp; <span className="text-gray-300">collection</span></p>
-						<Button text="Edit" icon="pen" className="ml-auto w-fit border-2 border-gray-800 justify-center" />
-					</div>
-				</header>
+			<footer className="p-4 flex justify-between items-center gap-4 rounded-xl bg-gray-900 text-gray-400">
+				<p>Total records: 5</p>
 
-				<div className="grow flex flex-col">
-					<section className="pb-4 flex gap-2">
-						<Button text="New Record" icon="plus" className="w-fit" color="highlight" />
-						<Button text="Search" icon="magnifying-glass" className="w-fit border-2 border-gray-800 justify-center" />
-					</section>
-
-					<Table
-						columns={[{title: "ID"},{title: "Title", options:{width: ""}},{title: "Status"},{title: "Created At"}]} 
-						records={[{id: "1", title: "No", status: "status", createdAt: "1"}]}
-						onClickRow={(id) => console.log("Selected:", id)}
-						/>
-				</div>
-
-				<footer className="p-4 flex justify-between items-center gap-4 rounded-xl bg-gray-900 text-gray-400">
-					<p>Total records: 5</p>
-
-					<section className="flex gap-2">
-						<Button text="Edit" icon="pen" color="warning" disabled />
-						<Button text="Delete" icon="trash-can" color="error" disabled />
-					</section>
-				</footer>
-			</main>
+				<section className="flex gap-2">
+					<Button text="Edit" icon="pen" color="warning" disabled />
+					<Button text="Delete" icon="trash-can" color="error" disabled />
+				</section>
+			</footer>
 		</div>
+	);
+}
+
+function CollectionEditor() {
+	return (
+		<div>Collection Editor</div>
+	);
+}
+
+function RecordEditor() {
+	return (
+		<div>Record Editor</div>
 	);
 }
 
