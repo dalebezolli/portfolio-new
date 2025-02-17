@@ -1,14 +1,19 @@
-type TableProps<T extends object> = {
+type Identifiable = {
+	id: string;
+};
+
+type TableProps<T extends Identifiable> = {
 	columns: {title: string, options?: ColumnOptions}[];
 	records: T[];
 	className?: string;
+	onClickRow?: (id: string) => void;
 };
 
 type ColumnOptions = {
 	width?: string;
 };
 
-export default function Table<T extends object>({columns, records, className=""}: TableProps<T>) {
+export default function Table<T extends Identifiable>({columns, records, className="", onClickRow}: TableProps<T>) {
 	return (
 		<div className="grow rounded-xl bg-gray-900 overflow-clip">
 			<table className={`w-full overflow-clip bg-gray-900 ${className}`}>
@@ -25,7 +30,7 @@ export default function Table<T extends object>({columns, records, className=""}
 
 				<tbody className="text-gray-400">
 					{ records.map(item => (
-						<tr className="hover:bg-gray-700 transition-colors cursor-pointer">
+						<tr className="hover:bg-gray-700 transition-colors cursor-pointer" onClick={() => onClickRow && onClickRow(item.id || "")}>
 							<td className="text-center"><div className="p-4 w-fit"><input type="checkbox" /></div></td>
 							{
 								Object.values(item).map(cell => (

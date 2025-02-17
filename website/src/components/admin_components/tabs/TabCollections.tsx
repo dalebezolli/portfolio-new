@@ -32,8 +32,8 @@ export default function TabCollections() {
 
 					<Table
 						columns={[{title: "ID"},{title: "Title", options:{width: ""}},{title: "Status"},{title: "Created At"}]} 
-						//records={[{id: "1", title: "No", status: "status", createdAt: "1"}]}
-						records={[]}
+						records={[{id: "1", title: "No", status: "status", createdAt: "1"}]}
+						onClickRow={(id) => console.log("Selected:", id)}
 						/>
 				</div>
 
