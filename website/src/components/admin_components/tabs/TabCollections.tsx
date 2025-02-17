@@ -31,7 +31,7 @@ export default function TabCollections() {
 					</section>
 
 					<div className="grow rounded-xl bg-gray-900">
-						<Table records={[{id: "1", title: "No", status: "status", createdAt: "1"}]} sizeOptions={{title: ""}} className="" />
+						<Table columns={[{title: "ID"},{title: "Title", options:{width: ""}},{title: "Status"},{title: "Created At"}]} records={[{id: "1", title: "No", status: "status", createdAt: "1"}]} className="" />
 					</div>
 				</div>
 
