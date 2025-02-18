@@ -3,6 +3,7 @@ import Icon, { IconName } from "../../Icon";
 import Button from "../Button";
 import Table from "../Table";
 import TabContext, { Tabs, TabWrapper } from "../Tabs";
+import GlobalState from "../../../state/GlobalState";
 
 export default function TabCollections() {
 	return (
@@ -24,13 +25,27 @@ export default function TabCollections() {
 
 function SideNav() {
 	const {select} = useContext(TabContext);
+	const {collections, selectedCollection, setSelectedCollection} = useContext(GlobalState);
+
+	function selectCollection(path: string) {
+		setSelectedCollection(path);
+		select(0);
+	}
 
 	return (
 		<div className="bg-gray-900 border-r border-gray-800">
 			<CollectionSearch />
-			<section className="px-4 pt-4 gap-2">
-				<CollectionButton text="Collection A" onClick={() => select(0)} />
-				<CollectionButton text="Collection B" onClick={() => select(0)} />
+			<section className="px-4 pt-4 flex flex-col gap-2">
+				{
+					Object.entries(collections).map(([path, collection]) => (
+						<Button
+							key={path}
+							text={collection.name}
+							onClick={() => selectCollection(path)}
+							active={path == selectedCollection}
+							className="w-full"/>
+					))
+				}
 				<Button text="New Collection" icon="plus" onClick={() => select(1)} className="w-full border-2 border-gray-800 mt-4 justify-center" />
 			</section>
 		</div>
@@ -39,12 +54,34 @@ function SideNav() {
 
 function CollectionView() {
 	const {select} = useContext(TabContext);
+	const {collections, selectedCollection} = useContext(GlobalState);
+
+	const collectionName = (collections[selectedCollection ?? ""]) ? collections[selectedCollection ?? ""].name : "";
+
+	if(!collectionName) {
+		return (
+			<div className="w-full p-8 pt-16 flex justify-center gap-8">
+				<p className="font-bold text-xl text-gray-400">Create your first collection</p>
+			</div>
+		);
+	}
+
+	const rawRecords = Object.values(collections[selectedCollection!].records);
+	console.log(rawRecords);
+	let tableRecords = rawRecords.map(record => ({
+			id: record._id,
+			title: record['title'],
+			status: 'Draft',
+			createdAt: new Date().toISOString(),
+	}));
 
 	return (
 		<div className="w-full p-8 flex flex-col gap-8">
 			<header className="pb-12 flex flex-col gap-4">
 				<div className="grow flex gap-2 items-center">
-					<p className="text-lg font-semibold text-gray-600">Collections &nbsp;&nbsp;/&nbsp;&nbsp; <span className="text-gray-300">collection</span></p>
+					<p className="text-lg font-semibold text-gray-600">Collections &nbsp;&nbsp;/&nbsp;&nbsp;
+						<span className="text-gray-300">{collectionName}</span>
+					</p>
 					<Button text="Edit" icon="pen" onClick={() => select(1)} className="ml-auto w-fit border-2 border-gray-800 justify-center" />
 				</div>
 			</header>
@@ -57,13 +94,13 @@ function CollectionView() {
 
 				<Table
 					columns={[{title: "ID"},{title: "Title", options:{width: ""}},{title: "Status"},{title: "Created At"}]} 
-					records={[{id: "1", title: "No", status: "status", createdAt: "1"}]}
+					records={tableRecords}
 					onClickRow={() => select(2)}
 				/>
 			</div>
 
 			<footer className="p-4 flex justify-between items-center gap-4 rounded-xl bg-gray-900 text-gray-400">
-				<p>Total records: 5</p>
+				<p>Total records: {tableRecords.length}</p>
 
 				<section className="flex gap-2">
 					<Button text="Edit" icon="pen" color="warning" disabled />
@@ -75,14 +112,49 @@ function CollectionView() {
 }
 
 function CollectionEditor() {
+	const {select} = useContext(TabContext);
+	const {collections, setCollection, setSelectedCollection} = useContext(GlobalState);
+
+	function createCollection() {
+		const collection = {
+			name: "Collection"+Object.entries(collections).length,
+			path: "collection"+Object.entries(collections).length,
+			attributes: [],
+			records: {},
+		};
+		setCollection(collection);
+		setSelectedCollection(collection.path);
+		select(0);
+	}
+
 	return (
-		<div>Collection Editor</div>
+		<div>
+			<p>Collection Editor</p>
+			<Button text="Create Empty collection" color="success" onClick={createCollection} />
+		</div>
 	);
 }
 
 function RecordEditor() {
+	const {select} = useContext(TabContext);
+	const {collections, selectedCollection, setRecord} = useContext(GlobalState);
+
+	function createRecord() {
+		if(selectedCollection == null) return;
+
+		const record = {
+			_id: (Object.entries(collections[selectedCollection].records).length).toString(),
+			title: "Record"+Object.entries(collections[selectedCollection].records).length,
+		};
+		setRecord(selectedCollection, record);
+		select(0);
+	}
+
 	return (
-		<div>Record Editor</div>
+		<div>
+			<p>Record Editor</p>
+			<Button text="Create Empty Record" color="success" onClick={createRecord} />
+		</div>
 	);
 }
 

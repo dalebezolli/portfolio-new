@@ -1,0 +1,77 @@
+import { createContext } from "preact";
+import { PropsWithChildren, useState } from "preact/compat";
+
+type CollectionPath = string;
+type Collections = Record<CollectionPath, Collection>;
+
+type GlobalStateDetails = {
+	collections: Collections;
+	selectedCollection: CollectionPath | null;
+
+
+	initializeCollections: (collections: Collection[]) => void;
+	insertCollection: (collection: Collection) => void;
+	updateCollection: (collection: Collection) => void;
+	deleteCollection: (path: CollectionPath) => void;
+
+	setSelectedCollection: (collection: CollectionPath) => void;
+};
+
+const GlobalState = createContext<GlobalStateDetails>({
+	collections: {},
+	selectedCollection: null,
+
+	initializeCollections: () => {},
+	insertCollection: () => {},
+	updateCollection: () => {},
+	deleteCollection: () => {},
+
+	setSelectedCollection: () => {},
+});
+
+export default GlobalState;
+
+export function GlobalStateProvider({children}: PropsWithChildren) {
+	const [collections, setCollections] = useState<Collections>({});
+	const [selectedCollection, setSelectedCollection] = useState<CollectionPath | null>(null);
+
+	function initializeCollections(collections: Collection[]) {
+		const collectionObject: Collections = {};
+
+		for(const col of collections) {
+			collectionObject[col.path] = col;
+		}
+
+		setCollections(collectionObject);
+	}
+
+	function insertCollection(collection: Collection) {
+		setCollections(old => ({...old, test: collection}));
+	}
+
+	function updateCollection(collection: Collection) {
+
+	}
+
+	function deleteCollection(path: CollectionPath) {
+
+	}
+	
+	const contextValue: GlobalStateDetails = {
+		collections,
+		selectedCollection,
+
+		initializeCollections,
+		insertCollection,
+		updateCollection,
+		deleteCollection,
+
+		setSelectedCollection,
+	};
+
+	return (
+		<GlobalState.Provider value={contextValue}>
+			{children}
+		</GlobalState.Provider>
+	);
+}

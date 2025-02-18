@@ -3,22 +3,25 @@ import Button from "../components/admin_components/Button";
 import { PopupProvider } from "../components/admin_components/Popup";
 import TabCollections from "../components/admin_components/tabs/TabCollections";
 import TabContext, { TabWrapper, Tabs } from "../components/admin_components/Tabs";
+import { GlobalStateProvider } from "../state/GlobalState";
 
 export function Admin() {
 	return (
-		<PopupProvider>
-		 <div className="bg-gray-950 text-white min-w-screen min-h-screen flex justify-stretch" id="top">
-				<TabWrapper>
-					<Header />
+		<GlobalStateProvider>
+			<PopupProvider>
+			 <div className="bg-gray-950 text-white min-w-screen min-h-screen flex justify-stretch" id="top">
+					<TabWrapper>
+						<Header />
 
-					<Tabs className="w-full">
-						<div>Home</div>
-						<TabCollections />
-						<div>Analytics</div>
-					</Tabs>
-				</TabWrapper>
-			</div>
-		</PopupProvider>
+						<Tabs className="w-full">
+							<div>Home</div>
+							<TabCollections />
+							<div>Analytics</div>
+						</Tabs>
+					</TabWrapper>
+				</div>
+			</PopupProvider>
+		</GlobalStateProvider>
 	);
 }
 

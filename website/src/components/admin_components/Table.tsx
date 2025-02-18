@@ -3,17 +3,22 @@ type Identifiable = {
 };
 
 type TableProps<T extends Identifiable> = {
-	columns: {title: string, options?: ColumnOptions}[];
+	columns: Column[];
 	records: T[];
 	className?: string;
 	onClickRow?: (id: string) => void;
 };
+
+export type Column = {title: string, options?: ColumnOptions};
+export type TitledRecord = {id: string, title: string, status: string, createdAt: Date};
 
 type ColumnOptions = {
 	width?: string;
 };
 
 export default function Table<T extends Identifiable>({columns, records, className="", onClickRow}: TableProps<T>) {
+	console.log(records);
+
 	return (
 		<div className="grow rounded-xl bg-gray-900 overflow-clip">
 			<table className={`w-full overflow-clip bg-gray-900 ${className}`}>
