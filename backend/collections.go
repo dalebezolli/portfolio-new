@@ -42,6 +42,11 @@ func handleCollectionRoutes(db *mongo.Client) *http.ServeMux {
 	mux.HandleFunc("PUT /{collection}/{id}", updateData(db))
 	mux.HandleFunc("DELETE /{collection}/{id}", deleteData(db))
 
+	mux.HandleFunc("OPTIONS /collections", handlePrefligh())
+	mux.HandleFunc("OPTIONS /collections/{collection}", handlePrefligh())
+	mux.HandleFunc("OPTIONS /{collection}", handlePrefligh())
+	mux.HandleFunc("OPTIONS /{collection}/{id}", handlePrefligh())
+
 	return mux
 }
 
@@ -509,6 +514,14 @@ func deleteData(db *mongo.Client) http.HandlerFunc {
 		}
 
 		WriteJSON(w, http.StatusOK, ResponseMessage{Status: StatusCodeOk, Message: message})
+	}
+}
+
+func handlePrefligh() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Access-Control-Allow-Origin", "*")
+		w.Header().Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Add("Access-Control-Allow-Headers", "*")
 	}
 }
 
