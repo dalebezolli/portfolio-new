@@ -1,5 +1,6 @@
 import { createContext } from "preact";
 import { PropsWithChildren, useState } from "preact/compat";
+import { StateUpdater } from "preact/hooks";
 
 type CollectionPath = string;
 export type Collections = Record<CollectionPath, Collection>;
@@ -7,6 +8,8 @@ export type Collections = Record<CollectionPath, Collection>;
 type GlobalStateDetails = {
 	collections: Collections;
 	selectedCollection: CollectionPath | null;
+	editingCollection: Collection;
+	editingCollectionStatus: "new" | "old";
 
 
 	initializeCollections: (collections: Collection[]) => void;
@@ -17,11 +20,16 @@ type GlobalStateDetails = {
 	removeRecord: (path: CollectionPath, recordId: string) => void;
 
 	setSelectedCollection: (collection: CollectionPath) => void;
+
+	setEditingCollection: (value: StateUpdater<Collection>) => void;
+	setEditingCollectionStatus: (value: StateUpdater<"new" | "old">) => void;
 };
 
 const GlobalState = createContext<GlobalStateDetails>({
 	collections: {},
 	selectedCollection: null,
+	editingCollection: {name: "", path: "", attributes: [], records: {}},
+	editingCollectionStatus: "new",
 
 	initializeCollections: () => {},
 	setCollection: () => {},
@@ -31,6 +39,9 @@ const GlobalState = createContext<GlobalStateDetails>({
 	removeRecord: () => {},
 
 	setSelectedCollection: () => {},
+
+	setEditingCollection: () => {},
+	setEditingCollectionStatus: () => {},
 });
 
 export default GlobalState;
@@ -38,6 +49,8 @@ export default GlobalState;
 export function GlobalStateProvider({children}: PropsWithChildren) {
 	const [collections, setCollections] = useState<Collections>({});
 	const [selectedCollection, setSelectedCollection] = useState<CollectionPath | null>(null);
+	const [editingCollection, setEditingCollection] = useState<Collection>({name: "", path: "", attributes: [], records: {}});
+	const [editingCollectionStatus, setEditingCollectionStatus] = useState<"new" | "old">("new");
 
 	function initializeCollections(collections: Collection[]) {
 		const collectionObject: Collections = {};
@@ -83,6 +96,8 @@ export function GlobalStateProvider({children}: PropsWithChildren) {
 	const contextValue: GlobalStateDetails = {
 		collections,
 		selectedCollection,
+		editingCollection,
+		editingCollectionStatus,
 
 		initializeCollections,
 		setCollection,
@@ -92,6 +107,8 @@ export function GlobalStateProvider({children}: PropsWithChildren) {
 		removeRecord,
 
 		setSelectedCollection,
+		setEditingCollection,
+		setEditingCollectionStatus,
 	};
 
 	return (

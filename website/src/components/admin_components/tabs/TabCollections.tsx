@@ -1,4 +1,4 @@
-import { JSX, useContext, useState } from "preact/compat";
+import { JSX, useContext } from "preact/compat";
 import Button from "../Button";
 import Table from "../Table";
 import TabContext, { Tabs, TabWrapper } from "../Tabs";
@@ -26,7 +26,7 @@ export default function TabCollections() {
 
 function SideNav() {
 	const {select} = useContext(TabContext);
-	const {collections, selectedCollection, setSelectedCollection} = useContext(GlobalState);
+	const {collections, selectedCollection, setSelectedCollection, setEditingCollection, setEditingCollectionStatus} = useContext(GlobalState);
 
 	function selectCollection(path: string) {
 		setSelectedCollection(path);
@@ -47,7 +47,15 @@ function SideNav() {
 							className="w-full"/>
 					))
 				}
-				<Button text="New Collection" icon="plus" onClick={() => select(1)} className="w-full border-2 border-gray-800 mt-4 justify-center" />
+				<Button
+					text="New Collection"
+					icon="plus"
+					onClick={() => {
+						setEditingCollection({name: "", path: "", attributes: [{name: "", type: "string"}], records: {}});
+						setEditingCollectionStatus("new");
+						select(1);
+					}}
+					className="w-full border-2 border-gray-800 mt-4 justify-center" />
 			</section>
 		</div>
 	);
@@ -55,7 +63,7 @@ function SideNav() {
 
 function CollectionView() {
 	const {select} = useContext(TabContext);
-	const {collections, selectedCollection} = useContext(GlobalState);
+	const {collections, selectedCollection, setEditingCollection, setEditingCollectionStatus} = useContext(GlobalState);
 
 	const collectionName = (collections[selectedCollection ?? ""]) ? collections[selectedCollection ?? ""].name : "";
 
@@ -82,7 +90,15 @@ function CollectionView() {
 					<p className="text-lg font-semibold text-gray-600">Collections &nbsp;&nbsp;/&nbsp;&nbsp;
 						<span className="text-gray-300">{collectionName}</span>
 					</p>
-					<Button text="Edit" icon="pen" onClick={() => select(1)} className="ml-auto w-fit border-2 border-gray-800 justify-center" />
+					<Button
+						text="Edit"
+						icon="pen"
+						onClick={() => {
+							setEditingCollection(collections[selectedCollection!]);
+							setEditingCollectionStatus("old");
+							select(1);
+						}}
+						className="ml-auto w-fit border-2 border-gray-800 justify-center" />
 				</div>
 			</header>
 
@@ -113,31 +129,28 @@ function CollectionView() {
 
 function CollectionEditor() {
 	const {select} = useContext(TabContext);
-	const {setCollection, setSelectedCollection} = useContext(GlobalState);
-	const [newCollection, setNewCollection] = useState<Collection>({
-		name: "",
-		path: "",
-		attributes: [{name: "", type: "string"}],
-		records: {},
-	});
+	const {
+		setCollection, setSelectedCollection,
+		editingCollection, editingCollectionStatus: status, setEditingCollection
+	} = useContext(GlobalState);
 
 	function createCollection() {
-		setCollection(newCollection);
-		setSelectedCollection(newCollection.path);
+		setCollection(editingCollection);
+		setSelectedCollection(editingCollection.path);
 		select(0);
 	}
 
 	function insertAttribute() {
 		const newAttribute: CollectionAttribute = {name: "", type: "string"};
-		setNewCollection(old => {
+		setEditingCollection(old => {
 			return {...old, attributes: [...old.attributes, newAttribute]};
 		});
 	}
 
 	function updateAttribute(event: JSX.TargetedEvent<HTMLInputElement>, prop: "name" | "type", index: number) {
-		const newAttribute = {...newCollection.attributes[index], [prop]: event.currentTarget.value};
+		const newAttribute = {...editingCollection.attributes[index], [prop]: event.currentTarget.value};
 
-		setNewCollection(old => {
+		setEditingCollection(old => {
 			let attributes = [...old.attributes];
 			attributes[index] = newAttribute;
 			return {...old, attributes};
@@ -145,7 +158,7 @@ function CollectionEditor() {
 	}
 
 	function removeAttribute(index: number) {
-		setNewCollection(old => {
+		setEditingCollection(old => {
 			return {
 				...old,
 				attributes: old.attributes.filter((_, i) => i !== index),
@@ -157,7 +170,7 @@ function CollectionEditor() {
 		<section className="w-full p-8 flex flex-col gap-8 font-bold text-gray-400">
 			<header className="flex items-center gap-4">
 				<Button icon="arrow-left" className="border-2 border-gray-800" onClick={() => select(0)} />
-				<p className="font-bold text-xl">Edit Collection</p>
+				<p className="font-bold text-xl">{status === "old" ? "Edit" : "Create"} Collection</p>
 			</header>
 
 			<div className="flex flex-col gap-4 p-4 bg-gray-900 border-2 border-gray-800 rounded-2xl">
@@ -167,7 +180,7 @@ function CollectionEditor() {
 					<p>Collection Name</p>
 
 					<div className="flex items-center gap-4">
-					<Input placeholder="A really cool collection" value={newCollection.name} onChange={e => setNewCollection(c => ({...c, name: e.currentTarget.value}))} />
+					<Input placeholder="A really cool collection" value={editingCollection.name} onChange={e => setEditingCollection(c => ({...c, name: e.currentTarget.value}))} />
 					<p className="text-gray-700 font-bold">Path: none</p>
 					</div>
 				</div>
@@ -188,7 +201,7 @@ function CollectionEditor() {
 
 						<TBody>
 							{
-								newCollection.attributes.map((attr, i) => (
+								editingCollection.attributes.map((attr, i) => (
 									<TRow>
 										<td></td>
 										<td><Input value={attr.name} placeholder="Helpful Attribute" onChange={e => updateAttribute(e, "name", i)} /></td>
