@@ -1,9 +1,10 @@
-import { ButtonHTMLAttributes, useContext } from "preact/compat";
-import Icon, { IconName } from "../../Icon";
+import { JSX, useContext, useState } from "preact/compat";
 import Button from "../Button";
 import Table from "../Table";
 import TabContext, { Tabs, TabWrapper } from "../Tabs";
 import GlobalState from "../../../state/GlobalState";
+import { STable, TBody, THead, THeadRow, TRow } from "../SimpleTable";
+import Input from "../Input";
 
 export default function TabCollections() {
 	return (
@@ -67,7 +68,6 @@ function CollectionView() {
 	}
 
 	const rawRecords = Object.values(collections[selectedCollection!].records);
-	console.log(rawRecords);
 	let tableRecords = rawRecords.map(record => ({
 			id: record._id,
 			title: record['title'],
@@ -113,25 +113,102 @@ function CollectionView() {
 
 function CollectionEditor() {
 	const {select} = useContext(TabContext);
-	const {collections, setCollection, setSelectedCollection} = useContext(GlobalState);
+	const {setCollection, setSelectedCollection} = useContext(GlobalState);
+	const [newCollection, setNewCollection] = useState<Collection>({
+		name: "",
+		path: "",
+		attributes: [{name: "", type: "string"}],
+		records: {},
+	});
 
 	function createCollection() {
-		const collection = {
-			name: "Collection"+Object.entries(collections).length,
-			path: "collection"+Object.entries(collections).length,
-			attributes: [],
-			records: {},
-		};
-		setCollection(collection);
-		setSelectedCollection(collection.path);
+		setCollection(newCollection);
+		setSelectedCollection(newCollection.path);
 		select(0);
 	}
 
+	function insertAttribute() {
+		const newAttribute: CollectionAttribute = {name: "", type: "string"};
+		setNewCollection(old => {
+			return {...old, attributes: [...old.attributes, newAttribute]};
+		});
+	}
+
+	function updateAttribute(event: JSX.TargetedEvent<HTMLInputElement>, prop: "name" | "type", index: number) {
+		const newAttribute = {...newCollection.attributes[index], [prop]: event.currentTarget.value};
+
+		setNewCollection(old => {
+			let attributes = [...old.attributes];
+			attributes[index] = newAttribute;
+			return {...old, attributes};
+		});
+	}
+
+	function removeAttribute(index: number) {
+		setNewCollection(old => {
+			return {
+				...old,
+				attributes: old.attributes.filter((_, i) => i !== index),
+			};
+		});
+	}
+
 	return (
-		<div>
-			<p>Collection Editor</p>
-			<Button text="Create Empty collection" color="success" onClick={createCollection} />
-		</div>
+		<section className="w-full p-8 flex flex-col gap-8 font-bold text-gray-400">
+			<header className="flex items-center gap-4">
+				<Button icon="arrow-left" className="border-2 border-gray-800" onClick={() => select(0)} />
+				<p className="font-bold text-xl">Edit Collection</p>
+			</header>
+
+			<div className="flex flex-col gap-4 p-4 bg-gray-900 border-2 border-gray-800 rounded-2xl">
+				<p className="text-gray-200 font-bold text-xl mb-2">Collection Information</p>
+
+				<div className="flex flex-col gap-1">
+					<p>Collection Name</p>
+
+					<div className="flex items-center gap-4">
+					<Input placeholder="A really cool collection" value={newCollection.name} onChange={e => setNewCollection(c => ({...c, name: e.currentTarget.value}))} />
+					<p className="text-gray-700 font-bold">Path: none</p>
+					</div>
+				</div>
+
+				<div className="flex flex-col gap-1">
+					<p>Collection Attributes</p>
+
+
+					<STable className="bg-gray-800">
+						<THead className="bg-gray-700">
+							<THeadRow>
+								<td className="w-[1%]"><div className="w-[32px] h-[48px]"></div></td>
+								<td className="w-[20%]">NAME</td>
+								<td className="w-[20%]">TYPE</td>
+								<td className="w-[60%]" align="right"></td>
+							</THeadRow>
+						</THead>
+
+						<TBody>
+							{
+								newCollection.attributes.map((attr, i) => (
+									<TRow>
+										<td></td>
+										<td><Input value={attr.name} placeholder="Helpful Attribute" onChange={e => updateAttribute(e, "name", i)} /></td>
+										<td><Input defaultValue={attr.type} placeholder="Type" onChange={e => updateAttribute(e, "type", i)} /></td>
+										<td align="right"><Button icon="trash-can" className="my-4" onClick={() => removeAttribute(i)} /></td>
+									</TRow>
+								))
+							}
+						</TBody>
+					</STable>
+
+					<Button text="Add Attribute" onClick={insertAttribute} className="w-fit" />
+				</div>
+
+				<div className="pt-6">
+					<Button text="Create Collection" className="w-fit" color="success" onClick={createCollection} />
+				</div>
+			</div>
+
+		</section>
 	);
 }
 
@@ -168,24 +245,5 @@ function CollectionSearch() {
 			cursor-pointer transition-colors"
 			placeholder="Search Collections"
 			/>
-	);
-}
-
-type CollectionButtonProps = {
-	text?: string;
-	icon?: IconName;
-} & ButtonHTMLAttributes;
-
-function CollectionButton({text, icon, ...rest}: CollectionButtonProps) {
-	return (
-		<button className="
-			w-full
-			group px-4 py-2 flex gap-2 items-center
-			hover:bg-gray-800 focus:bg-gray-800 rounded-xl
-			font-bold text-gray-400 hover:text-gray-200 focus:text-gray-200
-			cursor-pointer transition-colors" {...rest}>
-			{icon && <Icon icon={icon} colorFill="fill-gray-400 group-hover:fill-gray-200 group-focus:fill-gray-200" />}
-			{text}
-		</button>
 	);
 }

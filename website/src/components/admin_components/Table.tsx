@@ -17,8 +17,6 @@ type ColumnOptions = {
 };
 
 export default function Table<T extends Identifiable>({columns, records, className="", onClickRow}: TableProps<T>) {
-	console.log(records);
-
 	return (
 		<div className="grow rounded-xl bg-gray-900 overflow-clip">
 			<table className={`w-full overflow-clip bg-gray-900 ${className}`}>
