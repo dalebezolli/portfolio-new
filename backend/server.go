@@ -32,6 +32,7 @@ type Validator interface {
 
 func WriteJSON[T any](w http.ResponseWriter, httpStatus int, data T) {
 	w.Header().Add("Content-Type", "application/json")
+	w.Header().Add("Access-Control-Allow-Origin", "*")
 
 	response, err := json.Marshal(data)
 	if err != nil {
