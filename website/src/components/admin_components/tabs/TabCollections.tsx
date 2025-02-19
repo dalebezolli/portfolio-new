@@ -135,8 +135,10 @@ function CollectionEditor() {
 	} = useContext(GlobalState);
 
 	function createCollection() {
-		setCollection(editingCollection);
-		setSelectedCollection(editingCollection.path);
+		// WARN: This is for mocking purposes only
+		const path = editingCollection.name.replace(/ /g, "_").toLowerCase();
+		setCollection({...editingCollection, path});
+		setSelectedCollection(path);
 		select(0);
 	}
 
