@@ -5,7 +5,8 @@ import { useTabs, Tabs, TabWrapper } from "../../components/admin_components/Tab
 import { useGlobalState } from "../../state/GlobalState";
 import { STable, TBody, THead, THeadRow, TRow } from "../../components/admin_components/SimpleTable";
 import Input from "../../components/admin_components/Input";
-import { CollectionAttribute } from "../../types";
+import { Collection, CollectionAttribute } from "../../types";
+import { get, post, put } from "../../utils/network";
 
 export default function TabCollections() {
 	return (
@@ -146,19 +147,26 @@ function CollectionView() {
 function CollectionEditor() {
 	const {select} = useTabs();
 	const {
-		collections,
 		setCollection, setSelectedCollection,
 		editingCollection, setEditingCollection,
 	} = useGlobalState();
 
-	function saveCollection() {
-		// WARN: This is for mocking purposes only
-		const path = editingCollection.name.replace(/ /g, "_").toLowerCase();
-		const id = editingCollection._id ?? Object.entries(collections).length.toString();
-		setCollection({...editingCollection, path, _id: id});
+	async function saveCollection() {
+		const {_id: _, path, records: ___, ...body} = editingCollection;
+		let data: Collection | null;
+
+		if(editingCollection._id == null) {
+			data = await post<Collection>({url: new URL(`${import.meta.env.VITE_CMS_URL}/collections`), body});
+		} else {
+			data = await put<Collection>({url: new URL(`${import.meta.env.VITE_CMS_URL}/collections/${path}`), body});
+		}
+
+		if(data == null || data._id == null) return;
+
+		setCollection({...data, records: {}});
 		setEditingCollection({ name: "", path: "", attributes: [], records: {}});
 
-		setSelectedCollection(id);
+		setSelectedCollection(data._id);
 		select(0);
 	}
 

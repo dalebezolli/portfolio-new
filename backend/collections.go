@@ -222,13 +222,35 @@ func updateCollection(db *mongo.Client) http.HandlerFunc {
 			return
 		}
 
-		message := fmt.Sprintf("Updated collection with path (%v)", collectionPath)
 		if response.MatchedCount == 0 {
-			message = fmt.Sprintf("Failed to find collection with path (%v)", collectionPath)
+			WriteJSON(w, http.StatusOK, ResponseMessage{
+				Status:  StatusCodeError,
+				Message: fmt.Sprintf("Failed to find collection with path (%v)", collectionPath),
+			})
+			return
 		}
+
+		changedPath, exists := (collectionChanges["path"]).(string)
+		if exists {
+			collectionPath = changedPath
+		}
+
+		result := cmsCollections.FindOne(context.TODO(), bson.M{"path": collectionPath})
+		collection := bson.M{}
+		err = result.Decode(&collection)
+		if err != nil {
+			WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
+				Status:  StatusCodeError,
+				Message: err.Error(),
+			})
+			log.Println(err.Error())
+			return
+		}
+
 		WriteJSON(w, http.StatusOK, ResponseMessage{
 			Status:  StatusCodeOk,
-			Message: message,
+			Message: fmt.Sprintf("Updated collection with path (%v)", collectionPath),
+			Data:    collection,
 		})
 	}
 }
