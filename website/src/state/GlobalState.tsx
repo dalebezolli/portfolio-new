@@ -1,7 +1,8 @@
 import { Collection, CollectionPath, CollectionRecord, Collections } from "../types";
 import { createContext } from "preact";
 import { PropsWithChildren, useState } from "preact/compat";
-import { StateUpdater, useContext } from "preact/hooks";
+import { StateUpdater, useContext, useEffect } from "preact/hooks";
+import { get } from "../utils/network";
 
 type GlobalStateDetails = {
 	collections: Collections;
@@ -52,11 +53,22 @@ export function GlobalStateProvider({children}: PropsWithChildren) {
 	const [editingCollection, setEditingCollection] = useState<Collection>({name: "", path: "", attributes: [], records: {}});
 	const [editingRecord, setEditingRecord] = useState<{[key: string]: string}>({});
 
-	function initializeCollections(collections: Collection[]) {
+	useEffect(() => {
+		initializeCollections();
+	}, []);
+
+	async function initializeCollections() {
+		const collections = await get<Collection[]>({url: new URL(`${import.meta.env.VITE_CMS_URL}/collections`)});
+		if(collections == null) return;
+
 		const collectionObject: Collections = {};
 
 		for(const col of collections) {
-			collectionObject[col.path] = col;
+			if(col._id == null) continue;
+			const collectionRecords = await get<CollectionRecord[]>({url: new URL(`${import.meta.env.VITE_CMS_URL}/${col.path}`)}) ?? [];
+
+			col.records = collectionRecords.reduce((acc, cur) => ({...acc, [cur._id]: cur}), {});
+			collectionObject[col._id] = col;
 		}
 
 		setCollections(collectionObject);
