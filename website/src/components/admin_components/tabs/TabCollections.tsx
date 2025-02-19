@@ -63,7 +63,7 @@ function SideNav() {
 
 function CollectionView() {
 	const {select} = useContext(TabContext);
-	const {collections, selectedCollection, setEditingCollection, setEditingCollectionStatus} = useContext(GlobalState);
+	const {collections, selectedCollection, setEditingCollection, setEditingCollectionStatus, setEditingRecord} = useContext(GlobalState);
 
 	const collectionName = (collections[selectedCollection ?? ""]) ? collections[selectedCollection ?? ""].name : "";
 
@@ -104,15 +104,32 @@ function CollectionView() {
 
 			<div className="grow flex flex-col">
 				<section className="pb-4 flex gap-2">
-					<Button text="New Record" icon="plus" onClick={() => select(2)} className="w-fit" color="highlight" />
+					<Button
+						text="New Record"
+						icon="plus"
+						onClick={() => {
+							let newRecord = {};
+							if(selectedCollection) {
+								newRecord = Object.fromEntries(collections[selectedCollection]
+									.attributes.map(attr => [attr.name, ""])
+								);
+							}
+							setEditingRecord(newRecord);
+							select(2);
+						}}
+						className="w-fit"
+						color="highlight" />
 					<Button text="Search" icon="magnifying-glass" className="w-fit border-2 border-gray-800 justify-center" />
 				</section>
 
 				<Table
 					columns={[{title: "ID"},{title: "Title", options:{width: ""}},{title: "Status"},{title: "Created At"}]} 
 					records={tableRecords}
-					onClickRow={() => select(2)}
-				/>
+					onClickRow={(id) => {
+						const record = collections[selectedCollection!].records[id];
+						setEditingRecord(record);
+						select(2);
+					}} />
 			</div>
 
 			<footer className="p-4 flex justify-between items-center gap-4 rounded-xl bg-gray-900 text-gray-400">
@@ -229,24 +246,52 @@ function CollectionEditor() {
 
 function RecordEditor() {
 	const {select} = useContext(TabContext);
-	const {collections, selectedCollection, setRecord} = useContext(GlobalState);
+	const {collections, selectedCollection, editingRecord, setRecord, setEditingRecord} = useContext(GlobalState);
+
+	if(selectedCollection == null) {
+		return (<div>No collection selected</div>);
+	}
+
+	function updateRecord(e: JSX.TargetedEvent<HTMLInputElement>, attribute: string) {
+		setEditingRecord(old => ({...old, [attribute]: e.currentTarget.value}))
+	}
 
 	function createRecord() {
 		if(selectedCollection == null) return;
 
-		const record = {
-			_id: (Object.entries(collections[selectedCollection].records).length).toString(),
-			title: "Record"+Object.entries(collections[selectedCollection].records).length,
-		};
-		setRecord(selectedCollection, record);
+		// WARN: This is a mock response
+		const newId = Object.entries(collections[selectedCollection].records).length.toString();
+		const id = editingRecord["_id"] ?? newId;
+		setRecord(selectedCollection, {_id: id, ...editingRecord});
+		setEditingRecord({});
 		select(0);
 	}
 
 	return (
-		<div>
-			<p>Record Editor</p>
-			<Button text="Create Empty Record" color="success" onClick={createRecord} />
-		</div>
+		<section key={Object.entries(collections[selectedCollection].records).length} className="w-full p-8 flex flex-col gap-8 font-bold text-gray-400">
+			<header className="flex items-center gap-4">
+				<Button icon="arrow-left" className="border-2 border-gray-800" onClick={() => select(0)} />
+				<p className="font-bold text-xl">{editingRecord["_id"] ? "Edit" : "Create"} Record</p>
+			</header>
+
+			<div className="flex flex-col gap-4 p-4 bg-gray-900 border-2 border-gray-800 rounded-2xl">
+				<p className="text-gray-200 font-bold text-xl mb-2">Record Information</p>
+
+				{
+					collections[selectedCollection].attributes.map(({name}) => (
+							<div className="flex flex-col gap-1">
+								<p>{name}</p>
+								<Input className="w-fit" value={editingRecord[name]} onChange={(e) => updateRecord(e, name)} />
+							</div>
+					))
+				}
+
+				<div className="pt-6">
+					<Button text={`${editingRecord["_id"] ? "Edit" : "Create"} Collection`} className="w-fit" color="success" onClick={createRecord} />
+				</div>
+			</div>
+
+		</section>
 	);
 }
 

@@ -11,6 +11,8 @@ type GlobalStateDetails = {
 	editingCollection: Collection;
 	editingCollectionStatus: "new" | "old";
 
+	editingRecord: {[key: string]: string};
+
 
 	initializeCollections: (collections: Collection[]) => void;
 	setCollection: (collection: Collection) => void;
@@ -23,6 +25,7 @@ type GlobalStateDetails = {
 
 	setEditingCollection: (value: StateUpdater<Collection>) => void;
 	setEditingCollectionStatus: (value: StateUpdater<"new" | "old">) => void;
+	setEditingRecord: (value: StateUpdater<object>) => void;
 };
 
 const GlobalState = createContext<GlobalStateDetails>({
@@ -30,6 +33,7 @@ const GlobalState = createContext<GlobalStateDetails>({
 	selectedCollection: null,
 	editingCollection: {name: "", path: "", attributes: [], records: {}},
 	editingCollectionStatus: "new",
+	editingRecord: {},
 
 	initializeCollections: () => {},
 	setCollection: () => {},
@@ -42,6 +46,7 @@ const GlobalState = createContext<GlobalStateDetails>({
 
 	setEditingCollection: () => {},
 	setEditingCollectionStatus: () => {},
+	setEditingRecord: () => {},
 });
 
 export default GlobalState;
@@ -51,6 +56,7 @@ export function GlobalStateProvider({children}: PropsWithChildren) {
 	const [selectedCollection, setSelectedCollection] = useState<CollectionPath | null>(null);
 	const [editingCollection, setEditingCollection] = useState<Collection>({name: "", path: "", attributes: [], records: {}});
 	const [editingCollectionStatus, setEditingCollectionStatus] = useState<"new" | "old">("new");
+	const [editingRecord, setEditingRecord] = useState<{[key: string]: string}>({});
 
 	function initializeCollections(collections: Collection[]) {
 		const collectionObject: Collections = {};
@@ -63,6 +69,7 @@ export function GlobalStateProvider({children}: PropsWithChildren) {
 	}
 
 	function setCollection(collection: Collection) {
+		console.log("Updating collection:", collection.path, "with data", collection, collections);
 		setCollections(old => ({...old, [collection.path]: collection}));
 	}
 
@@ -98,6 +105,7 @@ export function GlobalStateProvider({children}: PropsWithChildren) {
 		selectedCollection,
 		editingCollection,
 		editingCollectionStatus,
+		editingRecord,
 
 		initializeCollections,
 		setCollection,
@@ -109,6 +117,7 @@ export function GlobalStateProvider({children}: PropsWithChildren) {
 		setSelectedCollection,
 		setEditingCollection,
 		setEditingCollectionStatus,
+		setEditingRecord,
 	};
 
 	return (
