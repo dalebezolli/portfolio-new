@@ -1,8 +1,8 @@
-import Button from "../components/admin_components/Button";
-import { PopupProvider } from "../components/admin_components/Popup";
-import { GlobalStateProvider } from "../state/GlobalState";
-import { Tabs, TabWrapper, useTabs } from "../components/admin_components/Tabs";
-import TabCollections from "./Admin/TabCollections";
+import Button from "../../components/admin_components/Button";
+import { GlobalStateProvider } from "../../state/GlobalState";
+import { PopupProvider } from "../../components/admin_components/Popup";
+import { useTabs, Tabs, TabWrapper } from "../../components/admin_components/Tabs";
+import TabCollections from "./TabCollections";
 
 export function Admin() {
 	return (

@@ -1,9 +1,7 @@
+import { Collection, CollectionPath, CollectionRecord, Collections } from "../types";
 import { createContext } from "preact";
 import { PropsWithChildren, useState } from "preact/compat";
-import { StateUpdater } from "preact/hooks";
-
-type CollectionPath = string;
-export type Collections = Record<CollectionPath, Collection>;
+import { StateUpdater, useContext } from "preact/hooks";
 
 type GlobalStateDetails = {
 	collections: Collections;
@@ -11,7 +9,6 @@ type GlobalStateDetails = {
 	editingCollection: Collection;
 
 	editingRecord: {[key: string]: string};
-
 
 	initializeCollections: (collections: Collection[]) => void;
 	setCollection: (collection: Collection) => void;
@@ -45,7 +42,9 @@ const GlobalState = createContext<GlobalStateDetails>({
 	setEditingRecord: () => {},
 });
 
-export default GlobalState;
+export function useGlobalState() {
+	return useContext(GlobalState);
+}
 
 export function GlobalStateProvider({children}: PropsWithChildren) {
 	const [collections, setCollections] = useState<Collections>({});

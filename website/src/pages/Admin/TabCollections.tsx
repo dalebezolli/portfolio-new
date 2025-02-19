@@ -1,10 +1,11 @@
-import { JSX, useContext } from "preact/compat";
-import Button from "../Button";
-import Table from "../Table";
-import TabContext, { Tabs, TabWrapper } from "../Tabs";
-import GlobalState from "../../../state/GlobalState";
-import { STable, TBody, THead, THeadRow, TRow } from "../SimpleTable";
-import Input from "../Input";
+import { JSX } from "preact/compat";
+import Button from "../../components/admin_components/Button";
+import Table from "../../components/admin_components/Table";
+import { useTabs, Tabs, TabWrapper } from "../../components/admin_components/Tabs";
+import { useGlobalState } from "../../state/GlobalState";
+import { STable, TBody, THead, THeadRow, TRow } from "../../components/admin_components/SimpleTable";
+import Input from "../../components/admin_components/Input";
+import { CollectionAttribute } from "../../types";
 
 export default function TabCollections() {
 	return (
@@ -25,8 +26,8 @@ export default function TabCollections() {
 }
 
 function SideNav() {
-	const {select} = useContext(TabContext);
-	const {collections, selectedCollection, setSelectedCollection, setEditingCollection} = useContext(GlobalState);
+	const {select} = useTabs();
+	const {collections, selectedCollection, setSelectedCollection, setEditingCollection} = useGlobalState();
 
 	function selectCollection(id: string) {
 		setSelectedCollection(id);
@@ -61,8 +62,8 @@ function SideNav() {
 }
 
 function CollectionView() {
-	const {select} = useContext(TabContext);
-	const {collections, selectedCollection, setEditingCollection, setEditingRecord} = useContext(GlobalState);
+	const {select} = useTabs();
+	const {collections, selectedCollection, setEditingCollection, setEditingRecord} = useGlobalState();
 
 	const collectionName = (collections[selectedCollection ?? ""]) ? collections[selectedCollection ?? ""].name : "";
 
@@ -143,12 +144,12 @@ function CollectionView() {
 }
 
 function CollectionEditor() {
-	const {select} = useContext(TabContext);
+	const {select} = useTabs();
 	const {
 		collections,
 		setCollection, setSelectedCollection,
 		editingCollection, setEditingCollection,
-	} = useContext(GlobalState);
+	} = useGlobalState();
 
 	function saveCollection() {
 		// WARN: This is for mocking purposes only
@@ -247,8 +248,8 @@ function CollectionEditor() {
 }
 
 function RecordEditor() {
-	const {select} = useContext(TabContext);
-	const {collections, selectedCollection, editingRecord, setRecord, setEditingRecord} = useContext(GlobalState);
+	const {select} = useTabs();
+	const {collections, selectedCollection, editingRecord, setRecord, setEditingRecord} = useGlobalState();
 
 	if(selectedCollection == null) {
 		return (<div>No collection selected</div>);

@@ -10,7 +10,9 @@ const TabContext = createContext<TabDetails>({
 	select: () => {},
 });
 
-export default TabContext;
+export function useTabs() {
+	return useContext(TabContext);
+}
 
 export function TabWrapper({children}: PropsWithChildren) {
 	const [tabIndex, setTabIndex] = useState(0);

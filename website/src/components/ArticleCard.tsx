@@ -1,3 +1,5 @@
+import { ArticleMetadata } from "../types";
+
 type ArticleProps = {
 	metadata: ArticleMetadata;
 };
