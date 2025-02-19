@@ -513,7 +513,7 @@ func deleteData(db *mongo.Client) http.HandlerFunc {
 }
 
 var publicProjection = bson.M{
-	"_id":        false,
+	"_id":        true,
 	"createdAt":  bson.M{"$toDate": "$_id"},
 	"modifiedAt": true,
 	"name":       true,
