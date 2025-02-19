@@ -5,6 +5,7 @@ type ArticleMetadata = {
 };
 
 type Collection = {
+	_id?: string;
 	name: string;
 	path: string;
 	attributes: CollectionAttribute[];
@@ -12,8 +13,8 @@ type Collection = {
 };
 
 type CollectionAttribute = {
-	name: string;
-	type: CollectionAttributeType;
+	name?: string;
+	type?: CollectionAttributeType;
 };
 
 type CollectionRecord = {

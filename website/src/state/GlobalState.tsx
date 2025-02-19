@@ -9,7 +9,6 @@ type GlobalStateDetails = {
 	collections: Collections;
 	selectedCollection: CollectionPath | null;
 	editingCollection: Collection;
-	editingCollectionStatus: "new" | "old";
 
 	editingRecord: {[key: string]: string};
 
@@ -24,15 +23,13 @@ type GlobalStateDetails = {
 	setSelectedCollection: (collection: CollectionPath) => void;
 
 	setEditingCollection: (value: StateUpdater<Collection>) => void;
-	setEditingCollectionStatus: (value: StateUpdater<"new" | "old">) => void;
-	setEditingRecord: (value: StateUpdater<object>) => void;
+	setEditingRecord: (value: StateUpdater<{[key: string]: string}>) => void;
 };
 
 const GlobalState = createContext<GlobalStateDetails>({
 	collections: {},
 	selectedCollection: null,
 	editingCollection: {name: "", path: "", attributes: [], records: {}},
-	editingCollectionStatus: "new",
 	editingRecord: {},
 
 	initializeCollections: () => {},
@@ -45,7 +42,6 @@ const GlobalState = createContext<GlobalStateDetails>({
 	setSelectedCollection: () => {},
 
 	setEditingCollection: () => {},
-	setEditingCollectionStatus: () => {},
 	setEditingRecord: () => {},
 });
 
@@ -55,7 +51,6 @@ export function GlobalStateProvider({children}: PropsWithChildren) {
 	const [collections, setCollections] = useState<Collections>({});
 	const [selectedCollection, setSelectedCollection] = useState<CollectionPath | null>(null);
 	const [editingCollection, setEditingCollection] = useState<Collection>({name: "", path: "", attributes: [], records: {}});
-	const [editingCollectionStatus, setEditingCollectionStatus] = useState<"new" | "old">("new");
 	const [editingRecord, setEditingRecord] = useState<{[key: string]: string}>({});
 
 	function initializeCollections(collections: Collection[]) {
@@ -69,13 +64,13 @@ export function GlobalStateProvider({children}: PropsWithChildren) {
 	}
 
 	function setCollection(collection: Collection) {
-		console.log("Updating collection:", collection.path, "with data", collection, collections);
-		setCollections(old => ({...old, [collection.path]: collection}));
+		if(collection._id == null) return;
+		setCollections(old => ({...old, [collection._id!]: collection}));
 	}
 
-	function removeCollection(path: CollectionPath) {
+	function removeCollection(id: CollectionPath) {
 		setCollections(old => {
-			const {[path]:_, ...rest} = old;
+			const {[id]:_, ...rest} = old;
 			return rest;
 		});
 	}
@@ -104,7 +99,6 @@ export function GlobalStateProvider({children}: PropsWithChildren) {
 		collections,
 		selectedCollection,
 		editingCollection,
-		editingCollectionStatus,
 		editingRecord,
 
 		initializeCollections,
@@ -116,7 +110,6 @@ export function GlobalStateProvider({children}: PropsWithChildren) {
 
 		setSelectedCollection,
 		setEditingCollection,
-		setEditingCollectionStatus,
 		setEditingRecord,
 	};
 

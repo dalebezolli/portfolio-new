@@ -26,10 +26,10 @@ export default function TabCollections() {
 
 function SideNav() {
 	const {select} = useContext(TabContext);
-	const {collections, selectedCollection, setSelectedCollection, setEditingCollection, setEditingCollectionStatus} = useContext(GlobalState);
+	const {collections, selectedCollection, setSelectedCollection, setEditingCollection} = useContext(GlobalState);
 
-	function selectCollection(path: string) {
-		setSelectedCollection(path);
+	function selectCollection(id: string) {
+		setSelectedCollection(id);
 		select(0);
 	}
 
@@ -38,12 +38,12 @@ function SideNav() {
 			<CollectionSearch />
 			<section className="px-4 pt-4 flex flex-col gap-2">
 				{
-					Object.entries(collections).map(([path, collection]) => (
+					Object.entries(collections).map(([id, collection]) => (
 						<Button
-							key={path}
+							key={id}
 							text={collection.name}
-							onClick={() => selectCollection(path)}
-							active={path == selectedCollection}
+							onClick={() => selectCollection(id)}
+							active={id == selectedCollection}
 							className="w-full"/>
 					))
 				}
@@ -52,7 +52,6 @@ function SideNav() {
 					icon="plus"
 					onClick={() => {
 						setEditingCollection({name: "", path: "", attributes: [{name: "", type: "string"}], records: {}});
-						setEditingCollectionStatus("new");
 						select(1);
 					}}
 					className="w-full border-2 border-gray-800 mt-4 justify-center" />
@@ -63,7 +62,7 @@ function SideNav() {
 
 function CollectionView() {
 	const {select} = useContext(TabContext);
-	const {collections, selectedCollection, setEditingCollection, setEditingCollectionStatus, setEditingRecord} = useContext(GlobalState);
+	const {collections, selectedCollection, setEditingCollection, setEditingRecord} = useContext(GlobalState);
 
 	const collectionName = (collections[selectedCollection ?? ""]) ? collections[selectedCollection ?? ""].name : "";
 
@@ -95,7 +94,6 @@ function CollectionView() {
 						icon="pen"
 						onClick={() => {
 							setEditingCollection(collections[selectedCollection!]);
-							setEditingCollectionStatus("old");
 							select(1);
 						}}
 						className="ml-auto w-fit border-2 border-gray-800 justify-center" />
@@ -147,15 +145,19 @@ function CollectionView() {
 function CollectionEditor() {
 	const {select} = useContext(TabContext);
 	const {
+		collections,
 		setCollection, setSelectedCollection,
-		editingCollection, editingCollectionStatus: status, setEditingCollection
+		editingCollection, setEditingCollection,
 	} = useContext(GlobalState);
 
-	function createCollection() {
+	function saveCollection() {
 		// WARN: This is for mocking purposes only
 		const path = editingCollection.name.replace(/ /g, "_").toLowerCase();
-		setCollection({...editingCollection, path});
-		setSelectedCollection(path);
+		const id = editingCollection._id ?? Object.entries(collections).length.toString();
+		setCollection({...editingCollection, path, _id: id});
+		setEditingCollection({ name: "", path: "", attributes: [], records: {}});
+
+		setSelectedCollection(id);
 		select(0);
 	}
 
@@ -189,7 +191,7 @@ function CollectionEditor() {
 		<section className="w-full p-8 flex flex-col gap-8 font-bold text-gray-400">
 			<header className="flex items-center gap-4">
 				<Button icon="arrow-left" className="border-2 border-gray-800" onClick={() => select(0)} />
-				<p className="font-bold text-xl">{status === "old" ? "Edit" : "Create"} Collection</p>
+				<p className="font-bold text-xl">{editingCollection._id ? "Edit" : "Create"} Collection</p>
 			</header>
 
 			<div className="flex flex-col gap-4 p-4 bg-gray-900 border-2 border-gray-800 rounded-2xl">
@@ -236,7 +238,7 @@ function CollectionEditor() {
 				</div>
 
 				<div className="pt-6">
-					<Button text="Create Collection" className="w-fit" color="success" onClick={createCollection} />
+					<Button text="Create Collection" className="w-fit" color="success" onClick={saveCollection} />
 				</div>
 			</div>
 
@@ -256,7 +258,7 @@ function RecordEditor() {
 		setEditingRecord(old => ({...old, [attribute]: e.currentTarget.value}))
 	}
 
-	function createRecord() {
+	function saveRecord() {
 		if(selectedCollection == null) return;
 
 		// WARN: This is a mock response
@@ -278,16 +280,20 @@ function RecordEditor() {
 				<p className="text-gray-200 font-bold text-xl mb-2">Record Information</p>
 
 				{
-					collections[selectedCollection].attributes.map(({name}) => (
+					collections[selectedCollection].attributes.map(({name}) => {
+						if(name == null) return;
+
+						return (
 							<div className="flex flex-col gap-1">
 								<p>{name}</p>
 								<Input className="w-fit" value={editingRecord[name]} onChange={(e) => updateRecord(e, name)} />
 							</div>
-					))
+						)
+					})
 				}
 
 				<div className="pt-6">
-					<Button text={`${editingRecord["_id"] ? "Edit" : "Create"} Collection`} className="w-fit" color="success" onClick={createRecord} />
+					<Button text={`${editingRecord["_id"] ? "Edit" : "Create"} Collection`} className="w-fit" color="success" onClick={saveRecord} />
 				</div>
 			</div>
 
