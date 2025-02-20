@@ -5,7 +5,7 @@ import { useTabs, Tabs, TabWrapper } from "../../components/admin_components/Tab
 import { useGlobalState } from "../../state/GlobalState";
 import { STable, TBody, THead, THeadRow, TRow } from "../../components/admin_components/SimpleTable";
 import Input from "../../components/admin_components/Input";
-import { Collection, CollectionAttribute } from "../../types";
+import { Collection, CollectionAttribute, CollectionRecord } from "../../types";
 import { get, post, put } from "../../utils/network";
 
 export default function TabCollections() {
@@ -267,13 +267,22 @@ function RecordEditor() {
 		setEditingRecord(old => ({...old, [attribute]: e.currentTarget.value}))
 	}
 
-	function saveRecord() {
+	async function saveRecord() {
 		if(selectedCollection == null) return;
 
-		// WARN: This is a mock response
-		const newId = Object.entries(collections[selectedCollection].records).length.toString();
-		const id = editingRecord["_id"] ?? newId;
-		setRecord(selectedCollection, {_id: id, ...editingRecord});
+		const {_id, ...body} = editingRecord;
+
+		const collectionPath = collections[selectedCollection].path;
+		let record: CollectionRecord | null;
+		if(_id == null) {
+			record = await post<CollectionRecord>({url: new URL(`${import.meta.env.VITE_CMS_URL}/${collectionPath}`), body});
+		} else {
+			record = await put<CollectionRecord>({url: new URL(`${import.meta.env.VITE_CMS_URL}/${collectionPath}/${_id}`), body});
+		}
+
+		if(record == null) return;
+
+		setRecord(selectedCollection, record);
 		setEditingRecord({});
 		select(0);
 	}

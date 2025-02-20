@@ -446,7 +446,7 @@ func updateData(db *mongo.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		collectionPath := r.PathValue("collection")
 
-		list, err := cmsDatabase.ListCollectionNames(context.TODO(), bson.M{"path": collectionPath})
+		list, err := cmsDatabase.ListCollectionNames(context.TODO(), bson.M{"name": collectionPath})
 		if err != nil {
 			message := fmt.Sprintf("Error while getting data from collection (%v): %v", collectionPath, err.Error())
 			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: message})
@@ -491,12 +491,38 @@ func updateData(db *mongo.Client) http.HandlerFunc {
 			return
 		}
 
-		message := fmt.Sprintf("Updated document with id (%v) in collection (%v)", dataHexId, collectionPath)
 		if response.MatchedCount == 0 {
-			message = fmt.Sprintf("Failed to update document with id (%v) in collection (%v)", dataHexId, collectionPath)
+			WriteJSON(w, http.StatusOK, ResponseMessage{
+				Status:  StatusCodeError,
+				Message: fmt.Sprintf("Failed to update document with id (%v) in collection (%v)", dataHexId, collectionPath),
+			})
+			return
 		}
 
-		WriteJSON(w, http.StatusOK, ResponseMessage{Status: StatusCodeOk, Message: message})
+		responseFind := cmsCollectionData.FindOne(context.TODO(), bson.M{"_id": dataObjectId})
+		result := bson.M{}
+		err = responseFind.Decode(&result)
+		if err != nil && (mongo.IsNetworkError(err) || mongo.IsTimeout(err)) {
+			message := fmt.Sprintf("Error while searching for (%v) in collection (%v): %v", dataHexId, collectionPath, err.Error())
+			WriteJSON(w, http.StatusInternalServerError, ResponseMessage{Status: StatusCodeError, Message: message})
+			log.Println(message)
+			return
+		}
+
+		fmt.Println("COLLECTED DATA: ", result)
+
+		status := StatusCodeOk
+		message := ""
+		if _, exists := result["_id"]; exists == false {
+			status = StatusCodeError
+			message = fmt.Sprintf("Couldn't find (%v) in collection (%v)", dataHexId, collectionPath)
+		}
+
+		WriteJSON(w, http.StatusOK, ResponseMessage{
+			Status:  status,
+			Message: message,
+			Data:    result,
+		})
 	}
 }
 
