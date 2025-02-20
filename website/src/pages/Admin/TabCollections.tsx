@@ -1,12 +1,11 @@
 import { JSX } from "preact/compat";
 import Button from "../../components/admin_components/Button";
-import Table from "../../components/admin_components/Table";
 import { useTabs, Tabs, TabWrapper } from "../../components/admin_components/Tabs";
 import { useGlobalState } from "../../state/GlobalState";
 import { STable, TBody, THead, THeadRow, TRow } from "../../components/admin_components/SimpleTable";
 import Input from "../../components/admin_components/Input";
 import { Collection, CollectionAttribute, CollectionRecord } from "../../types";
-import { get, post, put } from "../../utils/network";
+import { del, post, put } from "../../utils/network";
 
 export default function TabCollections() {
 	return (
@@ -64,7 +63,11 @@ function SideNav() {
 
 function CollectionView() {
 	const {select} = useTabs();
-	const {collections, selectedCollection, setEditingCollection, setEditingRecord} = useGlobalState();
+	const {
+		collections, selectedCollection, selectedRecords,
+		setEditingCollection, setEditingRecord, removeRecord,
+		toggleSelectedRecord,
+	} = useGlobalState();
 
 	const collectionName = (collections[selectedCollection ?? ""]) ? collections[selectedCollection ?? ""].name : "";
 
@@ -83,6 +86,24 @@ function CollectionView() {
 			status: 'Draft',
 			createdAt: new Date().toISOString(),
 	}));
+
+	function onRowClick(e: JSX.TargetedMouseEvent<HTMLTableRowElement>, entry?: any) {
+		if(e.target == null) return;
+		const tagName = (e.target as HTMLTableRowElement).tagName;
+
+		if(tagName === "BUTTON" || tagName === "INPUT") return;
+		if(entry == null || entry.id == null) return;
+
+		editRecord(selectedCollection!, entry.id);
+	}
+
+	function editRecord(collectionId: string, recordId: string) {
+		const record = collections[collectionId].records[recordId];
+		setEditingRecord(record);
+		select(2);
+	}
+
+	const selectionCount = Object.values(selectedRecords).length;
 
 	return (
 		<div className="w-full p-8 flex flex-col gap-8">
@@ -122,22 +143,54 @@ function CollectionView() {
 					<Button text="Search" icon="magnifying-glass" className="w-fit border-2 border-gray-800 justify-center" />
 				</section>
 
-				<Table
-					columns={[{title: "ID"},{title: "Title", options:{width: ""}},{title: "Status"},{title: "Created At"}]} 
-					records={tableRecords}
-					onClickRow={(id) => {
-						const record = collections[selectedCollection!].records[id];
-						setEditingRecord(record);
-						select(2);
-					}} />
+
+				<div className="grow rounded-xl bg-gray-900 overflow-clip">
+					<STable>
+						<THead className="font-semibold text-gray-200 border-b-2 border-gray-800">
+							<THeadRow>
+								<td className="w-[1%]" align="center"><div className="w-[32px] h-[48px]"></div></td>
+								<td className="w-[1%]"><div className="p-2"><Button text="ID" className="w-full" /></div></td>
+								<td className=""><div className="p-2"><Button text="Title" className="w-full" /></div></td>
+								<td className="w-[1%]"><div className="p-2"><Button text="Status" className="w-full" /></div></td>
+								<td className="w-[1%]"><div className="p-2"><Button text="Created At" className="w-full" /></div></td>
+							</THeadRow>
+						</THead>
+
+						<TBody>
+							{
+								tableRecords.map((record, _) => (
+									<TRow key={record.id} entry={record} onRowClick={onRowClick} className="hover:bg-gray-700">
+										<td align="center"><input
+											type="checkbox"
+											checked={selectedRecords[record.id]}
+											onClick={() => toggleSelectedRecord(record.id)} /></td>
+										<td><p className="px-6 py-4">{record.id}</p></td>
+										<td><p className="px-6 py-4">{record.title}</p></td>
+										<td><p className="px-6 py-4">{record.status}</p></td>
+										<td><p className="px-6 py-4">{record.createdAt}</p></td>
+									</TRow>
+								))
+							}
+						</TBody>
+					</STable>
+				</div>
 			</div>
 
 			<footer className="p-4 flex justify-between items-center gap-4 rounded-xl bg-gray-900 text-gray-400">
 				<p>Total records: {tableRecords.length}</p>
 
 				<section className="flex gap-2">
-					<Button text="Edit" icon="pen" color="warning" disabled />
-					<Button text="Delete" icon="trash-can" color="error" disabled />
+					<Button text="Edit" icon="pen" color="warning"
+						disabled={selectionCount !== 1}
+						onClick={() => editRecord(selectedCollection!, Object.keys(selectedRecords)[0])} />
+					<Button text="Delete" icon="trash-can" color="error"
+						disabled={selectionCount === 0}
+						onClick={() => {
+							for(const record of Object.keys(selectedRecords)) {
+								del({url: new URL(`${import.meta.env.VITE_CMS_URL}/${collections[selectedCollection!].path}/${record}`)});
+								removeRecord(selectedCollection!, record);
+							}
+						}} />
 				</section>
 			</footer>
 		</div>

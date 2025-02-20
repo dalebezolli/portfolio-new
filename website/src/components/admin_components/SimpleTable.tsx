@@ -1,4 +1,4 @@
-import { HTMLAttributes, PropsWithChildren, TableHTMLAttributes } from "preact/compat";
+import { HTMLAttributes, JSX, PropsWithChildren, TableHTMLAttributes } from "preact/compat";
 
 export function STable({children, className="", ...rest}: PropsWithChildren<TableHTMLAttributes>) {
 	return (
@@ -32,9 +32,18 @@ export function TBody({children}: PropsWithChildren) {
 	);
 }
 
-export function TRow({children, className="", ...rest}: PropsWithChildren<HTMLAttributes<HTMLTableRowElement>>) {
+type TRowProps = PropsWithChildren<HTMLAttributes<HTMLTableRowElement> & {
+	entry?: any,
+	onRowClick?: (e: JSX.TargetedMouseEvent<HTMLTableRowElement>, entry?: any) => void,
+}>;
+
+export function TRow({children, entry, onRowClick, className="", ...rest}: TRowProps) {
+	function onClickManaged(e: JSX.TargetedMouseEvent<HTMLTableRowElement>) {
+		onRowClick && onRowClick(e, entry);
+	}
+
 	return (
-		<tr className={`${className}`} {...rest}>
+		<tr onClick={onClickManaged} className={`${className}`} {...rest}>
 			{children}
 		</tr>
 	);

@@ -7,9 +7,11 @@ import { get } from "../utils/network";
 type GlobalStateDetails = {
 	collections: Collections;
 	selectedCollection: CollectionPath | null;
-	editingCollection: Collection;
 
+	editingCollection: Collection;
 	editingRecord: {[key: string]: string};
+
+	selectedRecords: {[key: string]: true};
 
 	initializeCollections: (collections: Collection[]) => void;
 	setCollection: (collection: Collection) => void;
@@ -20,8 +22,14 @@ type GlobalStateDetails = {
 
 	setSelectedCollection: (collection: CollectionPath) => void;
 
+	toggleSelectedRecord: (recordId: string) => void;
+	addSelectedRecord: (...recordId: string[]) => void;
+	removeSelectedRecord: (...recordId: string[]) => void;
+	clearSelectedRecords: () => void;
+
 	setEditingCollection: (value: StateUpdater<Collection>) => void;
 	setEditingRecord: (value: StateUpdater<{[key: string]: string}>) => void;
+
 };
 
 const GlobalState = createContext<GlobalStateDetails>({
@@ -29,6 +37,8 @@ const GlobalState = createContext<GlobalStateDetails>({
 	selectedCollection: null,
 	editingCollection: {name: "", path: "", attributes: [], records: {}},
 	editingRecord: {},
+
+	selectedRecords: {},
 
 	initializeCollections: () => {},
 	setCollection: () => {},
@@ -38,6 +48,11 @@ const GlobalState = createContext<GlobalStateDetails>({
 	removeRecord: () => {},
 
 	setSelectedCollection: () => {},
+
+	toggleSelectedRecord: () => {},
+	addSelectedRecord: () => {},
+	removeSelectedRecord: () => {},
+	clearSelectedRecords: () => {},
 
 	setEditingCollection: () => {},
 	setEditingRecord: () => {},
@@ -52,6 +67,7 @@ export function GlobalStateProvider({children}: PropsWithChildren) {
 	const [selectedCollection, setSelectedCollection] = useState<CollectionPath | null>(null);
 	const [editingCollection, setEditingCollection] = useState<Collection>({name: "", path: "", attributes: [], records: {}});
 	const [editingRecord, setEditingRecord] = useState<{[key: string]: string}>({});
+	const [selectedRecords, setSelectedRecords] = useState<{[key: string]: true}>({});
 
 	useEffect(() => {
 		initializeCollections();
@@ -105,10 +121,38 @@ export function GlobalStateProvider({children}: PropsWithChildren) {
 			return {...old, [path]: {...collection, records: rest}};
 		});
 	}
+
+
+	function toggleSelectedRecord(recordId: string) {
+		if(selectedRecords[recordId] == null) {
+			addSelectedRecord(recordId);
+		} else {
+			removeSelectedRecord(recordId);
+		}
+	}
+
+	function addSelectedRecord(...recordId: string[]) {
+		const formattedRecords = recordId.reduce((acc, cur) => ({...acc, [cur]: true}),{});
+		setSelectedRecords(old => ({...old, ...formattedRecords}));
+	}
+
+	function removeSelectedRecord(...recordId: string[]) {
+		const copy = {...selectedRecords};
+		for(const r of recordId) {
+			delete copy[r];
+		}
+
+		setSelectedRecords(copy);
+	}
+
+	function clearSelectedRecords() {
+		setSelectedRecords({});
+	}
 	
 	const contextValue: GlobalStateDetails = {
 		collections,
 		selectedCollection,
+		selectedRecords,
 		editingCollection,
 		editingRecord,
 
@@ -120,6 +164,12 @@ export function GlobalStateProvider({children}: PropsWithChildren) {
 		removeRecord,
 
 		setSelectedCollection,
+
+		toggleSelectedRecord,
+		addSelectedRecord,
+		removeSelectedRecord,
+		clearSelectedRecords,
+
 		setEditingCollection,
 		setEditingRecord,
 	};

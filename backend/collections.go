@@ -509,8 +509,6 @@ func updateData(db *mongo.Client) http.HandlerFunc {
 			return
 		}
 
-		fmt.Println("COLLECTED DATA: ", result)
-
 		status := StatusCodeOk
 		message := ""
 		if _, exists := result["_id"]; exists == false {
@@ -628,8 +626,6 @@ func (d CollectionData) Validate(r *http.Request, db *mongo.Client) Misses {
 		misses["general.other"] = err.Error()
 		return misses
 	}
-
-	fmt.Println("Rows:", result)
 
 	expectOptional := map[string]bool{}
 	for _, value := range (result["attributes"]).(bson.A) {
