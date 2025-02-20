@@ -7,6 +7,8 @@ import Input from "../../components/admin_components/Input";
 import { Collection, CollectionAttribute, CollectionRecord } from "../../types";
 import { del, post, put } from "../../utils/network";
 import { Checkbox } from "../../components/admin_components/Checkbox";
+import Select from "../../components/admin_components/Select";
+import { selectTypes } from "../../utils/constants";
 
 export default function TabCollections() {
 	return (
@@ -279,7 +281,11 @@ function CollectionEditor() {
 								if(selectedCollection == null) return;
 								removeCollection(selectedCollection);
 								del({url: new URL(`${import.meta.env.VITE_CMS_URL}/collections/${collections[selectedCollection].path}`)});
-								setSelectedCollection(Object.keys(collections)[0]);
+								if(Object.keys(collections).length === 1) {
+									setSelectedCollection(null);
+								} else {
+									setSelectedCollection(Object.keys(collections)[0]);
+								}
 								select(0)
 							}} />
 					)
@@ -318,7 +324,7 @@ function CollectionEditor() {
 									<TRow>
 										<td></td>
 										<td><Input value={attr.name} placeholder="Helpful Attribute" onChange={e => updateAttribute(e, "name", i)} /></td>
-										<td><Input defaultValue={attr.type} placeholder="Type" onChange={e => updateAttribute(e, "type", i)} /></td>
+										<td><Select data={selectTypes} /></td>
 										<td align="right"><Button icon="trash-can" className="my-4" onClick={() => removeAttribute(i)} /></td>
 									</TRow>
 								))
@@ -330,7 +336,7 @@ function CollectionEditor() {
 				</div>
 
 				<div className="pt-6">
-					<Button icon="check" className="w-fit" color="success" disabled
+					<Button icon="check" className="w-fit" color="success" disabled={editingCollection._id != null}
 						text={`${editingCollection._id == null ? "Create" : "Save"} Collection`}
 						onClick={saveCollection} />
 				</div>

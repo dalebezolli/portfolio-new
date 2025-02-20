@@ -20,7 +20,7 @@ type GlobalStateDetails = {
 	setRecord: (path: CollectionPath, record: CollectionRecord) => void;
 	removeRecord: (path: CollectionPath, recordId: string) => void;
 
-	setSelectedCollection: (collection: CollectionPath) => void;
+	setSelectedCollection: (collection: CollectionPath | null) => void;
 
 	toggleSelectedRecord: (recordId: string) => void;
 	addSelectedRecord: (...recordId: string[]) => void;
