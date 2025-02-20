@@ -152,7 +152,7 @@ function CollectionView() {
 								<td className="w-[1%]"><div className="p-2"><Button text="ID" className="w-full" /></div></td>
 								<td className=""><div className="p-2"><Button text="Title" className="w-full" /></div></td>
 								<td className="w-[1%]"><div className="p-2"><Button text="Status" className="w-full" /></div></td>
-								<td className="w-[1%]"><div className="p-2"><Button text="Created At" className="w-full" /></div></td>
+								<td className="w-[1%]"><div className="p-2"><Button text="Created At" className="w-max" /></div></td>
 							</THeadRow>
 						</THead>
 
