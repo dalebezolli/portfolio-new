@@ -314,7 +314,7 @@ function CollectionEditor() {
 				</div>
 
 				<div className="pt-6">
-					<Button text="Create Collection" className="w-fit" color="success" onClick={saveCollection} />
+					<Button icon="check" text="Create Collection" className="w-fit" color="success" onClick={saveCollection} />
 				</div>
 			</div>
 
@@ -358,7 +358,7 @@ function RecordEditor() {
 		<section key={Object.entries(collections[selectedCollection].records).length} className="w-full p-8 flex flex-col gap-8 font-bold text-gray-400">
 			<header className="flex items-center gap-4">
 				<Button icon="arrow-left" className="border-2 border-gray-800" onClick={() => select(0)} />
-				<p className="font-bold text-xl">{editingRecord["_id"] ? "Edit" : "Create"} Record</p>
+				<p className="font-bold text-xl">{editingRecord["_id"] ? "Edit" : "New"} Record</p>
 			</header>
 
 			<div className="flex flex-col gap-4 p-4 bg-gray-900 border-2 border-gray-800 rounded-2xl">
@@ -378,7 +378,7 @@ function RecordEditor() {
 				}
 
 				<div className="pt-6">
-					<Button text={`${editingRecord["_id"] ? "Edit" : "Create"} Collection`} className="w-fit" color="success" onClick={saveRecord} />
+					<Button icon="check" text={`${editingRecord["_id"] ? "Edit" : "Create"} Record`} className="w-fit" color="success" onClick={saveRecord} />
 				</div>
 			</div>
 
