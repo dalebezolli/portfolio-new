@@ -200,7 +200,8 @@ function CollectionView() {
 function CollectionEditor() {
 	const {select} = useTabs();
 	const {
-		setCollection, setSelectedCollection,
+		collections, selectedCollection,
+		setCollection, removeCollection, setSelectedCollection,
 		editingCollection, setEditingCollection,
 	} = useGlobalState();
 
@@ -254,6 +255,15 @@ function CollectionEditor() {
 			<header className="flex items-center gap-4">
 				<Button icon="arrow-left" className="border-2 border-gray-800" onClick={() => select(0)} />
 				<p className="font-bold text-xl">{editingCollection._id ? "Edit" : "Create"} Collection</p>
+				<Button icon="trash-can" text="Delete Collection" color="error"
+					className="ml-auto border-2 border-gray-800"
+					onClick={() => {
+						if(selectedCollection == null) return;
+						removeCollection(selectedCollection);
+						del({url: new URL(`${import.meta.env.VITE_CMS_URL}/collections/${collections[selectedCollection].path}`)});
+						setSelectedCollection(Object.keys(collections)[0]);
+						select(0)
+					}} />
 			</header>
 
 			<div className="flex flex-col gap-4 p-4 bg-gray-900 border-2 border-gray-800 rounded-2xl">
