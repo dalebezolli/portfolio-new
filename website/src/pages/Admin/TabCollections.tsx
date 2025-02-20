@@ -314,7 +314,9 @@ function CollectionEditor() {
 				</div>
 
 				<div className="pt-6">
-					<Button icon="check" text="Create Collection" className="w-fit" color="success" onClick={saveCollection} />
+					<Button icon="check" className="w-fit" color="success" disabled
+						text={`${editingCollection._id == null ? "Create" : "Save"} Collection`}
+						onClick={saveCollection} />
 				</div>
 			</div>
 
