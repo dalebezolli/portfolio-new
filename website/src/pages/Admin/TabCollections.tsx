@@ -6,6 +6,7 @@ import { STable, TBody, THead, THeadRow, TRow } from "../../components/admin_com
 import Input from "../../components/admin_components/Input";
 import { Collection, CollectionAttribute, CollectionRecord } from "../../types";
 import { del, post, put } from "../../utils/network";
+import { Checkbox } from "../../components/admin_components/Checkbox";
 
 export default function TabCollections() {
 	return (
@@ -66,7 +67,7 @@ function CollectionView() {
 	const {
 		collections, selectedCollection, selectedRecords,
 		setEditingCollection, setEditingRecord, removeRecord,
-		toggleSelectedRecord,
+		addSelectedRecord, toggleSelectedRecord, clearSelectedRecords,
 	} = useGlobalState();
 
 	const collectionName = (collections[selectedCollection ?? ""]) ? collections[selectedCollection ?? ""].name : "";
@@ -148,7 +149,19 @@ function CollectionView() {
 					<STable>
 						<THead className="font-semibold text-gray-200 border-b-2 border-gray-800">
 							<THeadRow>
-								<td className="w-[1%]" align="center"><div className="w-[32px] h-[48px]"></div></td>
+								<td className="w-[1%]" align="center">
+									<div className="p-2 w-full h-full flex justify-center items-center">
+										<Checkbox onClick={e => {
+											if(selectedCollection == null) return;
+											console.log(e.currentTarget.checked, ":", selectedRecords);
+											if(e.currentTarget.checked) {
+												addSelectedRecord(...Object.keys(collections[selectedCollection].records));
+											} else {
+												clearSelectedRecords();
+											}
+										}} />
+									</div>
+								</td>
 								<td className="w-[1%]"><div className="p-2"><Button text="ID" className="w-full" /></div></td>
 								<td className=""><div className="p-2"><Button text="Title" className="w-full" /></div></td>
 								<td className="w-[1%]"><div className="p-2"><Button text="Status" className="w-full" /></div></td>
@@ -160,10 +173,13 @@ function CollectionView() {
 							{
 								tableRecords.map((record, _) => (
 									<TRow key={record.id} entry={record} onRowClick={onRowClick} className="hover:bg-gray-700">
-										<td align="center"><input
-											type="checkbox"
-											checked={selectedRecords[record.id]}
-											onClick={() => toggleSelectedRecord(record.id)} /></td>
+										<td align="center">
+											<div className="p-2 w-full h-full flex justify-center items-center">
+												<Checkbox key={selectedRecords}
+													checked={selectedRecords[record.id]}
+													onClick={() => toggleSelectedRecord(record.id)} />
+											</div>
+										</td>
 										<td><p className="px-6 py-4">{record.id}</p></td>
 										<td><p className="px-6 py-4">{record.title}</p></td>
 										<td><p className="px-6 py-4">{record.status}</p></td>

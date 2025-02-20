@@ -146,7 +146,7 @@ export function GlobalStateProvider({children}: PropsWithChildren) {
 	}
 
 	function clearSelectedRecords() {
-		setSelectedRecords({});
+		setSelectedRecords(_ => ({}));
 	}
 	
 	const contextValue: GlobalStateDetails = {
