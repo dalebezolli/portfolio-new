@@ -14,7 +14,7 @@ type ProjectDisplayProps = {
 	className?: string;
 };
 
-export default function ProjectDisplay({name, small=false, className=""}: ProjectDisplayProps) {
+export default function ProjectDisplay({name, small=false, techTags=[], githubUrl="", liveUrl="", className=""}: ProjectDisplayProps) {
 	return (
 		<div className={`
 			group relative
@@ -47,16 +47,16 @@ export default function ProjectDisplay({name, small=false, className=""}: Projec
 				<p className="font-semibold text-2xl">{name}</p>
 
 				<div className="h-[24px] flex gap-2">
-					<TechIcon icon="tech-js" />
-					<TechIcon icon="tech-ts" />
-					<TechIcon icon="tech-go" />
-					<TechIcon icon="tech-react" />
-					<TechIcon icon="tech-tailwind" />
+					{
+						techTags.map(tag => (
+							<TechIcon icon={`tech-${tag}` as IconNameTech} />
+						))
+					}
 				</div>
 
 				<div className="pt-4 flex flex-wrap gap-8">
-					<ProjectActionButton icon="github">Source</ProjectActionButton>
-					<ProjectActionButton icon="location-arrow">Live</ProjectActionButton>
+					{githubUrl.length ? <ProjectActionButton icon="github" href={githubUrl}>Source</ProjectActionButton> : '' }
+					{liveUrl.length ? <ProjectActionButton icon="location-arrow" href={liveUrl}>Live</ProjectActionButton> : ''}
 				</div>
 			</section>
 		</div>

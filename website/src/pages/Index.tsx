@@ -1,8 +1,10 @@
+import { useEffect, useState } from "preact/hooks";
 import { ArticleCard } from "../components/ArticleCard";
 import { CenterContainer } from "../components/CenteredContainer";
 import Header from "../components/Header";
 import Icon from "../components/Icon";
 import ProjectDisplay from "../components/ProjectDisplay";
+import { get } from "../utils/network";
 
 export function Index() {
 	return (
@@ -20,17 +22,44 @@ export function Index() {
 	);
 }
 
+type ProjectRecord = {
+	title: string,
+	tags: string,
+	description: string,
+	liveUrl: string,
+	sourceUrl: string,
+};
+
 function SectionWork() {
+	const [projects, setProjects] = useState<ProjectRecord[]>([]);
+
+	useEffect(() => {
+		initializeProjects();
+	}, []);
+
+	async function initializeProjects() {
+		const data = await get<ProjectRecord[]>({url: new URL(`${import.meta.env.VITE_CMS_URL}/projects`)});
+		if(data == null) return;
+		setProjects(data);
+	}
+
 	return (
 		<div className="pt-16 pb-48">
 			<h2 className="w-fit pb-4 text-4xl md:text-5xl font-heading font-semibold text-transparent bg-clip-text bg-linear-to-r from-white to-white/40 transition-colors">Work</h2>
 
-			<div className="flex flex-wrap gap-2 sm:gap-4 justify-center items-center">
-				<ProjectDisplay name="Cool Project" img="test" className="grow" />
-				<div className="flex flex-col gap-2 sm:gap-4 grow md:grow-[0.3]">
-					<ProjectDisplay name="Cool Small Project" img="test" small={true} />
-					<ProjectDisplay name="Cool Small Project 2" img="test" small={true} />
-				</div>
+			<div className="grid grid-cols-1 md:grid-cols-[1.25fr_1fr] grid-rows-3 md:grid-rows-2 gap-4">
+				{
+					[0,1,2].map((i) => (
+						<ProjectDisplay
+							name={projects[i]?.title ?? "Cool Project"}
+							techTags={projects[i]?.tags.split(' ') ?? []}
+							liveUrl={projects[i]?.liveUrl ?? ""}
+							githubUrl={projects[i]?.sourceUrl ?? ""}
+							img="test"
+							className={`grow ${i === 0 ? "md:row-span-2" : ""} ${i === 2 ? "md:row-start-2 md:col-start-2" : ""}`}
+							small={i !== 0} />
+					))
+				}
 			</div>
 		</div>
 	);
