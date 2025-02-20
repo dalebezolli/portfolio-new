@@ -191,10 +191,13 @@ func updateCollection(db *mongo.Client) http.HandlerFunc {
 			return
 		}
 
+		var newCollectionPath string = collectionPath
 		if _, exists := collectionChanges["name"]; exists {
-			newCollectionPath := StringToPath((collectionChanges["name"]).(string))
-			collectionChanges["path"] = newCollectionPath
+			newCollectionPath = StringToPath((collectionChanges["name"]).(string))
+		}
 
+		if collectionPath != newCollectionPath {
+			collectionChanges["path"] = newCollectionPath
 			renameResult := cmsDatabase.RunCommand(context.TODO(), bson.D{
 				{Key: "renameCollection", Value: CMS_DATABASE + "." + collectionPath},
 				{Key: "to", Value: CMS_DATABASE + "." + newCollectionPath},
