@@ -37,7 +37,7 @@ export default function Button({text, icon, color, disabled=false, active=false,
 
 	return (
 		<button className={`
-			group px-4 py-2 flex gap-2 items-center rounded-xl font-bold
+			group px-4 py-2 flex gap-2 items-center rounded-xl font-bold w-max
 			${disabled ? "cursor-not-allowed" : "cursor-pointer"} transition-colors ${className}`} {...rest}>
 			{icon && <Icon icon={icon} colorFill={iconClassName} />}
 			{text}
