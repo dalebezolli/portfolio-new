@@ -1,0 +1,20 @@
+services:
+  web:
+    build: ./website
+    ports:
+      - "8000:80"
+    depends_on:
+      - cms_api
+  cms_api:
+    build: ./backend
+    ports:
+      - "9000:9000"
+    depends_on:
+      - cms_db
+  cms_db:
+    image: mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root

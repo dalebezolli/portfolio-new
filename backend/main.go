@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/joho/godotenv"
 )
@@ -29,6 +30,7 @@ func main() {
 	addRoutes(mux, db)
 
 	log.Println("Listening on:", ADDRESS)
+	log.Println("Database:", os.Getenv("MONGODB_URI"))
 	err = http.ListenAndServe(ADDRESS, mux)
 	if err != nil {
 		log.Fatalln("There was an error while serving:", err.Error())
