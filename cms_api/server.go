@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 
@@ -57,11 +59,23 @@ func ReadJSON[T any](s string) (T, error) {
 func ReadBodyJSON[T Validator](r *http.Request, db *mongo.Client) (T, Misses, error) {
 	var data T
 	err := json.NewDecoder(r.Body).Decode(&data)
+	if err != nil {
+		return data, nil, err
+	}
+
+	if err == io.EOF {
+		return data, nil, errors.New("No body was provided")
+	}
 
 	if err != nil {
 		return data, nil, err
 	}
 
 	misses := data.Validate(r, db)
+
+	if len(misses) != 0 {
+		return data, misses, errors.New("Invalid Syntax")
+	}
+
 	return data, misses, nil
 }
