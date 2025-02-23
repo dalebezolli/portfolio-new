@@ -1,13 +1,13 @@
 import { JSX } from "preact/compat";
-import Button from "../../components/admin_components/Button";
-import { useTabs, Tabs, TabWrapper } from "../../components/admin_components/Tabs";
+import Button from "../../components/Button";
+import { useTabs, Tabs, TabWrapper } from "../../components/Tabs";
 import { useGlobalState } from "../../state/GlobalState";
-import { STable, TBody, THead, THeadRow, TRow } from "../../components/admin_components/SimpleTable";
-import Input from "../../components/admin_components/Input";
+import { STable, TBody, THead, THeadRow, TRow } from "../../components/SimpleTable";
+import Input from "../../components/Input";
 import { Collection, CollectionAttribute, CollectionRecord } from "../../types";
 import { del, post, put } from "../../utils/network";
-import { Checkbox } from "../../components/admin_components/Checkbox";
-import Select from "../../components/admin_components/Select";
+import { Checkbox } from "../../components/Checkbox";
+import Select from "../../components/Select";
 import { selectTypes } from "../../utils/constants";
 
 export default function TabCollections() {

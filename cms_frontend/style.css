@@ -1,0 +1,11 @@
+@import 'tailwindcss';
+
+html {
+	background-color: var(--color-black, black);
+}
+
+@theme {
+	--breakpoint-xs: 30rem;
+	--font-primary: "Poppins", var(--default-font-family);
+	--font-heading: "Reem Kufi", var(--default-font-family);
+}

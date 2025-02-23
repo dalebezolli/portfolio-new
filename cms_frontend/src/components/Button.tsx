@@ -1,5 +1,5 @@
 import { ButtonHTMLAttributes, JSX } from "preact/compat";
-import Icon, { IconName } from "../Icon";
+import Icon, { IconName } from "./Icon";
 
 type PrimaryButtonProps = {
 	text?: string;

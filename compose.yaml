@@ -5,8 +5,14 @@ services:
       - "8000:80"
     depends_on:
       - cms_api
+  cms_frontend:
+    build: ./cms_frontend
+    ports:
+      - "8800:8800"
+    depends_on:
+      - cms_api
   cms_api:
-    build: ./backend
+    build: ./cms_api
     ports:
       - "9000:9000"
     depends_on:
