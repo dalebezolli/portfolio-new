@@ -1,9 +1,10 @@
 import fs from 'node:fs/promises'
 import express from 'express'
+import viteConfig from './vite.config.ts'
 
 // Constants
 const isProduction = process.env.NODE_ENV === 'production'
-const port = process.env.PORT || 5173
+const port = process.env.PORT || viteConfig?.server?.port || 5173
 const base = process.env.BASE || '/'
 
 // Cached production assets
