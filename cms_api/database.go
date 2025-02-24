@@ -25,11 +25,13 @@ func initializeDB() (*mongo.Client, error) {
 	if uri == "" {
 		return nil, errors.New("No MongoDB connection URI found. Set the 'MONGODB_URI' environment variable.")
 	}
-
+	
 	client, err := mongo.Connect(options.Client().ApplyURI(uri))
 	if err != nil {
 		return nil, err
 	}
+
+	createDBCollection(client.Database(CMS_DATABASE), CMS_COLLECTIONS)
 
 	return client, nil
 }
