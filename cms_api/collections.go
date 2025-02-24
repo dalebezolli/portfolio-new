@@ -207,9 +207,8 @@ func deleteCollection(db *mongo.Client) http.HandlerFunc {
 }
 
 func getData(db *mongo.Client) http.HandlerFunc {
-	cmsDatabase := db.Database(CMS_DATABASE)
-
 	return func(w http.ResponseWriter, r *http.Request) {
+		cmsDatabase := db.Database(CMS_DATABASE)
 		collectionPath := r.PathValue("collection")
 
 		list, err := cmsDatabase.ListCollectionNames(context.TODO(), bson.M{"name": collectionPath})
@@ -315,9 +314,8 @@ func getDataSingle(db *mongo.Client) http.HandlerFunc {
 }
 
 func createData(db *mongo.Client) http.HandlerFunc {
-	cmsDatabase := db.Database(CMS_DATABASE)
-
 	return func(w http.ResponseWriter, r *http.Request) {
+		cmsDatabase := db.Database(CMS_DATABASE)
 		collectionPath := r.PathValue("collection")
 
 		list, err := cmsDatabase.ListCollectionNames(context.TODO(), bson.M{"name": collectionPath})

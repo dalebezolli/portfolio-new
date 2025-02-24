@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"maps"
 	"os"
@@ -42,6 +43,11 @@ func getDBResource(
 	context, cancel := context.WithTimeout(context.Background(), db_max_request_timeout)
 	defer cancel()
 
+	err := checkCollectionExistence(db, collection)
+	if err != nil {
+		return nil, err
+	}
+
 	response, err := db.Collection(collection).Find(context, filter, opts...)
 	if err != nil {
 		return nil, err
@@ -68,6 +74,11 @@ func createDBResource(
 	document map[string]any,
 	opts ...options.Lister[options.InsertOneOptions],
 ) (map[string]interface{}, error) {
+	err := checkCollectionExistence(db, collection)
+	if err != nil {
+		return nil, err
+	}
+
 	var orderedCollection bson.D
 	stringifiedCollection, err := json.Marshal(document)
 	err = bson.UnmarshalExtJSON(stringifiedCollection, true, &orderedCollection)
@@ -101,6 +112,11 @@ func updateDBResource(
 ) (map[string]interface{}, error) {
 	context, cancel := context.WithTimeout(context.Background(), db_max_request_timeout)
 	defer cancel()
+
+	err := checkCollectionExistence(db, collection)
+	if err != nil {
+		return nil, err
+	}
 
 	record, err := getDBResource(db, collection, filter)
 	if err != nil {
@@ -142,6 +158,11 @@ func deleteDBResource(
 ) error {
 	context, cancel := context.WithTimeout(context.Background(), db_max_request_timeout)
 	defer cancel()
+
+	err := checkCollectionExistence(db, collection)
+	if err != nil {
+		return err
+	}
 
 	result, err := db.Collection(collection).DeleteOne(context, filter, opts...)
 	if err != nil {
@@ -191,3 +212,21 @@ func deleteDBCollection(
 	return db.Collection(collection).Drop(context)
 }
 
+func checkCollectionExistence(
+	db *mongo.Database,
+	collection string,
+) error {
+	context, cancel := context.WithTimeout(context.Background(), db_max_request_timeout)
+	defer cancel()
+
+	list, err := db.ListCollectionNames(context, bson.M{"name": collection})
+	if err != nil {
+		return errors.New(fmt.Sprintf("Error while getting data from collection (%v): %v", collection, err.Error()))
+	}
+
+	if len(list) == 0 {
+		return errors.New(fmt.Sprintf("Couldn't find collection (%v)", collection))
+	}
+
+	return nil
+}
