@@ -317,43 +317,15 @@ func createData(db *mongo.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cmsDatabase := db.Database(CMS_DATABASE)
 		collectionPath := r.PathValue("collection")
-
-		list, err := cmsDatabase.ListCollectionNames(context.TODO(), bson.M{"name": collectionPath})
-		if err != nil {
-			message := fmt.Sprintf("Error while creating new entry for collection (%v): %v", collectionPath, err.Error())
-			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: message})
-			log.Println(message)
-			return
-		}
-
-		if len(list) == 0 {
-			message := fmt.Sprintf("Couldn't find collection (%v)", collectionPath)
-			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: message})
-			return
-		}
-
 		newCollectionData, misses, err := ReadBodyJSON[CollectionData](r, db)
-		if err == io.EOF {
-			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "No body was provided"})
-			return
-		}
-
 		if err != nil {
-			response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax: " + err.Error()}
+			response := ResponseMessage{Status: StatusCodeError, Message: err.Error(), Data: misses}
 			WriteJSON(w, http.StatusBadRequest, response)
 			log.Println("Error while creating new data:", err)
 			return
 		}
 
-		if len(misses) != 0 {
-			response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax", Data: misses}
-			WriteJSON(w, http.StatusBadRequest, response)
-			log.Println("Error while creating new data:", err)
-			return
-		}
-
-		cmsCollectionData := db.Database(CMS_DATABASE).Collection(collectionPath)
-		response, err := cmsCollectionData.InsertOne(context.TODO(), newCollectionData)
+		data, err := createDBResource(cmsDatabase, collectionPath, newCollectionData)
 		if err != nil {
 			message := fmt.Sprintf("Error while creating data in collection (%v): %v", collectionPath, err.Error())
 			WriteJSON(w, http.StatusInternalServerError, ResponseMessage{Status: StatusCodeError, Message: message})
@@ -361,55 +333,26 @@ func createData(db *mongo.Client) http.HandlerFunc {
 			return
 		}
 
-		newCollectionData["_id"] = (response.InsertedID).(bson.ObjectID)
-		WriteJSON(w, http.StatusOK, ResponseMessage{Status: StatusCodeOk, Message: "Created collection successfully", Data: newCollectionData})
+		WriteJSON(w, http.StatusOK, ResponseMessage{Status: StatusCodeOk, Message: "Created collection successfully", Data: data})
 	}
 }
 
 func updateData(db *mongo.Client) http.HandlerFunc {
-	cmsDatabase := db.Database(CMS_DATABASE)
-
 	return func(w http.ResponseWriter, r *http.Request) {
+		cmsDatabase := db.Database(CMS_DATABASE)
 		collectionPath := r.PathValue("collection")
 
-		list, err := cmsDatabase.ListCollectionNames(context.TODO(), bson.M{"name": collectionPath})
-		if err != nil {
-			message := fmt.Sprintf("Error while getting data from collection (%v): %v", collectionPath, err.Error())
-			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: message})
-			log.Println(message)
-			return
-		}
-
-		if len(list) == 0 {
-			message := fmt.Sprintf("Couldn't find collection (%v)", collectionPath)
-			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: message})
-			return
-		}
-
 		newCollectionData, misses, err := ReadBodyJSON[CollectionData](r, db)
-		if err == io.EOF {
-			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "No body was provided"})
-			return
-		}
-
 		if err != nil {
-			response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax: " + err.Error()}
+			response := ResponseMessage{Status: StatusCodeError, Message: err.Error(), Data: misses}
 			WriteJSON(w, http.StatusBadRequest, response)
 			log.Println("Error while updating data:", err)
 			return
 		}
 
-		if len(misses) != 0 {
-			response := ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax", Data: misses}
-			WriteJSON(w, http.StatusBadRequest, response)
-			log.Println("Error while updating data:", err)
-			return
-		}
-
-		cmsCollectionData := db.Database(CMS_DATABASE).Collection(collectionPath)
 		dataHexId := r.PathValue("id")
 		dataObjectId, err := bson.ObjectIDFromHex(dataHexId)
-		response, err := cmsCollectionData.UpdateByID(context.TODO(), dataObjectId, bson.M{"$set": newCollectionData})
+		response, err := updateDBResource(cmsDatabase, collectionPath, bson.M{"_id": dataObjectId}, bson.M{"$set": newCollectionData})
 		if err != nil {
 			message := fmt.Sprintf("Error while updating data for (%v) in collection (%v): %v", dataHexId, collectionPath, err.Error())
 			WriteJSON(w, http.StatusInternalServerError, ResponseMessage{Status: StatusCodeError, Message: message})
@@ -417,75 +360,32 @@ func updateData(db *mongo.Client) http.HandlerFunc {
 			return
 		}
 
-		if response.MatchedCount == 0 {
-			WriteJSON(w, http.StatusOK, ResponseMessage{
-				Status:  StatusCodeError,
-				Message: fmt.Sprintf("Failed to update document with id (%v) in collection (%v)", dataHexId, collectionPath),
-			})
-			return
-		}
-
-		responseFind := cmsCollectionData.FindOne(context.TODO(), bson.M{"_id": dataObjectId})
-		result := bson.M{}
-		err = responseFind.Decode(&result)
-		if err != nil && (mongo.IsNetworkError(err) || mongo.IsTimeout(err)) {
-			message := fmt.Sprintf("Error while searching for (%v) in collection (%v): %v", dataHexId, collectionPath, err.Error())
-			WriteJSON(w, http.StatusInternalServerError, ResponseMessage{Status: StatusCodeError, Message: message})
-			log.Println(message)
-			return
-		}
-
-		status := StatusCodeOk
-		message := ""
-		if _, exists := result["_id"]; exists == false {
-			status = StatusCodeError
-			message = fmt.Sprintf("Couldn't find (%v) in collection (%v)", dataHexId, collectionPath)
-		}
-
 		WriteJSON(w, http.StatusOK, ResponseMessage{
-			Status:  status,
-			Message: message,
-			Data:    result,
+			Status:  StatusCodeOk,
+			Message: "Updated data successfully",
+			Data:    response,
 		})
 	}
 }
 
 func deleteData(db *mongo.Client) http.HandlerFunc {
-	cmsDatabase := db.Database(CMS_DATABASE)
-
 	return func(w http.ResponseWriter, r *http.Request) {
+		cmsDatabase := db.Database(CMS_DATABASE)
 		collectionPath := r.PathValue("collection")
 
-		list, err := cmsDatabase.ListCollectionNames(context.TODO(), bson.M{"name": collectionPath})
-		if err != nil {
-			message := fmt.Sprintf("Error while getting data from collection (%v): %v", collectionPath, err.Error())
-			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: message})
-			log.Println(message)
-			return
-		}
-
-		if len(list) == 0 {
-			message := fmt.Sprintf("Couldn't find collection (%v)", collectionPath)
-			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: message})
-			return
-		}
-
-		cmsCollectionData := db.Database(CMS_DATABASE).Collection(collectionPath)
 		dataHexId := r.PathValue("id")
 		dataObjectId, err := bson.ObjectIDFromHex(dataHexId)
-		response, err := cmsCollectionData.DeleteOne(context.TODO(), bson.M{"_id": dataObjectId})
+		err = deleteDBResource(cmsDatabase, collectionPath, bson.M{"_id": dataObjectId})
 		if err != nil {
-			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax: " + err.Error()})
+			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: err.Error()})
 			log.Println("Error while deleting collection:", err)
 			return
 		}
 
-		message := fmt.Sprintf("Deleted document with id (%v) in collection (%v)", dataHexId, collectionPath)
-		if response.DeletedCount == 0 {
-			message = fmt.Sprintf("Failed to delete document with id (%v) in collection (%v)", dataHexId, collectionPath)
-		}
-
-		WriteJSON(w, http.StatusOK, ResponseMessage{Status: StatusCodeOk, Message: message})
+		WriteJSON(w, http.StatusOK, ResponseMessage{Status:
+			StatusCodeOk, Message:
+			fmt.Sprintf("Deleted document with id (%v) in collection (%v)", dataHexId, collectionPath),
+		})
 	}
 }
 
