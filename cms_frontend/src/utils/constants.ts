@@ -1,5 +1,6 @@
 export const selectTypes = [
-	{name: "Single Line Text", value: "string"},
+	{name: "Text", value: "string"},
 	{name: "Formatted Text", value: "mdx"},
 	{name: "Date", value: "date"},
+	{name: "Image", value: "image"},
 ];

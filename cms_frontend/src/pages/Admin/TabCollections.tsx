@@ -9,6 +9,7 @@ import { del, post, put } from "../../utils/network";
 import { Checkbox } from "../../components/Checkbox";
 import Select from "../../components/Select";
 import { selectTypes } from "../../utils/constants";
+import { FileUploader } from "../../components/FileUploader";
 
 export default function TabCollections() {
 	return (
@@ -249,7 +250,7 @@ function CollectionEditor() {
 		});
 	}
 
-	function updateAttribute(event: JSX.TargetedEvent<HTMLInputElement>, prop: "name" | "type", index: number) {
+	function updateAttribute(event: JSX.TargetedEvent<HTMLInputElement | HTMLSelectElement>, prop: "name" | "type", index: number) {
 		const newAttribute = {...editingCollection.attributes[index], [prop]: event.currentTarget.value};
 
 		setEditingCollection(old => {
@@ -324,7 +325,7 @@ function CollectionEditor() {
 									<TRow>
 										<td></td>
 										<td><Input value={attr.name} placeholder="Helpful Attribute" onChange={e => updateAttribute(e, "name", i)} /></td>
-										<td><Select data={selectTypes} /></td>
+										<td><Select data={selectTypes} onClick={e => updateAttribute(e, "type", i)} /></td>
 										<td align="right"><Button icon="trash-can" className="my-4" onClick={() => removeAttribute(i)} /></td>
 									</TRow>
 								))
@@ -389,13 +390,23 @@ function RecordEditor() {
 				<p className="text-gray-200 font-bold text-xl mb-2">Record Information</p>
 
 				{
-					collections[selectedCollection].attributes.map(({name}) => {
+					collections[selectedCollection].attributes.map(({name, type}) => {
 						if(name == null) return;
+
+						let AttrInput = () => <Input className="w-fit" value={editingRecord[name]} onChange={(e) => updateRecord(e, name)} />
+						switch(type) {
+							case 'image':
+								AttrInput = () => <FileUploader />
+								break;
+							case 'mdx':
+								AttrInput = () => <Input className="w-full" value={editingRecord[name]} onChange={(e) => updateRecord(e, name)} />
+								break;
+						}
 
 						return (
 							<div className="flex flex-col gap-1">
 								<p>{name}</p>
-								<Input className="w-fit" value={editingRecord[name]} onChange={(e) => updateRecord(e, name)} />
+								<AttrInput />
 							</div>
 						)
 					})
