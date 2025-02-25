@@ -21,7 +21,7 @@ let vite
 if (!isProduction) {
 	const { createServer } = await import('vite')
 	vite = await createServer({
-		server: { middlewareMode: true },
+		server: { middlewareMode: true, hmr: { port: 24679 } },
 		appType: 'custom',
 		base,
 	})

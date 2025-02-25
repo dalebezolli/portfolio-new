@@ -9,6 +9,9 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
 	server: {
 		allowedHosts: ['portfolio.co-watch.com'],
+		hmr: {
+			port: 24679,
+		},
 	},
 	plugins: [
 		tailwindcss(),

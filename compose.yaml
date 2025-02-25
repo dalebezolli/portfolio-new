@@ -3,12 +3,18 @@ services:
     build: ./website
     ports:
       - "8000:80"
+      - "24678:24678"
+    volumes:
+      - "./website:/home/node/app"
     depends_on:
       - cms_api
   cms_frontend:
     build: ./cms_frontend
     ports:
       - "8800:8800"
+      - "24679:24679"
+    volumes:
+      - "./cms_frontend:/home/node/app"
     depends_on:
       - cms_api
   cms_api:
