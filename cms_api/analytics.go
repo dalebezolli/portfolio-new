@@ -4,8 +4,10 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -13,9 +15,75 @@ import (
 
 func handleAnalyticsRoutes(db *mongo.Client) *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/identify", identify(db))
+	mux.HandleFunc("GET /stats", getStatistics(db))
+	mux.HandleFunc("GET /identify", identify(db))
 
 	return mux
+}
+
+// Ideally this will be precalculated every so often
+// For now though we'll be manually calculating every aspect of the data to simplify the logic
+func getStatistics(db *mongo.Client) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		startDateString := r.URL.Query().Get("start")
+		endDateString := r.URL.Query().Get("end")
+
+		filter := bson.D{}
+		if startDateString != "" {
+			time, err := time.Parse(time.RFC3339, startDateString)
+			if err != nil {
+				log.Printf("Failed to parse start date string with %q", startDateString)
+			} else {
+				filter = append(filter, bson.E{Key: "loggedAt", Value: bson.D{{Key:"$gte", Value: time}}})
+			}
+		}
+
+		if endDateString != "" {
+			time, err := time.Parse(time.RFC3339, endDateString)
+			if err != nil {
+				log.Printf("Failed to parse end date string with %q", endDateString)
+			} else {
+				filter = append(filter, bson.E{Key: "loggedAt", Value: bson.D{{Key:"$lte", Value: time}}})
+			}
+		}
+
+		log.Println("Filtering with: ", filter)
+
+		cmsDatabase := db.Database(CMS_DATABASE)
+		results, err := getDBResource(cmsDatabase, CMS_C_ANALYTICS_USERS, filter)
+		if err != nil {
+			WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
+				Status: StatusCodeError,
+				Message: err.Error(),
+			})
+			return
+		}
+
+		totalVisitorsByCountry := make(map[string]int)
+		totalVisits := 0
+		totalUniqueVisits := 0
+
+		for _, analytic := range results {
+			currentVisitCount := int((analytic["visitCount"]).(int32))
+			totalVisits += int((analytic["visitCount"]).(int32))
+			totalUniqueVisits++
+			count, exists := totalVisitorsByCountry[(analytic["countryCode"]).(string)]
+			if exists {
+				totalVisitorsByCountry[(analytic["countryCode"]).(string)] = count + currentVisitCount
+			} else {
+				totalVisitorsByCountry[(analytic["countryCode"]).(string)] = currentVisitCount
+			}
+		}
+
+		WriteJSON(w, http.StatusOK, ResponseMessage{
+			Status: StatusCodeOk,
+			Data: map[string]any{
+				"totalVisitorsByCountry": totalVisitorsByCountry,
+				"totalVisits": totalVisits,
+				"totalUniqueVisits": totalUniqueVisits,
+			},
+		})
+	}
 }
 
 func identify(db *mongo.Client) http.HandlerFunc {
@@ -51,6 +119,7 @@ func identify(db *mongo.Client) http.HandlerFunc {
 			Ip: visitor.Ip,
 			UserId: visitor.UserId,
 			CountryCode: visitor.CountryCode,
+			LoggedAt: time.Now(),
 		}
 
 		if len(res) == 0 {
@@ -98,12 +167,12 @@ func (v *Visitor) ToMap() map[string]interface{} {
 	}
 }
 
-
 type Analytic struct {
 	UserId string
 	Ip string
 	CountryCode string
 	VisitCount int
+	LoggedAt time.Time
 }
 
 func (a *Analytic) ToMap() map[string]interface{} {
@@ -112,6 +181,7 @@ func (a *Analytic) ToMap() map[string]interface{} {
 		"ip": a.Ip,
 		"countryCode": a.CountryCode,
 		"visitCount": a.VisitCount,
+		"loggedAt": bson.NewDateTimeFromTime(a.LoggedAt),
 	}
 }
 
