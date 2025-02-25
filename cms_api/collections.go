@@ -58,7 +58,7 @@ func handleCollectionRoutes(db *mongo.Client) *http.ServeMux {
 func getCollections(db *mongo.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cmsDB := db.Database(CMS_DATABASE)
-		results, err := getDBResource(cmsDB, CMS_COLLECTIONS, bson.D{}, options.Find().SetProjection(publicProjection))
+		results, err := getDBResource(cmsDB, CMS_C_COLLECTIONS, bson.D{}, options.Find().SetProjection(publicProjection))
 		if err != nil {
 			WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
 				Status:  StatusCodeError,
@@ -79,7 +79,7 @@ func getCollectionSingle(db *mongo.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cmsDB := db.Database(CMS_DATABASE)
 		collectionPath := r.PathValue("collection")
-		results, err := getDBResource(cmsDB, CMS_COLLECTIONS, bson.M{"path": collectionPath})
+		results, err := getDBResource(cmsDB, CMS_C_COLLECTIONS, bson.M{"path": collectionPath})
 		if err != nil {
 			WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
 				Status:  StatusCodeError,
@@ -115,7 +115,7 @@ func createCollection(db *mongo.Client) http.HandlerFunc {
 		name, _ := (newCollection["name"]).(string)
 		newCollection["path"] = StringToPath(name)
 		newCollection["modifiedAt"] = time.Now()
-		insertedCollection, err := createDBResource(cmsDatabase, CMS_COLLECTIONS, newCollection)
+		insertedCollection, err := createDBResource(cmsDatabase, CMS_C_COLLECTIONS, newCollection)
 		if err != nil {
 			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: "Invalid Syntax: " + err.Error()})
 			log.Println("Error while creating new collection:", err)
@@ -165,7 +165,7 @@ func updateCollection(db *mongo.Client) http.HandlerFunc {
 			}
 		}
 
-		updatedResource, err := updateDBResource(cmsDatabase, CMS_COLLECTIONS, bson.D{{Key:"name", Value: collectionPath}}, bson.M{"$set": bson.M{"attributes": ""}})
+		updatedResource, err := updateDBResource(cmsDatabase, CMS_C_COLLECTIONS, bson.D{{Key:"name", Value: collectionPath}}, bson.M{"$set": collectionChanges})
 		if err != nil {
 			errorMessage := fmt.Sprintf("Error while updating collections: %v", err.Error())
 			WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
@@ -188,7 +188,7 @@ func deleteCollection(db *mongo.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cmsDatabase := db.Database(CMS_DATABASE)
 		collectionPath := r.PathValue("collection")
-		err := deleteDBResource(cmsDatabase, CMS_COLLECTIONS, bson.M{"path": collectionPath})
+		err := deleteDBResource(cmsDatabase, CMS_C_COLLECTIONS, bson.M{"path": collectionPath})
 		if err != nil {
 			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: err.Error()})
 			log.Println("Error while deleting collection:", err)
@@ -471,7 +471,7 @@ func (c Collection) Validate(r *http.Request, db *mongo.Client) Misses {
 
 func (n NewCollection) Validate(r *http.Request, db *mongo.Client) Misses {
 	misses := Collection(n).Validate(r, db)
-	results, err := getDBResource(db.Database(CMS_DATABASE), CMS_COLLECTIONS, bson.M{"name": n["name"]})
+	results, err := getDBResource(db.Database(CMS_DATABASE), CMS_C_COLLECTIONS, bson.M{"name": n["name"]})
 	if err != nil && err != mongo.ErrNoDocuments {
 		misses["general.other"] = err.Error()
 		return misses
@@ -489,7 +489,7 @@ type CollectionData map[string]any
 func (d CollectionData) Validate(r *http.Request, db *mongo.Client) Misses {
 	misses := make(Misses, 0)
 
-	collection := db.Database(CMS_DATABASE).Collection(CMS_COLLECTIONS)
+	collection := db.Database(CMS_DATABASE).Collection(CMS_C_COLLECTIONS)
 	response := collection.FindOne(context.TODO(), bson.M{"path": r.PathValue("collection")})
 	result := bson.M{}
 	err := response.Decode(&result)

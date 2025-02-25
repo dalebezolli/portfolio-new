@@ -16,7 +16,8 @@ import (
 )
 
 const CMS_DATABASE = "portfolio-cms"
-const CMS_COLLECTIONS = "collections"
+const CMS_C_COLLECTIONS = "collections"
+const CMS_C_ANALYTICS_USERS = "analytics_users"
 
 const db_max_request_timeout = 10*time.Second
 
@@ -31,7 +32,8 @@ func initializeDB() (*mongo.Client, error) {
 		return nil, err
 	}
 
-	createDBCollection(client.Database(CMS_DATABASE), CMS_COLLECTIONS)
+	createDBCollection(client.Database(CMS_DATABASE), CMS_C_COLLECTIONS)
+	createDBCollection(client.Database(CMS_DATABASE), CMS_C_ANALYTICS_USERS)
 
 	return client, nil
 }

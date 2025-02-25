@@ -7,6 +7,9 @@ import tailwindcss from '@tailwindcss/vite';
 
 // https://vite.dev/config/
 export default defineConfig({
+	server: {
+		allowedHosts: ['portfolio.co-watch.com'],
+	},
 	plugins: [
 		tailwindcss(),
 		{enforce: 'pre', ...mdx({ jsxImportSource: 'preact' })},
