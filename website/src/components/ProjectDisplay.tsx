@@ -3,7 +3,6 @@ import Icon, { IconName, IconNameTech } from "./Icon";
 
 type ProjectDisplayProps = {
 	name: string;
-	img: string;
 	techTags?: string[];
 
 	small?: boolean;
@@ -11,10 +10,13 @@ type ProjectDisplayProps = {
 	githubUrl?: string;
 	liveUrl?: string;
 
+	img_primary?: string;
+	img_secondary?: string;
+
 	className?: string;
 };
 
-export default function ProjectDisplay({name, small=false, techTags=[], githubUrl="", liveUrl="", className=""}: ProjectDisplayProps) {
+export default function ProjectDisplay({name, small=false, techTags=[], githubUrl="", liveUrl="", className="", img_primary="", img_secondary=""}: ProjectDisplayProps) {
 	return (
 		<div className={`
 			group relative
@@ -28,8 +30,12 @@ export default function ProjectDisplay({name, small=false, techTags=[], githubUr
 
 			<div className={`absolute inset-0 transition-all md:group-hover:brightness-50 ${small ? '' : 'md:group-hover:brightness-100'}`}>
 				<div className="absolute top-[10%] left-[10%] w-[80px] h-[80px] rotate-3 bg-blue-600 rounded-md shadow-2xl"></div>
-				<div className="absolute top-[40%] left-[20%] w-[200px] h-[200px] rotate-12 bg-blue-400 rounded-md shadow-2xl"></div>
-				<div className="absolute top-[20%] right-[10%] w-[150px] h-[150px] rotate-45 bg-purple-400 rounded-md shadow-2xl"></div>
+				<div className="absolute top-[40%] left-[20%] w-[200px] h-[200px] rotate-12 bg-blue-400 rounded-md shadow-2xl">
+					{img_primary && <img src={img_primary} />}
+				</div>
+				<div className="absolute top-[20%] right-[10%] w-[150px] h-[150px] rotate-45 bg-purple-400 rounded-md shadow-2xl">
+					{img_secondary && <img src={img_secondary} />}
+				</div>
 				<div className="absolute bottom-[20%] right-[10%] w-[80px] h-[80px] rotate-[36deg] bg-purple-600 rounded-md shadow-2xl"></div>
 			</div>
 

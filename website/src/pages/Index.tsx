@@ -28,6 +28,8 @@ type ProjectRecord = {
 	description: string,
 	liveUrl: string,
 	sourceUrl: string,
+	img_primary: string,
+	img_secondary: string,
 };
 
 function SectionWork() {
@@ -55,7 +57,8 @@ function SectionWork() {
 							techTags={projects[i]?.tags.split(' ') ?? []}
 							liveUrl={projects[i]?.liveUrl ?? ""}
 							githubUrl={projects[i]?.sourceUrl ?? ""}
-							img="test"
+							img_primary={projects[i]?.img_primary ?? ""}
+							img_secondary={projects[i]?.img_secondary ?? ""}
 							className={`grow ${i === 0 ? "md:row-span-2" : ""} ${i === 2 ? "md:row-start-2 md:col-start-2" : ""}`}
 							small={i !== 0} />
 					))
