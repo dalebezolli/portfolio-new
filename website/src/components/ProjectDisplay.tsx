@@ -1,4 +1,4 @@
-import { PropsWithChildren } from "preact/compat";
+import React, { PropsWithChildren, useState } from "preact/compat";
 import Icon, { IconName, IconNameTech } from "./Icon";
 
 type ProjectDisplayProps = {
@@ -17,6 +17,24 @@ type ProjectDisplayProps = {
 };
 
 export default function ProjectDisplay({name, small=false, techTags=[], githubUrl="", liveUrl="", className="", img_primary="", img_secondary=""}: ProjectDisplayProps) {
+	const [tiltX, setTiltX] = useState(0);
+	const [tiltY, setTiltY] = useState(0);
+
+	function onHover(e: React.MouseEvent<HTMLDivElement>) {
+		const {clientX, clientY} = e;
+		const {x: cardX, y: cardY, width, height} = e.currentTarget.getBoundingClientRect();
+		const posX = (clientX - cardX) / width - 0.5;
+		const posY = (clientY - cardY) / height - 0.5;
+
+		setTiltX(posX);
+		setTiltY(posY);
+	}
+
+	function onHoverEnd() {
+		setTiltX(0);
+		setTiltY(0);
+	}
+
 	return (
 		<div className={`
 			group relative
@@ -26,30 +44,74 @@ export default function ProjectDisplay({name, small=false, techTags=[], githubUr
 			flex flex-col justify-end
 			rounded-xl
 			bg-zinc-900 font-primary
-			${className}`}>
 
-			<div className={`absolute inset-0 transition-all md:group-hover:brightness-50 ${small ? '' : 'md:group-hover:brightness-100'}`}>
-				<div className="absolute top-[10%] left-[10%] w-[80px] h-[80px] rotate-3 bg-blue-600 rounded-md shadow-2xl"></div>
-				<div className="absolute top-[40%] left-[20%] w-[200px] h-[200px] rotate-12 bg-blue-400 rounded-md shadow-2xl">
-					{img_primary && <img src={img_primary} />}
+
+			shadow-3xl shadow-black/80
+
+			${small ? '' : 'hover:overflow-visible hover:z-10'}
+			${className}`}
+
+			style={{transformStyle: 'preserve-3d', transform: `rotateY(${tiltX * 10}deg) rotateX(${tiltY * 10}deg)`}}
+			onMouseMove={onHover}
+			onMouseLeave={onHoverEnd}>
+			<div className={`absolute inset-0 transition-all md:group-hover:brightness-50 overflow-clip ${small ? '' : 'md:group-hover:brightness-100'}`}>
+				<div className="
+					absolute
+					w-[1px] h-[1px] top-[32%] left-[25%]
+
+					transition-all duration-700 ease-in-out
+					rounded-md shadow-projectdisplay group-hover:shadow-projectdisplay-hover shadow-fuchsia-400 overflow-clip">
 				</div>
-				<div className="absolute top-[20%] right-[10%] w-[150px] h-[150px] rotate-45 bg-purple-400 rounded-md shadow-2xl">
-					{img_secondary && <img src={img_secondary} />}
+
+				<div className="
+					absolute
+					w-[1px] h-[1px] bottom-[32%] right-[25%] scale-75
+
+					transition-all duration-1000 delay-100 ease-in-out
+					rounded-md shadow-projectdisplay group-hover:shadow-projectdisplay-hover shadow-fuchsia-600/60 overflow-clip">
 				</div>
-				<div className="absolute bottom-[20%] right-[10%] w-[80px] h-[80px] rotate-[36deg] bg-purple-600 rounded-md shadow-2xl"></div>
+			</div>
+
+			<div className={`translate-z-1 absolute inset-0 transition-all md:group-hover:brightness-50 perspective-[400px] ${small ? '' : 'md:group-hover:brightness-100'}`}>
+				<div className="
+					absolute
+					bottom-[22%] left-[20%]
+					scale-105 group-hover:scale-[101%]
+					group-hover:bottom-[20%] group-hover:left-[18%]
+					rotate-x-2 rotate-y-12 -rotate-z-12 translate-z-10 group-hover:translate-z-20
+
+					transition-all duration-500 ease-in-out
+					rounded-md shadow-3xl shadow-black/25 overflow-clip">
+					{img_secondary && <img width={300} src={img_secondary} />}
+				</div>
+			</div>
+
+			<div className={`translate-z-1 absolute inset-0 transition-all md:group-hover:brightness-50 perspective-[400px] ${small ? '' : 'md:group-hover:brightness-100'}`}>
+				<div className="
+					absolute
+					top-[2%] right-[15%]
+					group-hover:scale-105
+					group-hover:top-0 group-hover:right-[10%]
+					rotate-x-2 -rotate-y-12 rotate-z-12 translate-z-1
+
+					transition-all duration-500 ease-in-out
+					rounded-md shadow-3xl shadow-black/50 overflow-clip">
+					{img_primary && <img width={400} src={img_primary} />}
+				</div>
 			</div>
 
 			<section className={`
+				absolute bottom-0 inset-x-0
 				p-8
 				flex flex-col gap-1
 				h-full justify-end ${small ? '' :'md:h-auto md:justify-stretch'}
-				${small ? '' : 'md:bg-linear-60 from-zinc-950/10 to-zinc-600/10'}
+				${small ? '' : 'md:bg-linear-60 from-zinc-950/90 to-zinc-600/50'}
 				md:opacity-0 group-hover:opacity-100
-				backdrop-blur-2xl
+				backdrop-blur-sm rounded-b-xl
 
 				${small ? '' :'md:translate-y-20 md:group-hover:translate-y-0'}
 
-				transition-all ease-out duration-[250ms]`}>
+				transition-all ease-out duration-[250ms]`} style={{transform: 'translateZ(10px)'}}>
 				<p className="font-semibold text-2xl">{name}</p>
 
 				<div className="h-[24px] flex gap-2">
