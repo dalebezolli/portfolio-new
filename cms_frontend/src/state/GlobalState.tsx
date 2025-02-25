@@ -9,7 +9,7 @@ type GlobalStateDetails = {
 	selectedCollection: CollectionPath | null;
 
 	editingCollection: Collection;
-	editingRecord: {[key: string]: string};
+	editingRecord: {[key: string]: any};
 
 	selectedRecords: {[key: string]: true};
 
@@ -28,7 +28,7 @@ type GlobalStateDetails = {
 	clearSelectedRecords: () => void;
 
 	setEditingCollection: (value: StateUpdater<Collection>) => void;
-	setEditingRecord: (value: StateUpdater<{[key: string]: string}>) => void;
+	setEditingRecord: (value: StateUpdater<{[key: string]: any}>) => void;
 
 };
 
@@ -66,7 +66,7 @@ export function GlobalStateProvider({children}: PropsWithChildren) {
 	const [collections, setCollections] = useState<Collections>({});
 	const [selectedCollection, setSelectedCollection] = useState<CollectionPath | null>(null);
 	const [editingCollection, setEditingCollection] = useState<Collection>({name: "", path: "", attributes: [], records: {}});
-	const [editingRecord, setEditingRecord] = useState<{[key: string]: string}>({});
+	const [editingRecord, setEditingRecord] = useState<{[key: string]: any}>({});
 	const [selectedRecords, setSelectedRecords] = useState<{[key: string]: true}>({});
 
 	useEffect(() => {

@@ -1,4 +1,4 @@
-import { JSX } from "preact/compat";
+import { JSX, useEffect, useState } from "preact/compat";
 import Button from "../../components/Button";
 import { useTabs, Tabs, TabWrapper } from "../../components/Tabs";
 import { useGlobalState } from "../../state/GlobalState";
@@ -355,8 +355,8 @@ function RecordEditor() {
 		return (<div>No collection selected</div>);
 	}
 
-	function updateRecord(e: JSX.TargetedEvent<HTMLInputElement>, attribute: string) {
-		setEditingRecord(old => ({...old, [attribute]: e.currentTarget.value}))
+	function updateRecord(data: any, attribute: string) {
+		setEditingRecord(old => ({...old, [attribute]: data}))
 	}
 
 	async function saveRecord() {
@@ -392,21 +392,26 @@ function RecordEditor() {
 				{
 					collections[selectedCollection].attributes.map(({name, type}) => {
 						if(name == null) return;
-
-						let AttrInput = () => <Input className="w-fit" value={editingRecord[name]} onChange={(e) => updateRecord(e, name)} />
-						switch(type) {
-							case 'image':
-								AttrInput = () => <FileUploader />
-								break;
-							case 'mdx':
-								AttrInput = () => <Input className="w-full" value={editingRecord[name]} onChange={(e) => updateRecord(e, name)} />
-								break;
-						}
-
 						return (
 							<div className="flex flex-col gap-1">
 								<p>{name}</p>
-								<AttrInput />
+								{type == "string" && <Input className="w-fit" value={editingRecord[name]} onChange={(e) => updateRecord(e.currentTarget.value, name)} />}
+								{type == "image" && editingRecord[name] && <img width={128} src={editingRecord[name]} />}
+								{type == "image" && <FileUploader onChange={async e => {
+									if(e.currentTarget.files == null) return;
+									if(e.currentTarget.files[0] == null) return;
+									let target = e.currentTarget;
+									const file = target.files![0]
+
+									let base64Img = await new Promise((resolve: (value: string) => void) => {
+										let reader = new FileReader();
+										reader.onload = _ => resolve(reader.result as string)
+										reader.readAsDataURL(file)
+									});
+
+									updateRecord(base64Img, name)
+								}} />}
+								{type == "mdx" && <Input className="w-full" value={editingRecord[name]} onChange={(e) => updateRecord(e.currentTarget.value, name)} />}
 							</div>
 						)
 					})

@@ -1,9 +1,9 @@
-type FileUploaderProps = {
+import { HTMLAttributes } from "preact/compat";
 
-};
-
-export function FileUploader({}: FileUploaderProps) {
+export function FileUploader({...rest}: FileUploaderProps) {
 	return (
-		<input type="file" />
+		<input type="file" {...rest} />
 	);
 }
+
+type FileUploaderProps = HTMLAttributes<HTMLInputElement>;
