@@ -16,12 +16,13 @@ type ProjectDisplayProps = {
 
 	className?: string;
 	color?: string;
+	whiteTheme?: boolean;
 } & HTMLAttributes<HTMLDivElement>;
 
 export default function ProjectDisplay({
 	name, small=false, techTags=[],
 	githubUrl="", liveUrl="", className="",
-	img_primary="", img_secondary="", img_tertiary="", color="",
+	img_primary="", img_secondary="", img_tertiary="", color="", whiteTheme=false,
 	...rest
 }: ProjectDisplayProps) {
 	const [tiltX, setTiltX] = useState(0);
@@ -50,7 +51,7 @@ export default function ProjectDisplay({
 			overflow-clip
 			flex flex-col justify-end
 			rounded-xl
-			bg-zinc-900 font-primary
+			${whiteTheme ? "bg-zinc-200" : "bg-zinc-900"} font-primary
 
 
 			shadow-3xl shadow-black/80 hover:shadow-highlight/20
@@ -66,9 +67,9 @@ export default function ProjectDisplay({
 			<div className={`
 				absolute inset-0 overflow-clip rounded-xl
 				group-hover:bg-highlight
-				md:group-hover:brightness-50 ${small ? '' : 'md:group-hover:brightness-100'}	
+				md:group-hover:brightness-50 ${small ? '' : 'md:group-hover:brightness-100'}
 				transition-all`}>
-				<div className="absolute inset-0.5 rounded-xl bg-zinc-900 z-[2]">
+				<div className={`absolute inset-0.5 rounded-xl ${whiteTheme ? "bg-zinc-200" : "bg-zinc-900"} z-[2]`}>
 					<div className="
 						absolute
 						w-[1px] h-[1px] top-[32%] left-[25%]
@@ -124,27 +125,27 @@ export default function ProjectDisplay({
 					rounded-md shadow-3xl shadow-black/25 group-hover:shadow-highlight/25 overflow-clip`}>
 					{ img_secondary != "" ?
 						<img width={300} src={img_secondary} /> :
-						<div className="w-40 h-40 bg-cyan-400"></div>
+						<div className={`w-40 h-40 ${whiteTheme ? "bg-zinc-200" : "bg-zinc-900"}`}></div>
 					}
 				</div>
 			</div>
 
-			<div className={`z-[4] translate-z-1 absolute inset-0 transition-all md:group-hover:brightness-50 perspective-[400px] ${small ? '' : 'md:group-hover:brightness-100'}`}>
+			<div className={`z-[4] absolute ${small ? 'inset-1 overflow-clip' : 'inset-0'} transition-all md:group-hover:brightness-50 ${small ? '' : 'translate-z-1 perspective-[400px] md:group-hover:brightness-100'}`}>
 				<div className={`
 					absolute
 
 					${small ?
 						'top-[-10%] right-[1%] scale-75' :
-						'top-[2%] right-[15%] group-hover:scale-105 group-hover:top-0 group-hover:right-[10%]'
+						'top-[2%] right-[15%] group-hover:scale-105 group-hover:top-0 group-hover:right-[10%] translate-z-1'
 					}
 
-					rotate-x-2 -rotate-y-12 rotate-z-12 translate-z-1
+					rotate-x-2 -rotate-y-12 rotate-z-12
 
 					transition-all duration-500 ease-in-out
 					rounded-md shadow-3xl shadow-black/25 group-hover:shadow-highlight/5 overflow-clip`}>
 					{ img_primary != "" ?
 						<img width={400} src={img_primary} /> :
-						<div className="w-48 h-48 bg-fuchsia-400"></div>
+						<div className={`w-48 h-48 ${whiteTheme ? "bg-zinc-200" : "bg-zinc-900"}`}></div>
 					}
 				</div>
 			</div>
@@ -160,7 +161,7 @@ export default function ProjectDisplay({
 
 				${small ? '' :'md:translate-y-20 md:group-hover:translate-y-0'}
 
-				transition-all ease-out duration-[250ms]`} style={{transform: 'translateZ(10px)'}}>
+				transition-all ease-out duration-[250ms]`} style={{transform: small ? '' : 'translateZ(10px)'}}>
 				<p className="font-semibold text-2xl">{name}</p>
 
 				<div className="h-[24px] flex gap-2">
