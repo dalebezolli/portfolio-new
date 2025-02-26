@@ -54,25 +54,33 @@ export default function ProjectDisplay({name, small=false, techTags=[], githubUr
 			style={{transformStyle: 'preserve-3d', transform: `rotateY(${tiltX * 10}deg) rotateX(${tiltY * 10}deg)`}}
 			onMouseMove={onHover}
 			onMouseLeave={onHoverEnd}>
-			<div className={`absolute inset-0 transition-all md:group-hover:brightness-50 overflow-clip ${small ? '' : 'md:group-hover:brightness-100'}`}>
-				<div className="
-					absolute
-					w-[1px] h-[1px] top-[32%] left-[25%]
+			<div className={`
+				absolute inset-0 overflow-clip rounded-xl
+				md:group-hover:brightness-50 ${small ? '' : 'md:group-hover:brightness-100'}
 
-					transition-all duration-700 ease-in-out
-					rounded-md shadow-projectdisplay group-hover:shadow-projectdisplay-hover shadow-fuchsia-400 overflow-clip">
-				</div>
+				${small ? '' : 'group-hover:bg-fuchsia-400'}
+				
+				transition-all`}>
+				<div className="absolute inset-0.5 rounded-xl bg-zinc-900 z-[2]">
+					<div className="
+						absolute
+						w-[1px] h-[1px] top-[32%] left-[25%]
 
-				<div className="
-					absolute
-					w-[1px] h-[1px] bottom-[32%] right-[25%] scale-75
+						transition-all duration-700 ease-in-out
+						rounded-md shadow-projectdisplay group-hover:shadow-projectdisplay-hover shadow-fuchsia-400 overflow-clip">
+					</div>
 
-					transition-all duration-1000 delay-100 ease-in-out
-					rounded-md shadow-projectdisplay group-hover:shadow-projectdisplay-hover shadow-fuchsia-600/60 overflow-clip">
+					<div className="
+						absolute
+						w-[1px] h-[1px] bottom-[32%] right-[25%] scale-75
+
+						transition-all duration-1000 delay-100 ease-in-out
+						rounded-md shadow-projectdisplay group-hover:shadow-projectdisplay-hover shadow-purple-400/60 overflow-clip">
+					</div>
 				</div>
 			</div>
 
-			<div className={`translate-z-1 absolute inset-0 transition-all md:group-hover:brightness-50 perspective-[400px] ${small ? '' : 'md:group-hover:brightness-100'}`}>
+			<div className={`z-[3] translate-z-1 absolute inset-0 transition-all md:group-hover:brightness-50 perspective-[400px] ${small ? '' : 'md:group-hover:brightness-100'}`}>
 				<div className="
 					absolute
 					bottom-[22%] left-[20%]
@@ -86,7 +94,7 @@ export default function ProjectDisplay({name, small=false, techTags=[], githubUr
 				</div>
 			</div>
 
-			<div className={`translate-z-1 absolute inset-0 transition-all md:group-hover:brightness-50 perspective-[400px] ${small ? '' : 'md:group-hover:brightness-100'}`}>
+			<div className={`z-[4] translate-z-1 absolute inset-0 transition-all md:group-hover:brightness-50 perspective-[400px] ${small ? '' : 'md:group-hover:brightness-100'}`}>
 				<div className="
 					absolute
 					top-[2%] right-[15%]
