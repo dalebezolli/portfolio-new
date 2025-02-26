@@ -10,7 +10,7 @@ import img from "../dot.png";
 
 export function Index() {
 	return (
-		<div className="bg-black text-white max-w-full min-h-screen" id="top">
+		<div className="bg-black text-white max-w-full min-h-screen scroll-smooth" id="top">
 			<div className="fixed inset-0 opacity-15 pointer-events-none" style={{ background: `url(${img})`}}></div>
 			<Header />
 			<main>
@@ -59,22 +59,26 @@ function SectionWork() {
 
 		for(let i = 0; i < refTitle.current.children.length; i++) {
 			let spanChild = refTitle.current.children[i] as HTMLSpanElement;
+			spanChild.style.color = `var(--color-${color})`;
 			spanChild.style.animation = `word-bounce 300ms linear 1 ${i * 50}ms`;
-			spanChild.onanimationend = () => spanChild.style.animation = '';
+			spanChild.onanimationend = () => {
+				spanChild.style.animation = '';
+				spanChild.style.color = '';
+			}
 		}
 	}
 
 	return (
-		<div className="pt-16 pb-48">
+		<div id="work" className="pt-16 pb-48">
 			<h2 ref={refTitle} className={`
 				flex items-end
 				w-fit pb-4
 				text-4xl md:text-5xl font-heading font-semibold overflow-visible
 				text-transparent bg-clip-text bg-linear-to-r from-white to-white/40 transition-colors`}>
-				<span className="h-14 flex items-end">W</span>
-				<span className="h-14 flex items-end">o</span>
-				<span className="h-14 flex items-end">r</span>
-				<span className="h-14 flex items-end">k</span>
+				<span className="h-14 flex items-end transition-colors">W</span>
+				<span className="h-14 flex items-end transition-colors">o</span>
+				<span className="h-14 flex items-end transition-colors">r</span>
+				<span className="h-14 flex items-end transition-colors">k</span>
 			</h2>
 
 			<div className="grid grid-cols-1 md:grid-cols-[1.25fr_1fr] grid-rows-3 md:grid-rows-2 gap-4 perspective-distant">

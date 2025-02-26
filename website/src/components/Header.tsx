@@ -25,10 +25,10 @@ export default function Header() {
 						</button>
 
 						<ul className="max-md:aria-hidden:hidden max-md:absolute max-md:top-[64px] max-md:inset-x-0 max-md:backdrop-blur-2xl max-md:bg-black/75 md:flex gap-2" aria-hidden={mobileHidden}>
-							<li><HeadingLink text="Work" /></li>
-							<li><HeadingLink text="Aritcles" /></li>
-							<li><HeadingLink text="About Me" /></li>
-							<li><HeadingLink text="Let's Connect" /></li>
+							<li><HeadingLink text="Work" href="#work" /></li>
+							<li><HeadingLink text="Aritcles" href="/#articles" /></li>
+							<li><HeadingLink text="About Me" href="/#about" /></li>
+							<li><HeadingLink text="Let's Connect" href="/#connect" /></li>
 						</ul>
 					</nav>
 				</header>
@@ -44,7 +44,7 @@ type HeadlingLinkProps = {
 
 function HeadingLink({href, text}: HeadlingLinkProps) {
 	return (
-		<a className="group/action px-2 last-of-type:pr-0 py-1.5 flex flex-col items-center font-semibold cursor-pointer text-gray-400 hover:text-blue-200" href={href} target="_blank">
+		<a className="group/action px-2 last-of-type:pr-0 py-1.5 flex flex-col items-center font-semibold cursor-pointer text-gray-400 hover:text-blue-200" href={href}>
 			<div className="flex items-center gap-2 group-hover/action:translate-y-[-20%] transition-transform ease-out">
 				{text}
 			</div>
