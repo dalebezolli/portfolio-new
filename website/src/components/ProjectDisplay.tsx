@@ -12,11 +12,16 @@ type ProjectDisplayProps = {
 
 	img_primary?: string;
 	img_secondary?: string;
+	img_tertiary?: string;
 
 	className?: string;
 };
 
-export default function ProjectDisplay({name, small=false, techTags=[], githubUrl="", liveUrl="", className="", img_primary="", img_secondary=""}: ProjectDisplayProps) {
+export default function ProjectDisplay({
+	name, small=false, techTags=[],
+	githubUrl="", liveUrl="", className="",
+	img_primary="", img_secondary="", img_tertiary="",
+}: ProjectDisplayProps) {
 	const [tiltX, setTiltX] = useState(0);
 	const [tiltY, setTiltY] = useState(0);
 
@@ -56,10 +61,8 @@ export default function ProjectDisplay({name, small=false, techTags=[], githubUr
 			onMouseLeave={onHoverEnd}>
 			<div className={`
 				absolute inset-0 overflow-clip rounded-xl
-				md:group-hover:brightness-50 ${small ? '' : 'md:group-hover:brightness-100'}
-
 				${small ? '' : 'group-hover:bg-fuchsia-400'}
-				
+				md:group-hover:brightness-50 ${small ? '' : 'md:group-hover:brightness-100'}	
 				transition-all`}>
 				<div className="absolute inset-0.5 rounded-xl bg-zinc-900 z-[2]">
 					<div className="
@@ -80,10 +83,29 @@ export default function ProjectDisplay({name, small=false, techTags=[], githubUr
 				</div>
 			</div>
 
-			<div className={`z-[3] translate-z-1 absolute inset-0 transition-all md:group-hover:brightness-50 perspective-[400px] ${small ? '' : 'md:group-hover:brightness-100'}`}>
+			<div className={`
+				z-[3] translate-z-1 absolute inset-0.5 rounded-xl
+				transition-all
+				md:group-hover:brightness-50 
+
+
+				perspective-[400px]
+				overflow-clip ${small ? '' : 'md:group-hover:brightness-100'}`}>
 				<div className="
 					absolute
-					bottom-[22%] left-[20%]
+					bottom-[2%] right-[10%]
+					scale-105 group-hover:scale-[101%]
+					group-hover:bottom-[0%] group-hover:right-[8%]
+					-rotate-y-2 rotate-z-2 translate-z-10 group-hover:translate-z-20
+
+					transition-all duration-500 ease-in-out
+					rounded-md shadow-3xl shadow-black/25 overflow-clip">
+					{img_tertiary && <img width={300} src={img_tertiary} />}
+				</div>
+
+				<div className="
+					absolute
+					bottom-[22%] left-[12%]
 					scale-105 group-hover:scale-[101%]
 					group-hover:bottom-[20%] group-hover:left-[18%]
 					rotate-x-2 rotate-y-12 -rotate-z-12 translate-z-10 group-hover:translate-z-20

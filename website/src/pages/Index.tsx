@@ -30,6 +30,7 @@ type ProjectRecord = {
 	sourceUrl: string,
 	img_primary: string,
 	img_secondary: string,
+	img_tertiary: string,
 };
 
 function SectionWork() {
@@ -59,6 +60,7 @@ function SectionWork() {
 							githubUrl={projects[i]?.sourceUrl ?? ""}
 							img_primary={projects[i]?.img_primary ?? ""}
 							img_secondary={projects[i]?.img_secondary ?? ""}
+							img_tertiary={projects[i]?.img_tertiary ?? ""}
 							className={`grow ${i === 0 ? "md:row-span-2" : ""} ${i === 2 ? "md:row-start-2 md:col-start-2" : ""}`}
 							small={i !== 0} />
 					))
