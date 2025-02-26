@@ -103,7 +103,7 @@ export default function ProjectDisplay({
 
 					transition-all duration-500 ease-in-out
 					rounded-md shadow-3xl shadow-black/25 overflow-clip">
-					{img_tertiary && <img width={300} src={img_tertiary} />}
+					{ img_tertiary && <img width={300} src={img_tertiary} />}
 				</div>
 
 				<div className={`
@@ -116,7 +116,10 @@ export default function ProjectDisplay({
 
 					transition-all duration-500 ease-in-out
 					rounded-md shadow-3xl shadow-black/25 overflow-clip`}>
-					{img_secondary && <img width={300} src={img_secondary} />}
+					{ img_secondary != "" ?
+						<img width={300} src={img_secondary} /> :
+						<div className="w-40 h-40 bg-cyan-400 animate-pulse"></div>
+					}
 				</div>
 			</div>
 
@@ -133,7 +136,10 @@ export default function ProjectDisplay({
 
 					transition-all duration-500 ease-in-out
 					rounded-md shadow-3xl shadow-black/50 overflow-clip`}>
-					{img_primary && <img width={400} src={img_primary} />}
+					{ img_primary != "" ?
+						<img width={400} src={img_primary} /> :
+						<div className="w-48 h-48 bg-fuchsia-400 animate-pulse"></div>
+					}
 				</div>
 			</div>
 
