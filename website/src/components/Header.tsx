@@ -9,7 +9,7 @@ export default function Header() {
 		<Fragment>
 			<div className="h-[56px]"></div>
 
-			<CenterContainer className="sticky top-0 z-50 backdrop-blur-2xl bg-black/75">
+			<CenterContainer className="sticky top-0 z-50 backdrop-blur-md bg-black/25">
 				<header className="flex justify-between pt-4 pb-4 mb-4">
 					<h1><a href="/#top" className="
 						w-fit pb-4 text-2xl font-semibold text-transparent 
