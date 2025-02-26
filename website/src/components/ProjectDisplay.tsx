@@ -62,7 +62,7 @@ export default function ProjectDisplay({
 			{...rest}>
 			<div className={`
 				absolute inset-0 overflow-clip rounded-xl
-				${small ? '' : 'group-hover:bg-fuchsia-400'}
+				group-hover:bg-fuchsia-400
 				md:group-hover:brightness-50 ${small ? '' : 'md:group-hover:brightness-100'}	
 				transition-all`}>
 				<div className="absolute inset-0.5 rounded-xl bg-zinc-900 z-[2]">
@@ -85,10 +85,9 @@ export default function ProjectDisplay({
 			</div>
 
 			<div className={`
-				z-[3] translate-z-1 absolute inset-0.5 rounded-xl
+				z-[3] ${small ? '' : 'translate-z-1'} absolute inset-0.5 rounded-xl
 				transition-all
-				md:group-hover:brightness-50 
-
+				md:group-hover:brightness-50
 
 				perspective-[400px]
 				overflow-clip ${small ? '' : 'md:group-hover:brightness-100'}`}>
@@ -104,35 +103,39 @@ export default function ProjectDisplay({
 					{img_tertiary && <img width={300} src={img_tertiary} />}
 				</div>
 
-				<div className="
+				<div className={`
 					absolute
-					bottom-[22%] left-[12%]
-					scale-105 group-hover:scale-[101%]
-					group-hover:bottom-[20%] group-hover:left-[18%]
-					rotate-x-2 rotate-y-12 -rotate-z-12 translate-z-10 group-hover:translate-z-20
+					${small ?
+						'bottom-[-10%] left-[-8%] scale-75' :
+						'bottom-[22%] left-[12%] scale-105 group-hover:scale-[101%] group-hover:bottom-[20%] group-hover:left-[18%]'
+					}
+					rotate-x-2 rotate-y-12 -rotate-z-12 ${small ? '' : 'translate-z-10 group-hover:translate-z-20'}
 
 					transition-all duration-500 ease-in-out
-					rounded-md shadow-3xl shadow-black/25 overflow-clip">
+					rounded-md shadow-3xl shadow-black/25 overflow-clip`}>
 					{img_secondary && <img width={300} src={img_secondary} />}
 				</div>
 			</div>
 
 			<div className={`z-[4] translate-z-1 absolute inset-0 transition-all md:group-hover:brightness-50 perspective-[400px] ${small ? '' : 'md:group-hover:brightness-100'}`}>
-				<div className="
+				<div className={`
 					absolute
-					top-[2%] right-[15%]
-					group-hover:scale-105
-					group-hover:top-0 group-hover:right-[10%]
+
+					${small ?
+						'top-[-10%] right-[1%] scale-75' :
+						'top-[2%] right-[15%] group-hover:scale-105 group-hover:top-0 group-hover:right-[10%]'
+					}
+
 					rotate-x-2 -rotate-y-12 rotate-z-12 translate-z-1
 
 					transition-all duration-500 ease-in-out
-					rounded-md shadow-3xl shadow-black/50 overflow-clip">
+					rounded-md shadow-3xl shadow-black/50 overflow-clip`}>
 					{img_primary && <img width={400} src={img_primary} />}
 				</div>
 			</div>
 
 			<section className={`
-				absolute bottom-0 inset-x-0
+				absolute ${small ? 'inset-1 rounded-xl' : 'bottom-0 inset-x-0'} z-10
 				p-8
 				flex flex-col gap-1
 				h-full justify-end ${small ? '' :'md:h-auto md:justify-stretch'}
