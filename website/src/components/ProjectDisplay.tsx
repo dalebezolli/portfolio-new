@@ -53,12 +53,13 @@ export default function ProjectDisplay({
 			bg-zinc-900 font-primary
 
 
-			shadow-3xl shadow-black/80
+			shadow-3xl shadow-black/80 hover:shadow-highlight/20
+			transition-shadow duration-300
 
 			${small ? '' : 'hover:overflow-visible hover:z-10'}
 			${className}`}
 
-			style={{transformStyle: 'preserve-3d', transform: `rotateY(${tiltX * 10}deg) rotateX(${tiltY * 10}deg)`}}
+			style={{transformStyle: 'preserve-3d', transform: `rotateY(${tiltX * 10}deg) rotateX(${tiltY * 10}deg)`, '--color-highlight': `var(--color-${color})`}}
 			onMouseMove={onHover}
 			onMouseLeave={onHoverEnd}
 			{...rest}>
@@ -66,8 +67,7 @@ export default function ProjectDisplay({
 				absolute inset-0 overflow-clip rounded-xl
 				group-hover:bg-highlight
 				md:group-hover:brightness-50 ${small ? '' : 'md:group-hover:brightness-100'}	
-				transition-all`}
-				style={{ '--color-highlight': `var(--color-${color})` }}>
+				transition-all`}>
 				<div className="absolute inset-0.5 rounded-xl bg-zinc-900 z-[2]">
 					<div className="
 						absolute
@@ -94,6 +94,12 @@ export default function ProjectDisplay({
 
 				perspective-[400px]
 				overflow-clip ${small ? '' : 'md:group-hover:brightness-100'}`}>
+				<div className="absolute inset-0" style={{ '--color-highlight': `var(--color-${color})` }}>
+					<div className="absolute -left-8 top-8 w-[150%] h-0.5 bg-highlight/80 -rotate-[20deg]"></div>
+					<div className="absolute -left-8 top-16 w-[150%] h-0.5 bg-highlight/50 -rotate-[20deg]"></div>
+					<div className="absolute -left-8 top-24 w-[150%] h-0.5 bg-highlight/20 -rotate-[20deg]"></div>
+				</div>
+
 				<div className="
 					absolute
 					bottom-[2%] right-[10%]
@@ -102,7 +108,7 @@ export default function ProjectDisplay({
 					-rotate-y-2 rotate-z-2 translate-z-10 group-hover:translate-z-20
 
 					transition-all duration-500 ease-in-out
-					rounded-md shadow-3xl shadow-black/25 overflow-clip">
+					rounded-md shadow-3xl shadow-black/25 group-hover:shadow-highlight/25 overflow-clip">
 					{ img_tertiary && <img width={300} src={img_tertiary} />}
 				</div>
 
@@ -115,10 +121,10 @@ export default function ProjectDisplay({
 					rotate-x-2 rotate-y-12 -rotate-z-12 ${small ? '' : 'translate-z-10 group-hover:translate-z-20'}
 
 					transition-all duration-500 ease-in-out
-					rounded-md shadow-3xl shadow-black/25 overflow-clip`}>
+					rounded-md shadow-3xl shadow-black/25 group-hover:shadow-highlight/25 overflow-clip`}>
 					{ img_secondary != "" ?
 						<img width={300} src={img_secondary} /> :
-						<div className="w-40 h-40 bg-cyan-400 animate-pulse"></div>
+						<div className="w-40 h-40 bg-cyan-400"></div>
 					}
 				</div>
 			</div>
@@ -135,10 +141,10 @@ export default function ProjectDisplay({
 					rotate-x-2 -rotate-y-12 rotate-z-12 translate-z-1
 
 					transition-all duration-500 ease-in-out
-					rounded-md shadow-3xl shadow-black/50 overflow-clip`}>
+					rounded-md shadow-3xl shadow-black/25 group-hover:shadow-highlight/5 overflow-clip`}>
 					{ img_primary != "" ?
 						<img width={400} src={img_primary} /> :
-						<div className="w-48 h-48 bg-fuchsia-400 animate-pulse"></div>
+						<div className="w-48 h-48 bg-fuchsia-400"></div>
 					}
 				</div>
 			</div>
