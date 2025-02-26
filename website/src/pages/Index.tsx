@@ -105,7 +105,7 @@ function SectionWork() {
 
 function SectionArticles() {
 	return (
-		<div className="pt-16 pb-48">
+		<div id="articles" className="pt-16 pb-48">
 			<h2 className="w-fit pb-4 text-4xl md:text-5xl font-heading font-semibold text-transparent bg-clip-text bg-linear-to-r from-white to-white/40 transition-colors">Articles</h2>
 
 			<div className="after:pointer-events-none relative after:contents after:absolute after:inset-0 md:after:bg-linear-to-r after:from-black/0 after:from-90% after:to-black/100">
@@ -121,7 +121,7 @@ function SectionArticles() {
 
 function SectionAbout() {
 	return (
-		<div className="pt-16 pb-48">
+		<div id="about" className="pt-16 pb-48">
 			<div>
 				<h2 className="w-fit pb-4 text-4xl md:text-5xl font-heading font-semibold text-transparent bg-clip-text bg-linear-to-r from-white to-white/40 transition-colors">About Me</h2>
 				<p className="pb-4 text-zinc-500 max-w-[60ch]">
@@ -167,7 +167,7 @@ function SectionAbout() {
 
 function SectionContactMe() {
 	return (
-		<div className="pt-16 pb-48">
+		<div id="connect" className="pt-16 pb-48">
 			<h2 className="w-fit pb-4 text-4xl md:text-5xl font-heading font-semibold text-transparent bg-clip-text bg-linear-to-r from-white to-white/40 transition-colors">Let's Connect</h2>
 			
 			<p className="text-zinc-500">I’m always on the lookout for new <span className="text-blue-200">exciting adventures</span> to follow.</p>
