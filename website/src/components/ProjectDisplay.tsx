@@ -1,4 +1,4 @@
-import React, { PropsWithChildren, useState } from "preact/compat";
+import React, { HTMLAttributes, PropsWithChildren, useState } from "preact/compat";
 import Icon, { IconName, IconNameTech } from "./Icon";
 
 type ProjectDisplayProps = {
@@ -15,12 +15,12 @@ type ProjectDisplayProps = {
 	img_tertiary?: string;
 
 	className?: string;
-};
+} & HTMLAttributes<HTMLDivElement>;
 
 export default function ProjectDisplay({
 	name, small=false, techTags=[],
 	githubUrl="", liveUrl="", className="",
-	img_primary="", img_secondary="", img_tertiary="",
+	img_primary="", img_secondary="", img_tertiary="", ...rest
 }: ProjectDisplayProps) {
 	const [tiltX, setTiltX] = useState(0);
 	const [tiltY, setTiltY] = useState(0);
@@ -58,7 +58,8 @@ export default function ProjectDisplay({
 
 			style={{transformStyle: 'preserve-3d', transform: `rotateY(${tiltX * 10}deg) rotateX(${tiltY * 10}deg)`}}
 			onMouseMove={onHover}
-			onMouseLeave={onHoverEnd}>
+			onMouseLeave={onHoverEnd}
+			{...rest}>
 			<div className={`
 				absolute inset-0 overflow-clip rounded-xl
 				${small ? '' : 'group-hover:bg-fuchsia-400'}

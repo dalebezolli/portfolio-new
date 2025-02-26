@@ -5,6 +5,7 @@ import Header from "../components/Header";
 import Icon from "../components/Icon";
 import ProjectDisplay from "../components/ProjectDisplay";
 import { get } from "../utils/network";
+import { createRef } from "preact";
 
 export function Index() {
 	return (
@@ -31,10 +32,12 @@ type ProjectRecord = {
 	img_primary: string,
 	img_secondary: string,
 	img_tertiary: string,
+	color: string,
 };
 
 function SectionWork() {
 	const [projects, setProjects] = useState<ProjectRecord[]>([]);
+	const refTitle = createRef<HTMLHeadingElement>();
 
 	useEffect(() => {
 		initializeProjects();
@@ -46,9 +49,21 @@ function SectionWork() {
 		setProjects(data);
 	}
 
+	function onTitleHighlight(color: string) {
+		if(refTitle.current == null) return;
+
+		refTitle.current.style.setProperty('--tw-gradient-from', `var(--color-${color})`);
+		refTitle.current.style.setProperty('--tw-gradient-to', `var(--color-${color}/40)`);
+	}
+
 	return (
 		<div className="pt-16 pb-48">
-			<h2 className="w-fit pb-4 text-4xl md:text-5xl font-heading font-semibold text-transparent bg-clip-text bg-linear-to-r from-white to-white/40 transition-colors">Work</h2>
+			<h2 ref={refTitle} className={`
+				w-fit pb-4
+				text-4xl md:text-5xl font-heading font-semibold
+				text-transparent bg-clip-text bg-linear-to-r from-white to-white/40 transition-colors`}>
+				Work
+			</h2>
 
 			<div className="grid grid-cols-1 md:grid-cols-[1.25fr_1fr] grid-rows-3 md:grid-rows-2 gap-4 perspective-distant">
 				{
@@ -62,7 +77,7 @@ function SectionWork() {
 							img_secondary={projects[i]?.img_secondary ?? ""}
 							img_tertiary={projects[i]?.img_tertiary ?? ""}
 							className={`grow ${i === 0 ? "md:row-span-2" : ""} ${i === 2 ? "md:row-start-2 md:col-start-2" : ""}`}
-							small={i !== 0} />
+							small={i !== 0} onMouseEnter={() => onTitleHighlight(projects[i]?.color ?? "white")} />
 					))
 				}
 			</div>
