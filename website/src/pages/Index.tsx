@@ -76,6 +76,7 @@ function SectionWork() {
 							img_primary={projects[i]?.img_primary ?? ""}
 							img_secondary={projects[i]?.img_secondary ?? ""}
 							img_tertiary={projects[i]?.img_tertiary ?? ""}
+							color={projects[i]?.color ?? "white"}
 							className={`grow ${i === 0 ? "md:row-span-2" : ""} ${i === 2 ? "md:row-start-2 md:col-start-2" : ""}`}
 							small={i !== 0} onMouseEnter={() => onTitleHighlight(projects[i]?.color ?? "white")} />
 					))

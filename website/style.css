@@ -9,6 +9,8 @@ html {
 	--font-primary: "Poppins", var(--default-font-family);
 	--font-heading: "Reem Kufi", var(--default-font-family);
 
+	--color-highlight: white;
+
     --shadow-3xl: 0 0 48px 48px var(--tw-shadow-color, rgb(0 0 0 / 0.25));
     --shadow-projectdisplay: 0 0 80px 80px var(--tw-shadow-color, rgb(0 0 0 / 0.25));
     --shadow-projectdisplay-hover: 0 0 128px 128px var(--tw-shadow-color, rgb(0 0 0 / 0.25));

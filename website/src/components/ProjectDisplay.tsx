@@ -15,12 +15,14 @@ type ProjectDisplayProps = {
 	img_tertiary?: string;
 
 	className?: string;
+	color?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
 export default function ProjectDisplay({
 	name, small=false, techTags=[],
 	githubUrl="", liveUrl="", className="",
-	img_primary="", img_secondary="", img_tertiary="", ...rest
+	img_primary="", img_secondary="", img_tertiary="", color="",
+	...rest
 }: ProjectDisplayProps) {
 	const [tiltX, setTiltX] = useState(0);
 	const [tiltY, setTiltY] = useState(0);
@@ -62,9 +64,10 @@ export default function ProjectDisplay({
 			{...rest}>
 			<div className={`
 				absolute inset-0 overflow-clip rounded-xl
-				group-hover:bg-fuchsia-400
+				group-hover:bg-highlight
 				md:group-hover:brightness-50 ${small ? '' : 'md:group-hover:brightness-100'}	
-				transition-all`}>
+				transition-all`}
+				style={{ '--color-highlight': `var(--color-${color})` }}>
 				<div className="absolute inset-0.5 rounded-xl bg-zinc-900 z-[2]">
 					<div className="
 						absolute
