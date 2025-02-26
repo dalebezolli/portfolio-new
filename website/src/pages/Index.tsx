@@ -10,7 +10,7 @@ import img from "../dot.png";
 
 export function Index() {
 	return (
-		<div className="bg-black text-white min-w-screen min-h-screen" id="top">
+		<div className="bg-black text-white max-w-full min-h-screen" id="top">
 			<div className="fixed inset-0 opacity-15" style={{ background: `url(${img})`}}></div>
 			<Header />
 			<main>
