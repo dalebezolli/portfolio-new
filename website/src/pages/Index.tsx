@@ -6,10 +6,12 @@ import Icon from "../components/Icon";
 import ProjectDisplay from "../components/ProjectDisplay";
 import { get } from "../utils/network";
 import { createRef } from "preact";
+import img from "../dot.png";
 
 export function Index() {
 	return (
 		<div className="bg-black text-white min-w-screen min-h-screen" id="top">
+			<div className="fixed inset-0 opacity-15" style={{ background: `url(${img})`}}></div>
 			<Header />
 			<main>
 				<CenterContainer>
