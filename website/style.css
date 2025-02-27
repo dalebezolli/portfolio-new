@@ -14,9 +14,28 @@ html {
     --shadow-3xl: 0 0 48px 48px var(--tw-shadow-color, rgb(0 0 0 / 0.25));
     --shadow-projectdisplay: 0 0 80px 80px var(--tw-shadow-color, rgb(0 0 0 / 0.25));
     --shadow-projectdisplay-hover: 0 0 128px 128px var(--tw-shadow-color, rgb(0 0 0 / 0.25));
+
+	--animate-word-shimmer: word-shimmer 3s infinite alternate ease-in-out;
+}
+
+@layer components {
+	.visually-hidden {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0); /* Legacy property for Internet Explorer */
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
 }
 
 @keyframes word-bounce {
 	0%, 100% {transform: translateY(0%); }
 	40% {transform: translateY(-20%); }
+}
+
+@keyframes word-shimmer {
+	0% {left: -100%;}
+	100% {left: 0%;}
 }
