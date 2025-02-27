@@ -2,6 +2,7 @@ import React, { HTMLAttributes, PropsWithChildren, useState } from "preact/compa
 import Icon, { IconName, IconNameTech } from "./Icon";
 
 type ProjectDisplayProps = {
+	projectId: string;
 	name: string;
 	techTags?: string[];
 
@@ -17,10 +18,10 @@ type ProjectDisplayProps = {
 	className?: string;
 	color?: string;
 	whiteTheme?: boolean;
-} & HTMLAttributes<HTMLDivElement>;
+} & HTMLAttributes<HTMLAnchorElement>;
 
 export default function ProjectDisplay({
-	name, small=false, techTags=[],
+	projectId, name, small=false, techTags=[],
 	githubUrl="", liveUrl="", className="",
 	img_primary="", img_secondary="", img_tertiary="", color="", whiteTheme=false,
 	...rest
@@ -28,7 +29,7 @@ export default function ProjectDisplay({
 	const [tiltX, setTiltX] = useState(0);
 	const [tiltY, setTiltY] = useState(0);
 
-	function onHover(e: React.MouseEvent<HTMLDivElement>) {
+	function onHover(e: React.MouseEvent<HTMLAnchorElement>) {
 		const {clientX, clientY} = e;
 		const {x: cardX, y: cardY, width, height} = e.currentTarget.getBoundingClientRect();
 		const posX = (clientX - cardX) / width - 0.5;
@@ -44,7 +45,7 @@ export default function ProjectDisplay({
 	}
 
 	return (
-		<div className={`
+		<a href={projectId ? `/resource/${projectId}` : ''} className={`
 			group relative
 			h-[260px] ${small ? '' : 'md:h-[536px]'}
 			xs:min-w-[360px]
@@ -177,7 +178,7 @@ export default function ProjectDisplay({
 					{liveUrl.length ? <ProjectActionButton icon="location-arrow" href={liveUrl}>Live</ProjectActionButton> : ''}
 				</div>
 			</section>
-		</div>
+		</a>
 	);
 }
 

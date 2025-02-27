@@ -7,6 +7,7 @@ import ProjectDisplay from "../components/ProjectDisplay";
 import { get } from "../utils/network";
 import { createRef } from "preact";
 import img from "../dot.png";
+import { ProjectRecord } from "../types";
 
 export function Index() {
 	return (
@@ -24,18 +25,6 @@ export function Index() {
 		</div>
 	);
 }
-
-type ProjectRecord = {
-	title: string,
-	tags: string,
-	description: string,
-	liveUrl: string,
-	sourceUrl: string,
-	img_primary: string,
-	img_secondary: string,
-	img_tertiary: string,
-	color: string,
-};
 
 function SectionWork() {
 	const [projects, setProjects] = useState<ProjectRecord[]>([]);
@@ -85,6 +74,7 @@ function SectionWork() {
 				{
 					[0,1,2].map((i) => (
 						<ProjectDisplay
+							projectId={projects[i]?._id ?? ""}
 							name={projects[i]?.title ?? "Cool Project"}
 							techTags={projects[i]?.tags.split(' ') ?? []}
 							liveUrl={projects[i]?.liveUrl ?? ""}

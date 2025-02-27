@@ -1,10 +1,10 @@
 import './../style.css';
 import { hydrate } from 'preact';
-import { App } from './app';
-import { getRoute } from './router';
+import { App } from './App';
+import { Router } from 'wouter-preact';
 
 async function prepareContent() {
-	hydrate(<App>{await getRoute(window.location.pathname)}</App>, document.getElementById('app') as HTMLElement);
+	hydrate(<Router><App/></Router>, document.getElementById('app') as HTMLElement);
 }
 
 prepareContent();

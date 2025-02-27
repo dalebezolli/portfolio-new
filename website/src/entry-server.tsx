@@ -1,7 +1,11 @@
 import renderToString from 'preact-render-to-string';
-import { getRoute } from './router';
-import { App } from './app';
+import { App } from './App';
+import { Router } from 'wouter-preact';
 
 export async function render(_url: string) {
-	return { html: renderToString(<App>{await getRoute('/' + _url)}</App>) };
+	return { html: renderToString(
+		<Router ssrPath={'/' + _url} ssrSearch=''>
+			<App/>
+		</Router>
+	) };
 };
