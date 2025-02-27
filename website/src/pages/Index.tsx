@@ -1,28 +1,22 @@
 import { useEffect, useState } from "preact/hooks";
 import { ArticleCard } from "../components/ArticleCard";
 import { CenterContainer } from "../components/CenteredContainer";
-import Header from "../components/Header";
 import Icon from "../components/Icon";
 import ProjectDisplay from "../components/ProjectDisplay";
 import { get } from "../utils/network";
 import { createRef } from "preact";
-import img from "../dot.png";
 import { ProjectRecord } from "../types";
 
 export function Index() {
 	return (
-		<div className="bg-black text-white max-w-full min-h-screen scroll-smooth" id="top">
-			<div className="fixed inset-0 opacity-15 pointer-events-none" style={{ background: `url(${img})`}}></div>
-			<Header />
-			<main>
-				<CenterContainer>
-					<SectionWork />
-					<SectionArticles />
-					<SectionAbout />
-					<SectionContactMe />
-				</CenterContainer>
-			</main>
-		</div>
+		<main>
+			<CenterContainer>
+				<SectionWork />
+				<SectionArticles />
+				<SectionAbout />
+				<SectionContactMe />
+			</CenterContainer>
+		</main>
 	);
 }
 
