@@ -11,7 +11,7 @@ export function App() {
 			<div className="fixed inset-0 opacity-15 pointer-events-none" style={{ background: `url(${img})`}}></div>
 			<Header />
 
-			<div>
+			<div className="relative z-0">
 				<Switch>
 					<Route path="/" component={Index} />
 					<Route path="/work/:id" component={Project} />

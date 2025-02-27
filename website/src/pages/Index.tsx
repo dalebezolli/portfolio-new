@@ -29,7 +29,11 @@ function SectionWork() {
 	}, []);
 
 	async function initializeProjects() {
-		const data = await get<ProjectRecord[]>({url: new URL(`${import.meta.env.VITE_CMS_URL}/projects`)});
+		let baseURL = import.meta.env.VITE_CMS_EXTERNAL_URL;
+		if(typeof window == 'undefined') {
+			baseURL = import.meta.env.VITE_CMS_INTERNAL_URL;
+		}
+		const data = await get<ProjectRecord[]>({url: new URL(`${baseURL}/projects`)});
 		if(data == null) return;
 		setProjects(data);
 	}
