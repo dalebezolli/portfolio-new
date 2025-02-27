@@ -45,7 +45,7 @@ export default function ProjectDisplay({
 	}
 
 	return (
-		<a href={projectId ? `/resource/${projectId}` : ''} className={`
+		<a href={projectId ? `/work/${projectId}` : ''} className={`
 			group relative
 			h-[260px] ${small ? '' : 'md:h-[536px]'}
 			xs:min-w-[360px]

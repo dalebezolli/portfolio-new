@@ -1,5 +1,7 @@
-export default function Project() {
+import { RouteComponentProps } from "wouter-preact";
+
+export default function Project({params}: RouteComponentProps) {
 	return (
-		<div className="bg-red-400">Project</div>
+		<div className="bg-red-400">Project: {params.id}</div>
 	);
 }

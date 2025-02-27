@@ -299,7 +299,7 @@ func getDataSingle(db *mongo.Client) http.HandlerFunc {
 
 		status := StatusCodeOk
 		message := ""
-		if id, exists := result["_id"]; exists == false || len((id).(string)) == 0 {
+		if _, exists := result["_id"]; exists == false {
 			status = StatusCodeError
 			message = fmt.Sprintf("Couldn't find (%v) in collection (%v)", dataHexId, collectionPath)
 		}

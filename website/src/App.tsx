@@ -14,7 +14,7 @@ export function App() {
 			<div>
 				<Switch>
 					<Route path="/" component={Index} />
-					<Route path="/work" component={Project} />
+					<Route path="/work/:id" component={Project} />
 					<Route component={NotFound} />
 				</Switch>
 			</div>
