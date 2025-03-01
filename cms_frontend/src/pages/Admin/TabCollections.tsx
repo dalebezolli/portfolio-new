@@ -1,4 +1,4 @@
-import { JSX, useEffect, useState } from "preact/compat";
+import { JSX } from "preact/compat";
 import Button from "../../components/Button";
 import { useTabs, Tabs, TabWrapper } from "../../components/Tabs";
 import { useGlobalState } from "../../state/GlobalState";
@@ -17,8 +17,8 @@ export default function TabCollections() {
 			<div className="grow flex">
 				<SideNav />
 
-				<main className="w-full h-full">
-					<Tabs className="w-full h-full">
+				<main className="w-full">
+					<Tabs className="w-full h-screen">
 						<CollectionView />
 						<CollectionEditor />
 						<RecordEditor />
@@ -380,15 +380,16 @@ function RecordEditor() {
 	}
 
 	return (
-		<section key={Object.entries(collections[selectedCollection].records).length} className="w-full p-8 flex flex-col gap-8 font-bold text-gray-400">
+		<section id="editor" key={Object.entries(collections[selectedCollection].records).length} className="w-full p-8 flex flex-col flex-1 gap-8 font-bold text-gray-400">
 			<header className="flex items-center gap-4">
 				<Button icon="arrow-left" className="border-2 border-gray-800" onClick={() => select(0)} />
 				<p className="font-bold text-xl">{editingRecord["_id"] ? "Edit" : "New"} Record</p>
 			</header>
 
-			<div className="flex flex-col gap-4 p-4 bg-gray-900 border-2 border-gray-800 rounded-2xl">
+			<div className="overflow-hidden flex flex-col flex-1 gap-4 p-4 bg-gray-900 border-2 border-gray-800 rounded-2xl">
 				<p className="text-gray-200 font-bold text-xl mb-2">Record Information</p>
 
+				<div className="overflow-y-auto">
 				{
 					collections[selectedCollection].attributes.map(({name, type}) => {
 						if(name == null) return;
@@ -416,8 +417,9 @@ function RecordEditor() {
 						)
 					})
 				}
+				</div>
 
-				<div className="pt-6">
+				<div className="grow flex items-end pt-6">
 					<Button icon="check" text={`${editingRecord["_id"] ? "Edit" : "Create"} Record`} className="w-fit" color="success" onClick={saveRecord} />
 				</div>
 			</div>
