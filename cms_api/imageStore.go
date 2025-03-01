@@ -15,6 +15,7 @@ import (
 )
 
 type ImageStore struct{
+	ResourceBaseUrl string
 	store *s3.Client
 	bucketName string
 }
@@ -47,6 +48,7 @@ func initializeImageStore() (*ImageStore, error) {
 	return &ImageStore{
 		store: client,
 		bucketName: r2BucketName,
+		ResourceBaseUrl: os.Getenv("R2_EXTERNAL_URL"),
 	}, nil
 }
 
@@ -65,9 +67,20 @@ func (s *ImageStore) Store(img *Image) (string, error) {
 	}
 
 
-	imgUrl := os.Getenv("R2_EXTERNAL_URL") + "/" + img.GetName()
+	imgUrl := s.ResourceBaseUrl + "/" + img.GetName()
 
 	return imgUrl, nil
+}
+
+func (s *ImageStore) Delete(imgUrl string) error {
+	identifier := strings.TrimPrefix(imgUrl, s.ResourceBaseUrl + "/")
+
+	_, err := s.store.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
+		Bucket: &s.bucketName,
+		Key: &identifier,
+	})
+
+	return err
 }
 
 func (img *Image) GetName() string {

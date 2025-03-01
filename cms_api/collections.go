@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"maps"
@@ -47,8 +46,8 @@ func handleCollectionRoutes(db *mongo.Client, imageStore *ImageStore) *http.Serv
 	mux.HandleFunc("GET /{collection}", getData(db))
 	mux.HandleFunc("GET /{collection}/{id}", getDataSingle(db))
 	mux.HandleFunc("POST /{collection}", createData(db, imageStore))
-	mux.HandleFunc("PUT /{collection}/{id}", updateData(db))
-	mux.HandleFunc("DELETE /{collection}/{id}", deleteData(db))
+	mux.HandleFunc("PUT /{collection}/{id}", updateData(db, imageStore))
+	mux.HandleFunc("DELETE /{collection}/{id}", deleteData(db, imageStore))
 
 	mux.HandleFunc("OPTIONS /collections", handlePrefligh())
 	mux.HandleFunc("OPTIONS /collections/{collection}", handlePrefligh())
@@ -333,6 +332,10 @@ func createData(db *mongo.Client, imageStore *ImageStore) http.HandlerFunc {
 				continue
 			}
 
+			if strings.HasPrefix(valueStringAsserted, "data:image/") == false {
+				continue
+			}
+
 			url, err := uploadBase64ImageToImageStore(imageStore, valueStringAsserted)
 			if err != nil {
 				log.Println("Error while uploading b64 image to image store:", err)
@@ -354,7 +357,7 @@ func createData(db *mongo.Client, imageStore *ImageStore) http.HandlerFunc {
 	}
 }
 
-func updateData(db *mongo.Client) http.HandlerFunc {
+func updateData(db *mongo.Client, imageStore *ImageStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cmsDatabase := db.Database(CMS_DATABASE)
 		collectionPath := r.PathValue("collection")
@@ -368,7 +371,38 @@ func updateData(db *mongo.Client) http.HandlerFunc {
 		}
 
 		dataHexId := r.PathValue("id")
-		dataObjectId, err := bson.ObjectIDFromHex(dataHexId)
+		dataObjectId, _ := bson.ObjectIDFromHex(dataHexId)
+
+		oldCollectionData, err := getDBResource(cmsDatabase, collectionPath, bson.M{"_id": dataObjectId})
+		if err != nil {
+			message := fmt.Sprintf("Error while updating data for (%v) in collection (%v): %v", dataHexId, collectionPath, err.Error())
+			WriteJSON(w, http.StatusInternalServerError, ResponseMessage{Status: StatusCodeError, Message: message})
+			log.Println(message)
+			return
+		}
+
+		for key, value := range newCollectionData {
+			valueStringAsserted, ok := value.(string)
+			if ok == false {
+				continue
+			}
+
+			if strings.HasPrefix(valueStringAsserted, "data:image/") == false {
+				continue
+			}
+
+			oldImgUrl, _ := oldCollectionData[0][key]
+			imageStore.Delete(oldImgUrl.(string))
+
+			url, err := uploadBase64ImageToImageStore(imageStore, valueStringAsserted)
+			if err != nil {
+				log.Println("Error while uploading b64 image to image store:", err)
+				continue
+			}
+
+			newCollectionData[key] = url
+		}
+
 		response, err := updateDBResource(cmsDatabase, collectionPath, bson.M{"_id": dataObjectId}, bson.M{"$set": newCollectionData})
 		if err != nil {
 			message := fmt.Sprintf("Error while updating data for (%v) in collection (%v): %v", dataHexId, collectionPath, err.Error())
@@ -385,13 +419,36 @@ func updateData(db *mongo.Client) http.HandlerFunc {
 	}
 }
 
-func deleteData(db *mongo.Client) http.HandlerFunc {
+func deleteData(db *mongo.Client, imageStore *ImageStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cmsDatabase := db.Database(CMS_DATABASE)
 		collectionPath := r.PathValue("collection")
 
 		dataHexId := r.PathValue("id")
-		dataObjectId, err := bson.ObjectIDFromHex(dataHexId)
+		dataObjectId, _ := bson.ObjectIDFromHex(dataHexId)
+
+		oldCollectionData, err := getDBResource(cmsDatabase, collectionPath, bson.M{"_id": dataObjectId})
+		if err != nil {
+			message := fmt.Sprintf("Error while updating data for (%v) in collection (%v): %v", dataHexId, collectionPath, err.Error())
+			WriteJSON(w, http.StatusInternalServerError, ResponseMessage{Status: StatusCodeError, Message: message})
+			log.Println(message)
+			return
+		}
+
+		for _, value := range oldCollectionData[0] {
+			valueStringAsserted, ok := value.(string)
+			if ok == false {
+				continue
+			}
+
+			if strings.HasPrefix(valueStringAsserted, imageStore.ResourceBaseUrl) == false {
+				continue
+			}
+
+			imageStore.Delete(valueStringAsserted)
+		}
+
+
 		err = deleteDBResource(cmsDatabase, collectionPath, bson.M{"_id": dataObjectId})
 		if err != nil {
 			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: err.Error()})
@@ -537,10 +594,6 @@ func (d CollectionData) Validate(r *http.Request, db *mongo.Client) Misses {
 }
 
 func uploadBase64ImageToImageStore(imageStore *ImageStore, value string) (string, error) {
-	if strings.HasPrefix(value, "data:image/") == false {
-		return "", errors.New("String isn't a base64 image")
-	}
-
 	image, err := ConvertB64ImgToImage(value)
 	if err != nil {
 		return "", err
