@@ -34,7 +34,7 @@ func getStatistics(db *mongo.Client) http.HandlerFunc {
 			if err != nil {
 				log.Printf("Failed to parse start date string with %q", startDateString)
 			} else {
-				filter = append(filter, bson.E{Key: "loggedAt", Value: bson.D{{Key:"$gte", Value: time}}})
+				filter = append(filter, bson.E{Key: "loggedAt", Value: bson.D{{Key: "$gte", Value: time}}})
 			}
 		}
 
@@ -43,7 +43,7 @@ func getStatistics(db *mongo.Client) http.HandlerFunc {
 			if err != nil {
 				log.Printf("Failed to parse end date string with %q", endDateString)
 			} else {
-				filter = append(filter, bson.E{Key: "loggedAt", Value: bson.D{{Key:"$lte", Value: time}}})
+				filter = append(filter, bson.E{Key: "loggedAt", Value: bson.D{{Key: "$lte", Value: time}}})
 			}
 		}
 
@@ -53,7 +53,7 @@ func getStatistics(db *mongo.Client) http.HandlerFunc {
 		results, err := getDBResource(cmsDatabase, CMS_C_ANALYTICS_USERS, filter)
 		if err != nil {
 			WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
-				Status: StatusCodeError,
+				Status:  StatusCodeError,
 				Message: err.Error(),
 			})
 			return
@@ -79,8 +79,8 @@ func getStatistics(db *mongo.Client) http.HandlerFunc {
 			Status: StatusCodeOk,
 			Data: map[string]any{
 				"totalVisitorsByCountry": totalVisitorsByCountry,
-				"totalVisits": totalVisits,
-				"totalUniqueVisits": totalUniqueVisits,
+				"totalVisits":            totalVisits,
+				"totalUniqueVisits":      totalUniqueVisits,
 			},
 		})
 	}
@@ -109,23 +109,23 @@ func identify(db *mongo.Client) http.HandlerFunc {
 		res, err := getDBResource(cmsDatabase, CMS_C_ANALYTICS_USERS, bson.M{"userId": visitor.UserId})
 		if err != nil {
 			WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
-				Status: StatusCodeError,
+				Status:  StatusCodeError,
 				Message: "Error while collecting analytics details: " + err.Error(),
 			})
 			return
 		}
 
 		analytic := &Analytic{
-			Ip: visitor.Ip,
-			UserId: visitor.UserId,
+			Ip:          visitor.Ip,
+			UserId:      visitor.UserId,
 			CountryCode: visitor.CountryCode,
-			LoggedAt: time.Now(),
+			LoggedAt:    time.Now(),
 		}
 
 		if len(res) == 0 {
 			http.SetCookie(w, &http.Cookie{
-				Name: visitorCookieKey,
-				Value: visitor.UserId,
+				Name:   visitorCookieKey,
+				Value:  visitor.UserId,
 				Secure: true,
 			})
 
@@ -142,9 +142,9 @@ func identify(db *mongo.Client) http.HandlerFunc {
 		}
 
 		WriteJSON(w, http.StatusOK, ResponseMessage{
-			Status: StatusCodeOk,
+			Status:  StatusCodeOk,
 			Message: "Identified User",
-			Data: analytic,
+			Data:    analytic,
 		})
 	}
 }
@@ -152,44 +152,44 @@ func identify(db *mongo.Client) http.HandlerFunc {
 const visitorCookieKey = "userId"
 
 type Visitor struct {
-	UserId string
-	Ip string
+	UserId      string
+	Ip          string
 	CountryCode string
-	Visited bool
+	Visited     bool
 }
 
 func (v *Visitor) ToMap() map[string]interface{} {
 	return map[string]interface{}{
-		"userId": v.UserId,
-		"ip": v.Ip,
+		"userId":      v.UserId,
+		"ip":          v.Ip,
 		"countryCode": v.CountryCode,
-		"visited": v.Visited,
+		"visited":     v.Visited,
 	}
 }
 
 type Analytic struct {
-	UserId string
-	Ip string
+	UserId      string
+	Ip          string
 	CountryCode string
-	VisitCount int
-	LoggedAt time.Time
+	VisitCount  int
+	LoggedAt    time.Time
 }
 
 func (a *Analytic) ToMap() map[string]interface{} {
 	return map[string]interface{}{
-		"userId": a.UserId,
-		"ip": a.Ip,
+		"userId":      a.UserId,
+		"ip":          a.Ip,
 		"countryCode": a.CountryCode,
-		"visitCount": a.VisitCount,
-		"loggedAt": bson.NewDateTimeFromTime(a.LoggedAt),
+		"visitCount":  a.VisitCount,
+		"loggedAt":    bson.NewDateTimeFromTime(a.LoggedAt),
 	}
 }
 
 func getCloudflareVisitorDetails(r *http.Request) *Visitor {
-	return &Visitor {
-		Ip: r.Header.Get("Cf-Connecting-Ip"),
+	return &Visitor{
+		Ip:          r.Header.Get("Cf-Connecting-Ip"),
 		CountryCode: r.Header.Get("Cf-Ipcountry"),
-		Visited: false,
+		Visited:     false,
 	}
 }
 
