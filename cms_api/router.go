@@ -7,8 +7,8 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
-func addRoutes(mux *http.ServeMux, db *mongo.Client) {
-	mux.Handle("/v1/api/", http.StripPrefix("/v1/api", handleCollectionRoutes(db)))
+func addRoutes(mux *http.ServeMux, db *mongo.Client, imageStore *ImageStore) {
+	mux.Handle("/v1/api/", http.StripPrefix("/v1/api", handleCollectionRoutes(db, imageStore)))
 	mux.Handle("/v1/api/analytics/", http.StripPrefix("/v1/api/analytics", handleAnalyticsRoutes(db)))
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

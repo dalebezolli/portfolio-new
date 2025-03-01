@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"maps"
@@ -19,20 +20,22 @@ type NewCollection map[string]interface{}
 type Collection map[string]interface{}
 
 type CollectionAttrType string
+
 const (
 	CollectionAttrTypeString CollectionAttrType = "string"
 	CollectionAttrTypeDate   CollectionAttrType = "date"
 	CollectionAttrTypeImage  CollectionAttrType = "image"
 	CollectionAttrTypeMDX    CollectionAttrType = "mdx"
 )
+
 var ValidAttrTypes map[CollectionAttrType]bool = map[CollectionAttrType]bool{
 	CollectionAttrTypeString: true,
-	CollectionAttrTypeDate: true,
-	CollectionAttrTypeImage: true,
-	CollectionAttrTypeMDX: true,
+	CollectionAttrTypeDate:   true,
+	CollectionAttrTypeImage:  true,
+	CollectionAttrTypeMDX:    true,
 }
 
-func handleCollectionRoutes(db *mongo.Client) *http.ServeMux {
+func handleCollectionRoutes(db *mongo.Client, imageStore *ImageStore) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /collections", getCollections(db))
@@ -43,7 +46,7 @@ func handleCollectionRoutes(db *mongo.Client) *http.ServeMux {
 
 	mux.HandleFunc("GET /{collection}", getData(db))
 	mux.HandleFunc("GET /{collection}/{id}", getDataSingle(db))
-	mux.HandleFunc("POST /{collection}", createData(db))
+	mux.HandleFunc("POST /{collection}", createData(db, imageStore))
 	mux.HandleFunc("PUT /{collection}/{id}", updateData(db))
 	mux.HandleFunc("DELETE /{collection}/{id}", deleteData(db))
 
@@ -165,7 +168,7 @@ func updateCollection(db *mongo.Client) http.HandlerFunc {
 			}
 		}
 
-		updatedResource, err := updateDBResource(cmsDatabase, CMS_C_COLLECTIONS, bson.D{{Key:"name", Value: collectionPath}}, bson.M{"$set": collectionChanges})
+		updatedResource, err := updateDBResource(cmsDatabase, CMS_C_COLLECTIONS, bson.D{{Key: "name", Value: collectionPath}}, bson.M{"$set": collectionChanges})
 		if err != nil {
 			errorMessage := fmt.Sprintf("Error while updating collections: %v", err.Error())
 			WriteJSON(w, http.StatusInternalServerError, ResponseMessage{
@@ -312,7 +315,7 @@ func getDataSingle(db *mongo.Client) http.HandlerFunc {
 	}
 }
 
-func createData(db *mongo.Client) http.HandlerFunc {
+func createData(db *mongo.Client, imageStore *ImageStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cmsDatabase := db.Database(CMS_DATABASE)
 		collectionPath := r.PathValue("collection")
@@ -322,6 +325,21 @@ func createData(db *mongo.Client) http.HandlerFunc {
 			WriteJSON(w, http.StatusBadRequest, response)
 			log.Println("Error while creating new data:", err)
 			return
+		}
+
+		for key, value := range newCollectionData {
+			valueStringAsserted, ok := value.(string)
+			if ok == false {
+				continue
+			}
+
+			url, err := uploadBase64ImageToImageStore(imageStore, valueStringAsserted)
+			if err != nil {
+				log.Println("Error while uploading b64 image to image store:", err)
+				continue
+			}
+
+			newCollectionData[key] = url
 		}
 
 		data, err := createDBResource(cmsDatabase, collectionPath, newCollectionData)
@@ -381,9 +399,7 @@ func deleteData(db *mongo.Client) http.HandlerFunc {
 			return
 		}
 
-		WriteJSON(w, http.StatusOK, ResponseMessage{Status:
-			StatusCodeOk, Message:
-			fmt.Sprintf("Deleted document with id (%v) in collection (%v)", dataHexId, collectionPath),
+		WriteJSON(w, http.StatusOK, ResponseMessage{Status: StatusCodeOk, Message: fmt.Sprintf("Deleted document with id (%v) in collection (%v)", dataHexId, collectionPath),
 		})
 	}
 }
@@ -518,4 +534,24 @@ func (d CollectionData) Validate(r *http.Request, db *mongo.Client) Misses {
 	}
 
 	return misses
+}
+
+func uploadBase64ImageToImageStore(imageStore *ImageStore, value string) (string, error) {
+	if strings.HasPrefix(value, "data:image/") == false {
+		return "", errors.New("String isn't a base64 image")
+	}
+
+	image, err := ConvertB64ImgToImage(value)
+	if err != nil {
+		return "", err
+	}
+
+	image.Name = bson.NewObjectID().Hex()
+
+	url, err := imageStore.Store(image)
+	if err != nil {
+		return "", err
+	}
+
+	return url, nil
 }

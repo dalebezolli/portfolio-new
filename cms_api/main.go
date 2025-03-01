@@ -26,8 +26,13 @@ func main() {
 		log.Fatalln("There was an error while opening the database:", err.Error())
 	}
 
+	imageStore, err := initializeImageStore()
+	if err != nil {
+		log.Fatalln("There was an error while connecting to s3:", err.Error())
+	}
+
 	defer db.Disconnect(context.TODO())
-	addRoutes(mux, db)
+	addRoutes(mux, db, imageStore)
 
 	log.Println("Listening on:", ADDRESS)
 	log.Println("Database:", os.Getenv("MONGODB_URI"))

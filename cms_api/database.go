@@ -19,14 +19,14 @@ const CMS_DATABASE = "portfolio-cms"
 const CMS_C_COLLECTIONS = "collections"
 const CMS_C_ANALYTICS_USERS = "analytics_users"
 
-const db_max_request_timeout = 10*time.Second
+const db_max_request_timeout = 10 * time.Second
 
 func initializeDB() (*mongo.Client, error) {
 	uri := os.Getenv("MONGODB_URI")
 	if uri == "" {
 		return nil, errors.New("No MongoDB connection URI found. Set the 'MONGODB_URI' environment variable.")
 	}
-	
+
 	client, err := mongo.Connect(options.Client().ApplyURI(uri))
 	if err != nil {
 		return nil, err
@@ -102,7 +102,6 @@ func createDBResource(
 	databaseCollection := maps.Clone(document)
 	databaseCollection["_id"] = result.InsertedID
 
-
 	log.Printf("Inserted resource in %q: %v", collection, databaseCollection)
 	return databaseCollection, nil
 }
@@ -139,7 +138,6 @@ func updateDBResource(
 	if response.ModifiedCount == 0 {
 		return nil, errors.New("No record was updated")
 	}
-
 
 	newRecord, err := getDBResource(db, collection, filter)
 	if err != nil {
