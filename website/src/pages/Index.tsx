@@ -6,6 +6,7 @@ import ProjectDisplay from "../components/ProjectDisplay";
 import { get } from "../utils/network";
 import { createRef } from "preact";
 import { ArticleRecord, ProjectRecord } from "../types";
+import { imgUrlToThumbnailUrl } from "../utils/imageConversion";
 
 export function Index() {
 	return (
@@ -53,13 +54,6 @@ function SectionWork() {
 				spanChild.style.color = '';
 			}
 		}
-	}
-
-	function imgUrlToThumbnailUrl(url: string): string {
-		let urlChunks = url.split(".");
-		urlChunks[urlChunks.length - 2] += "-thumbnail"
-
-		return urlChunks.join(".");
 	}
 
 	return (

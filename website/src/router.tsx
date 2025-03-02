@@ -5,9 +5,10 @@ import { useMDXComponents } from "@mdx-js/preact";
 import { Index } from "./pages/Index";
 import { NotFound } from "./pages/NotFound";
 import Project from "./pages/Project";
-import { ProjectRecord } from "./types";
+import { ArticleRecord, ProjectRecord } from "./types";
 import { get } from "./utils/network";
 import { MDXProps } from "mdx/types";
+import Article from "./pages/Article";
 
 const routes: Record<string, JSX.Element | ((params: any) => Promise<JSX.Element>)> = {
 	'/': <Index />,
@@ -25,6 +26,22 @@ const routes: Record<string, JSX.Element | ((params: any) => Promise<JSX.Element
 			<Project project={details}>
 				<Html />
 			</Project>
+		)
+	},
+	'/article/{id}': async (params) => {
+		let base = import.meta.env.VITE_CMS_EXTERNAL_URL;
+		if(typeof window == 'undefined') {
+			base = import.meta.env.VITE_CMS_INTERNAL_URL;
+		}
+
+		const details = await get<ArticleRecord>({ url: new URL(`${base}/articles/${params.id}`)})
+		if(details == null) return <NotFound />
+
+		const Html = await compileMarkdown(details.article);
+		return (
+			<Article article={details}>
+				<Html />
+			</Article>
 		)
 	},
 	'.': <NotFound />,

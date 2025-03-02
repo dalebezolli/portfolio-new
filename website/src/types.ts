@@ -1,6 +1,9 @@
 export type ArticleRecord = {
+	_id: string;
 	title: string;
 	description: string;
+	img: string;
+	article: string;
 };
 
 export type Collection = {
