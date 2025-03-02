@@ -14,7 +14,10 @@ export default function Header() {
 				after:bg-radial after:from-zinc-400/20 after:to-transparent">
 				<CenterContainer>
 					<header className="flex justify-between items-center">
-						<h1><a href="/#top" className="block w-fit text-lg font-semibold text-white pt-5 pb-4">Dale Bezolli</a></h1>
+						<h1><a href="/#top" className="group/logo flex gap-2 items-center w-fit text-lg font-semibold text-white pt-5 pb-4">
+							<Logo />
+							Dale Bezolli
+						</a></h1>
 
 						<nav className="flex items-center">
 							<button className="md:hidden cursor-pointer" onClick={() => setMobileHidden(!mobileHidden)}>
@@ -37,6 +40,21 @@ export default function Header() {
 				</CenterContainer>
 			</div>
 		</Fragment>
+	);
+}
+
+function Logo() {
+	return (
+		<div className="relative w-[24px] h-[24px]">
+			<div className="absolute top-[0%] left-[0%] w-[33.333%] h-[33.333%] bg-zinc-200 group-hover/logo:animate-logo-block-1"></div>
+			<div className="absolute top-[33.333%] left-[0%] w-[33.333%] h-[33.333%] bg-zinc-200 group-hover/logo:animate-logo-block-2"></div>
+			<div className="absolute top-[66.666%] left-[0%] w-[33.333%] h-[33.333%] bg-zinc-200 group-hover/logo:animate-logo-block-3"></div>
+
+			<div className="absolute top-[0%] left-[33.333%] w-[33.333%] h-[33.333%] bg-zinc-200 group-hover/logo:animate-logo-block-4"></div>
+			<div className="absolute top-[66.666%] left-[33.333%] w-[33.333%] h-[33.333%] bg-zinc-200 group-hover/logo:animate-logo-block-1"></div>
+
+			<div className="absolute top-[33.333%] left-[66.666%] w-[33.333%] h-[33.333%] bg-zinc-200 group-hover/logo:animate-logo-block-2"></div>
+		</div>
 	);
 }
 
