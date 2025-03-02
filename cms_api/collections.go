@@ -448,7 +448,6 @@ func deleteData(db *mongo.Client, imageStore *ImageStore) http.HandlerFunc {
 			imageStore.Delete(valueStringAsserted)
 		}
 
-
 		err = deleteDBResource(cmsDatabase, collectionPath, bson.M{"_id": dataObjectId})
 		if err != nil {
 			WriteJSON(w, http.StatusBadRequest, ResponseMessage{Status: StatusCodeError, Message: err.Error()})
@@ -456,8 +455,7 @@ func deleteData(db *mongo.Client, imageStore *ImageStore) http.HandlerFunc {
 			return
 		}
 
-		WriteJSON(w, http.StatusOK, ResponseMessage{Status: StatusCodeOk, Message: fmt.Sprintf("Deleted document with id (%v) in collection (%v)", dataHexId, collectionPath),
-		})
+		WriteJSON(w, http.StatusOK, ResponseMessage{Status: StatusCodeOk, Message: fmt.Sprintf("Deleted document with id (%v) in collection (%v)", dataHexId, collectionPath)})
 	}
 }
 

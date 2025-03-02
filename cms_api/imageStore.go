@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"mime"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -14,16 +15,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
-type ImageStore struct{
+type ImageStore struct {
 	ResourceBaseUrl string
-	store *s3.Client
-	bucketName string
+	store           *s3.Client
+	bucketName      string
 }
 
 type Image struct {
 	MimeType string
-	Name   string
-	Data   []byte
+	Name     string
+	Data     []byte
 }
 
 func initializeImageStore() (*ImageStore, error) {
@@ -36,7 +37,7 @@ func initializeImageStore() (*ImageStore, error) {
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(r2AccessKey, r2SecretKey, "")),
 		config.WithRegion("apac"),
-		)
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -46,26 +47,41 @@ func initializeImageStore() (*ImageStore, error) {
 	})
 
 	return &ImageStore{
-		store: client,
-		bucketName: r2BucketName,
+		store:           client,
+		bucketName:      r2BucketName,
 		ResourceBaseUrl: os.Getenv("R2_EXTERNAL_URL"),
 	}, nil
 }
 
 func (s *ImageStore) Store(img *Image) (string, error) {
+	thumbnailFile, err := img.createThumbnail()
+	if err != nil {
+		return "", err
+	}
+
 	name := img.GetName()
 	bodyReader := strings.NewReader(string(img.Data))
-
-	_, err := s.store.PutObject(context.TODO(), &s3.PutObjectInput{
-		Bucket: &s.bucketName,
-		Key: &name,
+	_, err = s.store.PutObject(context.TODO(), &s3.PutObjectInput{
+		Bucket:      &s.bucketName,
+		Key:         &name,
 		ContentType: &img.MimeType,
-		Body: bodyReader,
+		Body:        bodyReader,
 	})
 	if err != nil {
 		return "", err
 	}
 
+	name = img.GetNameSizeThumbnail()
+	bodyReader = strings.NewReader(string(thumbnailFile))
+	_, err = s.store.PutObject(context.TODO(), &s3.PutObjectInput{
+		Bucket:      &s.bucketName,
+		Key:         &name,
+		ContentType: &img.MimeType,
+		Body:        bodyReader,
+	})
+	if err != nil {
+		return "", err
+	}
 
 	imgUrl := s.ResourceBaseUrl + "/" + img.GetName()
 
@@ -73,11 +89,22 @@ func (s *ImageStore) Store(img *Image) (string, error) {
 }
 
 func (s *ImageStore) Delete(imgUrl string) error {
-	identifier := strings.TrimPrefix(imgUrl, s.ResourceBaseUrl + "/")
+	identifier := strings.TrimPrefix(imgUrl, s.ResourceBaseUrl+"/")
 
 	_, err := s.store.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
 		Bucket: &s.bucketName,
-		Key: &identifier,
+		Key:    &identifier,
+	})
+	if err != nil {
+		return err
+	}
+
+	identifier = strings.TrimPrefix(imgUrl, s.ResourceBaseUrl+"/")
+	identifier = strings.Replace(imgUrl, ".", "-thumbnail.", 1)
+
+	_, err = s.store.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
+		Bucket: &s.bucketName,
+		Key:    &identifier,
 	})
 
 	return err
@@ -92,6 +119,10 @@ func (img *Image) GetName() string {
 	return img.Name + exts[0]
 }
 
+func (img *Image) GetNameSizeThumbnail() string {
+	return strings.Replace(img.GetName(), ".", "-thumbnail.", 1)
+}
+
 func ConvertB64ImgToImage(encoded string) (*Image, error) {
 	parts := strings.Split(encoded, ",")
 	img, err := base64.StdEncoding.DecodeString(parts[1])
@@ -104,6 +135,26 @@ func ConvertB64ImgToImage(encoded string) (*Image, error) {
 
 	return &Image{
 		MimeType: imgType,
-		Data:   img,
+		Data:     img,
 	}, nil
+}
+
+func (img *Image) createThumbnail() ([]byte, error) {
+	err := os.WriteFile(img.GetName(), img.Data, 0600)
+	if err != nil {
+		return nil, err
+	}
+
+	cmd := exec.Command("ffmpeg", "-i", img.GetName(), "-vf", "scale=320:-1", img.GetNameSizeThumbnail())
+	err = cmd.Run()
+	if err != nil {
+		return nil, err
+	}
+
+	thumbnail, err := os.ReadFile(img.GetNameSizeThumbnail())
+	if err != nil {
+		return nil, err
+	}
+
+	return thumbnail, nil
 }

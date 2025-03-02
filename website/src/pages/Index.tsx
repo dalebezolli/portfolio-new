@@ -55,6 +55,13 @@ function SectionWork() {
 		}
 	}
 
+	function imgUrlToThumbnailUrl(url: string): string {
+		let urlChunks = url.split(".");
+		urlChunks[urlChunks.length - 2] += "-thumbnail"
+
+		return urlChunks.join(".");
+	}
+
 	return (
 		<div id="work" className="pt-16 pb-48">
 			<h2 ref={refTitle} className={`
@@ -77,9 +84,9 @@ function SectionWork() {
 							techTags={projects[i]?.tags.split(' ') ?? []}
 							liveUrl={projects[i]?.liveUrl ?? ""}
 							githubUrl={projects[i]?.sourceUrl ?? ""}
-							img_primary={projects[i]?.img_primary ?? ""}
-							img_secondary={projects[i]?.img_secondary ?? ""}
-							img_tertiary={projects[i]?.img_tertiary ?? ""}
+							img_primary={imgUrlToThumbnailUrl(projects[i]?.img_primary ?? "")}
+							img_secondary={imgUrlToThumbnailUrl(projects[i]?.img_secondary ?? "")}
+							img_tertiary={imgUrlToThumbnailUrl(projects[i]?.img_tertiary ?? "")}
 							color={projects[i]?.color ?? "white"}
 							className={`grow ${i === 0 ? "md:row-span-2" : ""} ${i === 2 ? "md:row-start-2 md:col-start-2" : ""}`}
 							whiteTheme={i == 1}
