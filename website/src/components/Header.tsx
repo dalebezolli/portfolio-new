@@ -130,14 +130,16 @@ function CTAButton({children, href}: CTAButtonProps) {
 					<div className="
 						absolute top-0 left-0
 						group-hover/cta:-translate-y-full group-hover/cta:translate-x-full
-						group-hover/cta:transition-transform group-hover/cta:duration-500">
+						group-hover/cta:transition-transform group-hover/cta:duration-500
+						group-hover/cta:ease-[cubic-bezier(0.39,_-0.8,_0.51,_0.5)]">
 						<Icon icon="location-arrow" colorFill="fill-zinc-200" />
 					</div>
 					<div className="
 						absolute top-0 left-0
 						not-[&:is(:where(.group\/cta):hover_*)]:translate-y-full
 						not-[&:is(:where(.group\/cta):hover_*)]:-translate-x-full
-						group-hover/cta:transition-transform group-hover/cta:duration-500">
+						group-hover/cta:transition-transform group-hover/cta:duration-500
+						group-hover/cta:ease-[cubic-bezier(0.49,_-1.14,_0.51,_0.5)]">
 						<Icon icon="location-arrow" colorFill="fill-zinc-200" />
 					</div>
 				</div>
