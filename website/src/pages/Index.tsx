@@ -5,7 +5,7 @@ import Icon from "../components/Icon";
 import ProjectDisplay from "../components/ProjectDisplay";
 import { get } from "../utils/network";
 import { createRef } from "preact";
-import { ProjectRecord } from "../types";
+import { ArticleRecord, ProjectRecord } from "../types";
 
 export function Index() {
 	return (
@@ -99,15 +99,33 @@ function SectionWork() {
 }
 
 function SectionArticles() {
+	const [articles, setArticles] = useState<ArticleRecord[]>([]);
+
+	useEffect(() => {
+		initializeArticles();
+	}, []);
+
+	async function initializeArticles() {
+		let baseURL = import.meta.env.VITE_CMS_EXTERNAL_URL;
+		if(typeof window == 'undefined') {
+			baseURL = import.meta.env.VITE_CMS_INTERNAL_URL;
+		}
+		const data = await get<ArticleRecord[]>({url: new URL(`${baseURL}/articles`)});
+		if(data == null) return;
+		setArticles(data);
+	}
+
 	return (
 		<div id="articles" className="pt-16 pb-48">
 			<h2 className="w-fit pb-4 text-4xl md:text-5xl font-heading font-semibold text-transparent bg-clip-text bg-linear-to-r from-white to-white/40 transition-colors">Articles</h2>
 
-			<div className="after:pointer-events-none relative after:contents after:absolute after:inset-0 md:after:bg-linear-to-r after:from-black/0 after:from-90% after:to-black/100">
+			<div className={`after:pointer-events-none relative after:absolute ${articles.length > 2 ? "after:inset-0" : ""} md:after:bg-linear-to-r after:from-black/0 after:from-90% after:to-black/100`}>
 				<div className="flex max-md:flex-wrap gap-2 sm:gap-4 overflow-y-auto">
-					<ArticleCard metadata={{title: "Hello World Title that is kinda long to fit in one line", description: "Silly Description", releaseDate: new Date()}} />
-					<ArticleCard metadata={{title: "Hello World", description: "Supendously long description that will be so annoying to write but so satisfying to reat because I love reading supendously long article descriptions that make me wonder if I'll ever repeat this again", releaseDate: new Date()}} />
-					<ArticleCard metadata={{title: "Hello World", description: "Silly Description", releaseDate: new Date()}} />
+					{
+						articles.length > 0 ?
+							articles.map(article => <ArticleCard metadata={article} />) :
+							<div className="text-zinc-500">No articles yet...</div>
+					}
 				</div>
 			</div>
 		</div>

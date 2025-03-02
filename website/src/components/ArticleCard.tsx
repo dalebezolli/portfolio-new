@@ -1,7 +1,7 @@
-import { ArticleMetadata } from "../types";
+import { ArticleRecord } from "../types";
 
 type ArticleProps = {
-	metadata: ArticleMetadata;
+	metadata: ArticleRecord;
 };
 export function ArticleCard({metadata}: ArticleProps) {
 	return (
@@ -11,7 +11,6 @@ export function ArticleCard({metadata}: ArticleProps) {
 			</div>
 
 			<div className="w-[300px] flex flex-col gap-4 p-4 text-zinc-500">
-				<p>{metadata.releaseDate.toISOString()}</p>
 				<h3 className="text-xl font-semibold text-white">{metadata.title}</h3>
 				<p>{metadata.description}</p>
 			</div>

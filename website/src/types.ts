@@ -1,7 +1,6 @@
-export type ArticleMetadata = {
+export type ArticleRecord = {
 	title: string;
 	description: string;
-	releaseDate: Date;
 };
 
 export type Collection = {
