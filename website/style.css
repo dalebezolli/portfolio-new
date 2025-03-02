@@ -20,6 +20,8 @@ html {
 	--animate-logo-block-2: pulse 0.5s 0.3s infinite ease-in-out;
 	--animate-logo-block-3: pulse 0.8s 0.2s infinite ease-in-out;
 	--animate-logo-block-4: pulse 1s infinite ease-in-out;
+
+	--animate-cta-highlight: cta-highlight 3s infinite linear;
 }
 
 @layer components {
@@ -42,4 +44,11 @@ html {
 @keyframes word-shimmer {
 	0%, 65% {left: -100%;}
 	100%    {left: 0%;}
+}
+
+@keyframes cta-highlight {
+	0%, 100% { bottom: 0; left: 0;}
+	25% { bottom: 100%; left: 0;}
+	50% { bottom: 100%; left: 100%;}
+	65% { bottom: 0%; left: 100%;}
 }

@@ -1,6 +1,8 @@
 import { Fragment } from "preact/jsx-runtime";
 import { CenterContainer } from "./CenteredContainer";
 import { useState } from "preact/hooks";
+import Icon from "./Icon";
+import { HTMLAttributes } from "preact/compat";
 
 export default function Header() {
 	const [mobileHidden, setMobileHidden] = useState(true);
@@ -35,7 +37,9 @@ export default function Header() {
 							</ul>
 						</nav>
 
-						<HeadingLink text="Let's Connect" href="/#connect" />
+						<CTAButton href="/#connect" className="px-2">
+							Let's Talk
+						</CTAButton>
 					</header>
 				</CenterContainer>
 			</div>
@@ -92,6 +96,52 @@ function HeadingLink({href, text}: HeadlingLinkProps) {
 				absolute -bottom-[1.5px] w-0 group-hover/action:w-full h-px
 				bg-radial from-zinc-400/50 to-transparent
 				transition-all ease-out"></div>
+		</a>
+	);
+}
+
+type CTAButtonProps = {
+	href: string;
+} & HTMLAttributes<HTMLAnchorElement>;
+
+function CTAButton({children, href}: CTAButtonProps) {
+	return (
+		<a href={href} className="
+			group/cta
+			relative p-px rounded-full
+
+			after:absolute after:content-['']
+			after:bottom-0 after:left-0 after:w-[300px] after:h-[150px]
+			after:-translate-x-[50%] after:translate-y-[50%]
+			after:bg-radial after:from-zinc-600 after:to-50% after:to-transparent
+			hover:after:animate-cta-highlight
+
+			text-zinc-200 font-semibold
+			overflow-clip transition-all">
+			<div className="
+				relative z-10
+				bg-zinc-950
+				pl-6 pr-4 py-2
+				flex gap-2 items-center
+				rounded-full">
+				{children}
+
+				<div className="relative p-2 rounded-full bg-black overflow-clip">
+					<div className="
+						absolute top-0 left-0
+						group-hover/cta:-translate-y-full group-hover/cta:translate-x-full
+						group-hover/cta:transition-transform group-hover/cta:duration-500">
+						<Icon icon="location-arrow" colorFill="fill-zinc-200" />
+					</div>
+					<div className="
+						absolute top-0 left-0
+						not-[&:is(:where(.group\/cta):hover_*)]:translate-y-full
+						not-[&:is(:where(.group\/cta):hover_*)]:-translate-x-full
+						group-hover/cta:transition-transform group-hover/cta:duration-500">
+						<Icon icon="location-arrow" colorFill="fill-zinc-200" />
+					</div>
+				</div>
+			</div>
 		</a>
 	);
 }
