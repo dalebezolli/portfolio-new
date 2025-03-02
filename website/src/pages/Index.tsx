@@ -63,7 +63,7 @@ function SectionWork() {
 	}
 
 	return (
-		<div id="work" className="pt-16 pb-48">
+		<div id="work" className="pt-16 pb-8">
 			<h2 ref={refTitle} className={`
 				flex items-end
 				w-fit pb-4
