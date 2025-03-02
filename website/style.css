@@ -52,3 +52,13 @@ html {
 	50% { bottom: 100%; left: 100%;}
 	65% { bottom: 0%; left: 100%;}
 }
+
+::-webkit-scrollbar {
+	width: 4px;
+	height: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+	border-radius: 10000px;
+	background-color: var(--color-zinc-600, white);
+}
