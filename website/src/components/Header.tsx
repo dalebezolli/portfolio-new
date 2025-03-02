@@ -34,10 +34,11 @@ export default function Header() {
 								<li><HeadingLink text="Work" href="#work" /></li>
 								<li><HeadingLink text="Aritcles" href="/#articles" /></li>
 								<li><HeadingLink text="About Me" href="/#about" /></li>
+								<li className="md:hidden"><HeadingLink text="Let's Talk" href="/#about" /></li>
 							</ul>
 						</nav>
 
-						<CTAButton href="/#connect" className="px-2">
+						<CTAButton href="/#connect" className="max-md:hidden">
 							Let's Talk
 						</CTAButton>
 					</header>
@@ -104,9 +105,9 @@ type CTAButtonProps = {
 	href: string;
 } & HTMLAttributes<HTMLAnchorElement>;
 
-function CTAButton({children, href}: CTAButtonProps) {
+function CTAButton({children, href, className=""}: CTAButtonProps) {
 	return (
-		<a href={href} className="
+		<a href={href} className={`
 			group/cta
 			relative p-px rounded-full
 
@@ -117,7 +118,7 @@ function CTAButton({children, href}: CTAButtonProps) {
 			hover:after:animate-cta-highlight
 
 			text-zinc-200 font-semibold
-			overflow-clip transition-all">
+			overflow-clip transition-all ${className}`}>
 			<div className="
 				relative z-10
 				bg-zinc-950
