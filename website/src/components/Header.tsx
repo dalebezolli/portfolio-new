@@ -7,32 +7,35 @@ export default function Header() {
 
 	return (
 		<Fragment>
-			<div className="h-[56px]"></div>
+			<div className="
+				sticky top-0 z-50
+				backdrop-blur-sm bg-black/60
+				after:contents-[''] after:relative after:block after:bottom-0 after:inset-x-0 after:h-px
+				after:bg-radial after:from-zinc-400/20 after:to-transparent">
+				<CenterContainer>
+					<header className="flex justify-between items-center">
+						<h1><a href="/#top" className="block w-fit text-lg font-semibold text-white pt-5 pb-4">Dale Bezolli</a></h1>
 
-			<CenterContainer className="sticky top-0 z-50 backdrop-blur-md bg-black/25">
-				<header className="flex justify-between pt-4 pb-4 mb-4">
-					<h1><a href="/#top" className="
-						w-fit pb-4 text-2xl font-semibold text-transparent 
-						bg-clip-text bg-linear-to-r from-white to-white/20 transition-colors hover:from-blue-200 hover:to-slate-600 hover:from-50%">Dale Bezolli</a></h1>
+						<nav className="flex items-center">
+							<button className="md:hidden cursor-pointer" onClick={() => setMobileHidden(!mobileHidden)}>
+								<div className="relative flex w-[24px] h-[24px] flex-col justify-around items-end group/hamburger">
+									<div className="w-[80%] group-hover/hamburger:w-full h-[2px] rounded-full bg-gray-400 group-hover/hamburger:bg-white transition-all ease-in-out duration-300"></div>
+									<div className="w-[40%] group-hover/hamburger:w-full h-[2px] rounded-full bg-gray-400 group-hover/hamburger:bg-white transition-all ease-in-out duration-300"></div>
+									<div className="w-[90%] group-hover/hamburger:w-full h-[2px] rounded-full bg-gray-400 group-hover/hamburger:bg-white transition-all ease-in-out duration-300"></div>
+								</div>
+							</button>
 
-					<nav className="flex items-center">
-						<button className="md:hidden cursor-pointer" onClick={() => setMobileHidden(!mobileHidden)}>
-							<div className="relative flex w-[24px] h-[24px] flex-col justify-around items-end group/hamburger">
-								<div className="w-[80%] group-hover/hamburger:w-full h-[2px] rounded-full bg-gray-400 group-hover/hamburger:bg-white transition-all ease-in-out duration-300"></div>
-								<div className="w-[40%] group-hover/hamburger:w-full h-[2px] rounded-full bg-gray-400 group-hover/hamburger:bg-white transition-all ease-in-out duration-300"></div>
-								<div className="w-[90%] group-hover/hamburger:w-full h-[2px] rounded-full bg-gray-400 group-hover/hamburger:bg-white transition-all ease-in-out duration-300"></div>
-							</div>
-						</button>
+							<ul className="max-md:aria-hidden:hidden max-md:absolute max-md:top-[64px] max-md:inset-x-0 max-md:backdrop-blur-2xl max-md:bg-black/75 md:flex" aria-hidden={mobileHidden}>
+								<li><HeadingLink text="Work" href="#work" /></li>
+								<li><HeadingLink text="Aritcles" href="/#articles" /></li>
+								<li><HeadingLink text="About Me" href="/#about" /></li>
+							</ul>
+						</nav>
 
-						<ul className="max-md:aria-hidden:hidden max-md:absolute max-md:top-[64px] max-md:inset-x-0 max-md:backdrop-blur-2xl max-md:bg-black/75 md:flex gap-2" aria-hidden={mobileHidden}>
-							<li><HeadingLink text="Work" href="#work" /></li>
-							<li><HeadingLink text="Aritcles" href="/#articles" /></li>
-							<li><HeadingLink text="About Me" href="/#about" /></li>
-							<li><HeadingLink text="Let's Connect" href="/#connect" /></li>
-						</ul>
-					</nav>
-				</header>
-			</CenterContainer>
+						<HeadingLink text="Let's Connect" href="/#connect" />
+					</header>
+				</CenterContainer>
+			</div>
 		</Fragment>
 	);
 }
@@ -44,12 +47,33 @@ type HeadlingLinkProps = {
 
 function HeadingLink({href, text}: HeadlingLinkProps) {
 	return (
-		<a className="group/action px-2 last-of-type:pr-0 py-1.5 flex flex-col items-center font-semibold cursor-pointer text-gray-400 hover:text-blue-200" href={href}>
+		<a className="
+			relative
+			pt-5 pb-4 px-5 group/action
+			flex flex-col items-center font-medium
+
+			text-zinc-300 hover:text-zinc-100
+			hover:bg-radial-[at_50%_90%] from-zinc-400/20 to-75% to-transparent
+
+			transition-all cursor-pointer" href={href}>
 			<div className="flex items-center gap-2 group-hover/action:translate-y-[-20%] transition-transform ease-out">
 				{text}
 			</div>
 
-			<div className="w-0 group-hover/action:w-[75%] h-[2px] bg-blue-200 transition-all ease-out"></div>
+			<div className="
+				absolute left-0 top-0 w-px h-0 group-hover/action:h-full
+				bg-linear-to-b from-zinc-400/20 to-transparent
+				transition-all ease-out"></div>
+
+			<div className="
+				absolute right-0 top-0 w-px h-0 group-hover/action:h-full
+				bg-linear-to-b from-zinc-400/20 to-transparent
+				transition-all ease-out"></div>
+
+			<div className="
+				absolute -bottom-[1.5px] w-0 group-hover/action:w-full h-px
+				bg-radial from-zinc-400/50 to-transparent
+				transition-all ease-out"></div>
 		</a>
 	);
 }
