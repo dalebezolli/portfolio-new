@@ -392,7 +392,9 @@ func updateData(db *mongo.Client, imageStore *ImageStore) http.HandlerFunc {
 			}
 
 			oldImgUrl, _ := oldCollectionData[0][key]
-			imageStore.Delete(oldImgUrl.(string))
+			if strings.HasPrefix(oldImgUrl.(string), "data:image/") == true {
+				imageStore.Delete(oldImgUrl.(string))
+			}
 
 			url, err := uploadBase64ImageToImageStore(imageStore, valueStringAsserted)
 			if err != nil {
