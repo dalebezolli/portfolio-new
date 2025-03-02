@@ -102,20 +102,27 @@ export default function ProjectDisplay({
 					<div className="absolute -left-8 top-24 w-[150%] h-0.5 bg-highlight/20 -rotate-[20deg]"></div>
 				</div>
 
-				<div className="
+				<div className={`
 					absolute
+
+
+					${ !small ? `w-[300px] aspect-video ${whiteTheme ? "bg-zinc-200" : "bg-zinc-900"}` : ""}
+
 					bottom-[2%] right-[10%]
 					scale-105 group-hover:scale-[101%]
 					group-hover:bottom-[0%] group-hover:right-[8%]
 					-rotate-y-2 rotate-z-2 translate-z-10 group-hover:translate-z-20
 
 					transition-all duration-500 ease-in-out
-					rounded-md shadow-3xl shadow-black/25 group-hover:shadow-highlight/25 overflow-clip">
+					rounded-md shadow-3xl shadow-black/25 group-hover:shadow-highlight/25 overflow-clip`}>
 					{ img_tertiary && <img width={300} src={img_tertiary} />}
 				</div>
 
 				<div className={`
 					absolute
+
+					w-[300px] aspect-video ${whiteTheme ? "bg-zinc-200" : "bg-zinc-900"}
+
 					${small ?
 						'bottom-[-10%] left-[-8%] scale-75' :
 						'bottom-[22%] left-[12%] scale-105 group-hover:scale-[101%] group-hover:bottom-[20%] group-hover:left-[18%]'
@@ -124,16 +131,15 @@ export default function ProjectDisplay({
 
 					transition-all duration-500 ease-in-out
 					rounded-md shadow-3xl shadow-black/25 group-hover:shadow-highlight/25 overflow-clip`}>
-					{ img_secondary != "" ?
-						<img width={300} src={img_secondary} /> :
-						<div className={`w-40 h-40 ${whiteTheme ? "bg-zinc-200" : "bg-zinc-900"}`}></div>
-					}
+					{img_secondary != "" && <img width={300} src={img_secondary} />}
 				</div>
 			</div>
 
 			<div className={`z-[4] absolute ${small ? 'inset-1 overflow-clip' : 'inset-0'} transition-all md:group-hover:brightness-50 ${small ? '' : 'translate-z-1 perspective-[400px] md:group-hover:brightness-100'}`}>
 				<div className={`
 					absolute
+
+					w-[400px] aspect-video ${whiteTheme ? "bg-zinc-200" : "bg-zinc-900"}
 
 					${small ?
 						'top-[-10%] right-[1%] scale-75' :
@@ -144,10 +150,7 @@ export default function ProjectDisplay({
 
 					transition-all duration-500 ease-in-out
 					rounded-md shadow-3xl shadow-black/25 group-hover:shadow-highlight/5 overflow-clip`}>
-					{ img_primary != "" ?
-						<img width={400} src={img_primary} /> :
-						<div className={`w-48 h-48 ${whiteTheme ? "bg-zinc-200" : "bg-zinc-900"}`}></div>
-					}
+					{img_primary != "" && <img width={400} src={img_primary} />}
 				</div>
 			</div>
 
