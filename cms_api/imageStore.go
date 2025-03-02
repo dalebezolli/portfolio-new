@@ -90,21 +90,23 @@ func (s *ImageStore) Store(img *Image) (string, error) {
 
 func (s *ImageStore) Delete(imgUrl string) error {
 	identifier := strings.TrimPrefix(imgUrl, s.ResourceBaseUrl+"/")
+	identifierChunks := strings.Split(identifier, ".")
 
+	img := &Image{Name: identifierChunks[0], MimeType: mime.TypeByExtension("." + identifierChunks[1])}
+
+	imgName := img.GetName()
 	_, err := s.store.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
 		Bucket: &s.bucketName,
-		Key:    &identifier,
+		Key:    &imgName,
 	})
 	if err != nil {
 		return err
 	}
 
-	identifier = strings.TrimPrefix(imgUrl, s.ResourceBaseUrl+"/")
-	identifier = strings.Replace(imgUrl, ".", "-thumbnail.", 1)
-
+	imgName = img.GetNameSizeThumbnail()
 	_, err = s.store.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
 		Bucket: &s.bucketName,
-		Key:    &identifier,
+		Key:    &imgName,
 	})
 
 	return err
