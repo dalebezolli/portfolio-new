@@ -229,9 +229,13 @@ function CollectionEditor() {
 		let data: Collection | null;
 
 		if(editingCollection._id == null) {
-			data = await post<Collection>({url: new URL(`${import.meta.env.VITE_CMS_URL}/collections`), body});
+			const response = await post<Collection>({url: new URL(`${import.meta.env.VITE_CMS_URL}/collections`), body});
+			if(response?.data == null) return;
+			data = response.data;
 		} else {
-			data = await put<Collection>({url: new URL(`${import.meta.env.VITE_CMS_URL}/collections/${path}`), body});
+			const response = await put<Collection>({url: new URL(`${import.meta.env.VITE_CMS_URL}/collections/${path}`), body});
+			if(response?.data == null) return;
+			data = response.data;
 		}
 
 		if(data == null || data._id == null) return;
@@ -367,9 +371,13 @@ function RecordEditor() {
 		const collectionPath = collections[selectedCollection].path;
 		let record: CollectionRecord | null;
 		if(_id == null) {
-			record = await post<CollectionRecord>({url: new URL(`${import.meta.env.VITE_CMS_URL}/${collectionPath}`), body});
+			const response = await post<CollectionRecord>({url: new URL(`${import.meta.env.VITE_CMS_URL}/${collectionPath}`), body});
+			if(response?.data == null) return;
+			record = response.data;
 		} else {
-			record = await put<CollectionRecord>({url: new URL(`${import.meta.env.VITE_CMS_URL}/${collectionPath}/${_id}`), body});
+			const response = await put<CollectionRecord>({url: new URL(`${import.meta.env.VITE_CMS_URL}/${collectionPath}/${_id}`), body});
+			if(response?.data == null) return;
+			record = response.data;
 		}
 
 		if(record == null) return;

@@ -9,6 +9,7 @@ import (
 
 func addRoutes(mux *http.ServeMux, db *mongo.Client, imageStore *ImageStore) {
 	mux.Handle("/v1/api/", http.StripPrefix("/v1/api", handleCollectionRoutes(db, imageStore)))
+	mux.Handle("/v1/api/auth/", http.StripPrefix("/v1/api/auth", handleAuthRoutes(db)))
 	mux.Handle("/v1/api/analytics/", http.StripPrefix("/v1/api/analytics", handleAnalyticsRoutes(db)))
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

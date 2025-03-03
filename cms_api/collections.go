@@ -37,9 +37,9 @@ var ValidAttrTypes map[CollectionAttrType]bool = map[CollectionAttrType]bool{
 func handleCollectionRoutes(db *mongo.Client, imageStore *ImageStore) *http.ServeMux {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /collections", getCollections(db))
+	mux.HandleFunc("GET /collections", ensureLoggedIn(getCollections(db)))
 	mux.HandleFunc("GET /collections/{collection}", getCollectionSingle(db))
-	mux.HandleFunc("POST /collections", createCollection(db))
+	mux.HandleFunc("POST /collections", ensureLoggedIn(createCollection(db)))
 	mux.HandleFunc("PUT /collections/{collection}", updateCollection(db))
 	mux.HandleFunc("DELETE /collections/{collection}", deleteCollection(db))
 
@@ -458,14 +458,6 @@ func deleteData(db *mongo.Client, imageStore *ImageStore) http.HandlerFunc {
 		}
 
 		WriteJSON(w, http.StatusOK, ResponseMessage{Status: StatusCodeOk, Message: fmt.Sprintf("Deleted document with id (%v) in collection (%v)", dataHexId, collectionPath)})
-	}
-}
-
-func handlePrefligh() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Access-Control-Allow-Origin", "*")
-		w.Header().Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Add("Access-Control-Allow-Headers", "*")
 	}
 }
 

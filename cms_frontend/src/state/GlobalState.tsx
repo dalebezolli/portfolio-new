@@ -3,6 +3,7 @@ import { createContext } from "preact";
 import { PropsWithChildren, useState } from "preact/compat";
 import { StateUpdater, useContext, useEffect } from "preact/hooks";
 import { get } from "../utils/network";
+import Login from "../pages/Login";
 
 type GlobalStateDetails = {
 	collections: Collections;
@@ -12,6 +13,8 @@ type GlobalStateDetails = {
 	editingRecord: {[key: string]: any};
 
 	selectedRecords: {[key: string]: true};
+
+	authPassword: string;
 
 	initializeCollections: (collections: Collection[]) => void;
 	setCollection: (collection: Collection) => void;
@@ -30,6 +33,8 @@ type GlobalStateDetails = {
 	setEditingCollection: (value: StateUpdater<Collection>) => void;
 	setEditingRecord: (value: StateUpdater<{[key: string]: any}>) => void;
 
+	setAuthPassword: (value: StateUpdater<string>) => void;
+
 };
 
 const GlobalState = createContext<GlobalStateDetails>({
@@ -39,6 +44,7 @@ const GlobalState = createContext<GlobalStateDetails>({
 	editingRecord: {},
 
 	selectedRecords: {},
+	authPassword: "",
 
 	initializeCollections: () => {},
 	setCollection: () => {},
@@ -56,6 +62,8 @@ const GlobalState = createContext<GlobalStateDetails>({
 
 	setEditingCollection: () => {},
 	setEditingRecord: () => {},
+
+	setAuthPassword: () => {},
 });
 
 export function useGlobalState() {
@@ -64,6 +72,7 @@ export function useGlobalState() {
 
 export function GlobalStateProvider({children}: PropsWithChildren) {
 	const [collections, setCollections] = useState<Collections>({});
+	const [authPassword, setAuthPassword] = useState<string>("");
 	const [selectedCollection, setSelectedCollection] = useState<CollectionPath | null>(null);
 	const [editingCollection, setEditingCollection] = useState<Collection>({name: "", path: "", attributes: [], records: {}});
 	const [editingRecord, setEditingRecord] = useState<{[key: string]: any}>({});
@@ -74,14 +83,17 @@ export function GlobalStateProvider({children}: PropsWithChildren) {
 	}, []);
 
 	async function initializeCollections() {
-		const collections = await get<Collection[]>({url: new URL(`${import.meta.env.VITE_CMS_URL}/collections`)});
+		const responseCollections = await get<Collection[]>({url: new URL(`${import.meta.env.VITE_CMS_URL}/collections`)});
+		const collections = responseCollections?.data;
 		if(collections == null) return;
 
 		const collectionObject: Collections = {};
 
 		for(const col of collections) {
 			if(col._id == null) continue;
-			const collectionRecords = await get<CollectionRecord[]>({url: new URL(`${import.meta.env.VITE_CMS_URL}/${col.path}`)}) ?? [];
+			const responseCollectionRecords = await get<CollectionRecord[]>({url: new URL(`${import.meta.env.VITE_CMS_URL}/${col.path}`)});
+			const collectionRecords = responseCollectionRecords?.data;
+			if(collectionRecords == null) continue;
 
 			col.records = collectionRecords.reduce((acc, cur) => ({...acc, [cur._id]: cur}), {});
 			collectionObject[col._id] = col;
@@ -155,6 +167,7 @@ export function GlobalStateProvider({children}: PropsWithChildren) {
 		selectedRecords,
 		editingCollection,
 		editingRecord,
+		authPassword,
 
 		initializeCollections,
 		setCollection,
@@ -172,11 +185,13 @@ export function GlobalStateProvider({children}: PropsWithChildren) {
 
 		setEditingCollection,
 		setEditingRecord,
+
+		setAuthPassword,
 	};
 
 	return (
 		<GlobalState.Provider value={contextValue}>
-			{children}
+			{ authPassword == "" ? <Login /> : children}
 		</GlobalState.Provider>
 	);
 }

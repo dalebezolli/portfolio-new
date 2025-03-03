@@ -79,3 +79,11 @@ func ReadBodyJSON[T Validator](r *http.Request, db *mongo.Client) (T, Misses, er
 
 	return data, misses, nil
 }
+
+func handlePrefligh() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Access-Control-Allow-Origin", "*")
+		w.Header().Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Add("Access-Control-Allow-Headers", "*")
+	}
+}

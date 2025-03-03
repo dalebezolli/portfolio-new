@@ -1,13 +1,13 @@
-export async function get<T>({url, headers}: RequestProps): Promise<T | null> {
+export async function get<T>({url, headers}: RequestProps) {
 	return await networkRequest<T>({url, headers, method: "GET"});
 }
 
-export async function post<T>({url, headers, body}: BodiedRequestProps): Promise<T | null> {
+export async function post<T>({url, headers, body}: BodiedRequestProps) {
 	const finalHeaders = concatHeaders(new Headers([["Content-Type", "application/json"]]), headers ?? new Headers());
 	return await networkRequest<T>({url, headers: finalHeaders, body, method: "POST"});
 }
 
-export async function put<T>({url, headers, body}: BodiedRequestProps): Promise<T | null> {
+export async function put<T>({url, headers, body}: BodiedRequestProps) {
 	const finalHeaders = concatHeaders(new Headers([["Content-Type", "application/json"]]), headers ?? new Headers());
 	return await networkRequest<T>({url, headers: finalHeaders, body, method: "PUT"});
 }
@@ -31,7 +31,7 @@ async function networkRequest<T>({url, method, headers, body}: GeneralizedReques
 			return null;
 		}
 
-		return response.data ?? null;
+		return response;
 	} catch {
 		return null;
 	}
