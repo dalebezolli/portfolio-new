@@ -158,7 +158,7 @@ export default function ProjectDisplay({
 				p-8
 				flex flex-col gap-1
 				justify-end ${small ? '' :'h-full md:h-auto md:justify-stretch'}
-				${small ? '' : 'md:bg-linear-60 from-zinc-950/90 to-zinc-600/50'}
+				${small ? 'bg-zinc-800/50' : 'md:bg-linear-60 from-zinc-950/90 to-zinc-600/50'}
 				md:opacity-0 group-hover:opacity-100
 				backdrop-blur-sm rounded-b-xl
 
@@ -185,7 +185,7 @@ export default function ProjectDisplay({
 }
 
 function TechIcon({icon}: {icon: IconNameTech}) {
-	return <div className="flex justify-center items-center p-1 bg-white/5 rounded-xs"><Icon icon={icon} size={16} /></div>;
+	return <div className="flex justify-center items-center p-1 bg-zinc-800 rounded-xs"><Icon icon={icon} size={16} /></div>;
 }
 
 function ProjectActionButton({href, icon, children}: PropsWithChildren<{href?: string, icon?: IconName}>) {
