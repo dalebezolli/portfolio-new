@@ -121,11 +121,11 @@ export default function ProjectDisplay({
 				<div className={`
 					absolute
 
-					w-[300px] aspect-video ${whiteTheme ? "bg-zinc-200" : "bg-zinc-900"}
+					${whiteTheme ? "bg-zinc-200" : "bg-zinc-900"}
 
-					${small ?
-						'bottom-[-10%] left-[-8%] scale-75' :
-						'bottom-[22%] left-[12%] scale-105 group-hover:scale-[101%] group-hover:bottom-[20%] group-hover:left-[18%]'
+					${!small ?
+						'w-[300px] aspect-video bottom-[22%] left-[12%] scale-105 group-hover:scale-[101%] group-hover:bottom-[20%] group-hover:left-[18%]' :
+						''
 					}
 					rotate-x-2 rotate-y-12 -rotate-z-12 ${small ? '' : 'translate-z-10 group-hover:translate-z-20'}
 
@@ -142,7 +142,7 @@ export default function ProjectDisplay({
 					w-[400px] aspect-video ${whiteTheme ? "bg-zinc-200" : "bg-zinc-900"}
 
 					${small ?
-						'top-[-10%] right-[1%] scale-75' :
+						`${img_secondary != "" ? "top-[-10%] right-[1%]" : "top-[8%] right-[5%]" } scale-75` :
 						'top-[2%] right-[15%] group-hover:scale-105 group-hover:top-0 group-hover:right-[10%] translate-z-1'
 					}
 
@@ -155,10 +155,10 @@ export default function ProjectDisplay({
 			</div>
 
 			<section className={`
-				absolute ${small ? 'inset-1 rounded-xl' : 'bottom-0 inset-x-0'} z-10
+				absolute ${small ? 'inset-0.5 rounded-xl' : 'bottom-0 inset-x-0'} z-10
 				p-8
 				flex flex-col gap-1
-				h-full justify-end ${small ? '' :'md:h-auto md:justify-stretch'}
+				justify-end ${small ? '' :'h-full md:h-auto md:justify-stretch'}
 				${small ? '' : 'md:bg-linear-60 from-zinc-950/90 to-zinc-600/50'}
 				md:opacity-0 group-hover:opacity-100
 				backdrop-blur-sm rounded-b-xl
