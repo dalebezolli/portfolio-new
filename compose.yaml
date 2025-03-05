@@ -4,8 +4,6 @@ services:
     ports:
       - "8000:80"
       - "24678:24678"
-    volumes:
-      - "./website:/home/node/app"
     depends_on:
       - cms_api
   cms_frontend:
@@ -24,7 +22,7 @@ services:
     depends_on:
       - cms_db
   cms_db:
-    image: mongo
+    image: mongodb-raspberrypi4-unofficial-r7.0.4
     ports:
       - "27017:27017"
     volumes:

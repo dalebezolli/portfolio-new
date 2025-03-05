@@ -20,7 +20,10 @@ let vite
 if (!isProduction) {
 	const { createServer } = await import('vite')
 	vite = await createServer({
-		server: { middlewareMode: true },
+		server: { 
+			middlewareMode: true,
+			allowedHosts: ['portfolio.co-watch.com'],
+		},
 		appType: 'custom',
 		base,
 	})
