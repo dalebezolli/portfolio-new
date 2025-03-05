@@ -135,10 +135,9 @@ export default function ProjectDisplay({
 				</div>
 			</div>
 
-			<div className={`z-[4] absolute ${small ? 'inset-1 overflow-clip' : 'inset-0'} transition-all md:group-hover:brightness-50 ${small ? '' : 'translate-z-1 perspective-[400px] md:group-hover:brightness-100'}`}>
+			<div className={`z-[4] absolute ${small ? 'inset-1 overflow-clip' : 'inset-0'} transition-all md:group-hover:brightness-50 ${small ? '' : 'translate-z-1 perspective-[400px] md:group-hover:brightness-100'}`} style={{ transformStyle: 'preserve-3d'}}>
 				<div className={`
 					absolute
-
 					w-[400px] aspect-video ${whiteTheme ? "bg-zinc-200" : "bg-zinc-900"}
 
 					${small ?
