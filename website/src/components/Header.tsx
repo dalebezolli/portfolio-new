@@ -32,7 +32,7 @@ export default function Header() {
 
 							<ul className="max-md:aria-hidden:hidden max-md:absolute max-md:top-[64px] max-md:inset-x-0 max-md:backdrop-blur-2xl max-md:bg-black/75 md:flex" aria-hidden={mobileHidden}>
 								<li><HeadingLink text="Work" href="#work" /></li>
-								<li><HeadingLink text="Aritcles" href="/#articles" /></li>
+								<li><HeadingLink text="Articles" href="/#articles" /></li>
 								<li><HeadingLink text="About Me" href="/#about" /></li>
 								<li className="md:hidden"><HeadingLink text="Let's Talk" href="/#about" /></li>
 							</ul>
