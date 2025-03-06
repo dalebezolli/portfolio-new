@@ -32,7 +32,8 @@ async function networkRequest<T>({url, method, headers, body}: GeneralizedReques
 		}
 
 		return response.data ?? null;
-	} catch {
+	} catch(error) {
+		console.error(`Error in network request for (${method}:${url}):`, error);
 		return null;
 	}
 }

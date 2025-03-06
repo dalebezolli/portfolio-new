@@ -1,5 +1,5 @@
 import { JSX } from "preact/jsx-runtime"
-import { compileSync, runSync } from "@mdx-js/mdx";
+import { compile, run } from "@mdx-js/mdx";
 import * as runtime from "preact/jsx-runtime";
 import { useMDXComponents } from "@mdx-js/preact";
 import { Index } from "./pages/Index";
@@ -21,7 +21,13 @@ const routes: Record<string, JSX.Element | ((params: any) => Promise<JSX.Element
 		const details = await get<ProjectRecord>({ url: new URL(`${base}/projects/${params.id}`)})
 		if(details == null) return <NotFound />
 
-		const Html = await compileMarkdown(details.description);
+		let Html: (props: any) => JSX.Element;
+		try {
+			Html = await compileMarkdown(details.description);
+		} catch(error) {
+			console.error("Error while compiling HTML:", error);
+			return <NotFound />
+		}
 		return (
 			<Project project={details}>
 				<Html />
@@ -37,7 +43,14 @@ const routes: Record<string, JSX.Element | ((params: any) => Promise<JSX.Element
 		const details = await get<ArticleRecord>({ url: new URL(`${base}/articles/${params.id}`)})
 		if(details == null) return <NotFound />
 
-		const Html = await compileMarkdown(details.article);
+		let Html: (props: any) => JSX.Element;
+		try {
+			Html = await compileMarkdown(details.article);
+		} catch(error) {
+			console.error("Error while compiling HTML:", error);
+			return <NotFound />
+		}
+
 		return (
 			<Article article={details}>
 				<Html />
@@ -88,7 +101,7 @@ function prepareRouteRegex(route: string): RegExp {
 
 async function compileMarkdown(markdown: string): Promise<(props: MDXProps) => JSX.Element> {
 	const baseUrl = import.meta.url;
-	const compiledData = compileSync(markdown, {
+	const compiledData = await compile(markdown, {
 		format: 'mdx',
 		providerImportSource: '@mdx-js/preact',
 		jsxImportSource: 'preact',
@@ -96,7 +109,7 @@ async function compileMarkdown(markdown: string): Promise<(props: MDXProps) => J
 		baseUrl,
 	});
 
-	const data = runSync(compiledData, {
+	const data = await run(compiledData, {
 		...runtime,
 		useMDXComponents,
 		baseUrl,
