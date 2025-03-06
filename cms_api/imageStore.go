@@ -94,6 +94,11 @@ func (s *ImageStore) Store(img *Image) (string, error) {
 		return "", err
 	}
 
+	if img.MimeType == "image/png" {
+		img.convert("image/webp")
+		img.MimeType = "image/webp"
+	}
+
 	for _, height := range img.AvailableHeights {
 		var imgName string
 		var imgBytes []byte
@@ -136,24 +141,6 @@ func (s *ImageStore) Store(img *Image) (string, error) {
 	return imgUrl, nil
 }
 
-func (s *ImageStore) getAllImageNames(imgName string) ([]string, error) {
-	out, err := s.store.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
-		Bucket: &s.bucketName,
-		Prefix: &imgName,
-	})
-
-	if err != nil {
-		return []string{}, err
-	}
-
-	names := make([]string, 0, len(out.Contents))
-	for i := range out.Contents {
-		names = append(names, *out.Contents[i].Key)
-	}
-
-	return names, nil
-}
-
 func (s *ImageStore) Delete(imgUrl string) error {
 	identifier := strings.TrimPrefix(imgUrl, s.ResourceBaseUrl+"/")
 	identifierChunks := strings.Split(identifier, ".")
@@ -190,8 +177,22 @@ func (img *Image) GetFilenameWithPostfix(namePostfix string) string {
 	return img.Name + "-" + namePostfix + exts[0]
 }
 
-func (img *Image) GetNameSizeThumbnail() string {
-	return strings.Replace(img.GetFilename(), ".", "-thumbnail.", 1)
+func (s *ImageStore) getAllImageNames(imgName string) ([]string, error) {
+	out, err := s.store.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
+		Bucket: &s.bucketName,
+		Prefix: &imgName,
+	})
+
+	if err != nil {
+		return []string{}, err
+	}
+
+	names := make([]string, 0, len(out.Contents))
+	for i := range out.Contents {
+		names = append(names, *out.Contents[i].Key)
+	}
+
+	return names, nil
 }
 
 func (img *Image) saveToDisk() error {
@@ -221,6 +222,37 @@ func (img *Image) removeInstances(heights ImageHeights) error {
 	}
 
 	return err
+}
+
+// Attempt to losslessly convert an image to webp
+func (img *Image) convert(newMimeType string) ([]byte, error) {
+	extensions, err := mime.ExtensionsByType(newMimeType)
+	if err != nil {
+		return []byte{}, errors.New("Mime type should be a legal mime type")
+	}
+
+	f, err := os.OpenFile(img.GetFilename(), os.O_RDONLY, 0600)
+	if err != nil {
+		return nil, err
+	}
+	f.Close()
+
+	cmd := exec.Command("ffmpeg", "-i", img.GetFilename(), "-c:v", "libwebp", "-lossless", "1", img.Name+extensions[0])
+	err = cmd.Run()
+	if err != nil {
+		return nil, err
+	}
+
+	converted, err := os.ReadFile(img.Name+extensions[0])
+	if err != nil {
+		return nil, err
+	}
+
+	img.removeInstances(img.AvailableHeights)
+
+	return converted, nil
+	
+
 }
 
 func (img *Image) downscale(height Height) ([]byte, error) {
