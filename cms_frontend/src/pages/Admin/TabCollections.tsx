@@ -9,7 +9,7 @@ import { del, post, put } from "../../utils/network";
 import { Checkbox } from "../../components/Checkbox";
 import Select from "../../components/Select";
 import { selectTypes } from "../../utils/constants";
-import { FileUploader } from "../../components/FileUploader";
+import { ImageUploader } from "../../components/ImageUploader";
 import TextArea from "../../components/TextArea";
 
 export default function TabCollections() {
@@ -406,8 +406,7 @@ function RecordEditor() {
 							<div className="flex flex-col gap-1">
 								<p>{name}</p>
 								{type == "string" && <Input className="w-fit" value={editingRecord[name]} onChange={(e) => updateRecord(e.currentTarget.value, name)} />}
-								{type == "image" && editingRecord[name] && <img width={128} src={editingRecord[name]} />}
-								{type == "image" && <FileUploader onChange={async e => {
+								{type == "image" && <ImageUploader src={editingRecord[name]} onChange={async e => {
 									if(e.currentTarget.files == null) return;
 									if(e.currentTarget.files[0] == null) return;
 									let target = e.currentTarget;
