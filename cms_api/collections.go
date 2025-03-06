@@ -586,7 +586,7 @@ func (d CollectionData) Validate(r *http.Request, db *mongo.Client) Misses {
 }
 
 func uploadBase64ImageToImageStore(imageStore *ImageStore, value string) (string, error) {
-	image, err := ConvertB64ImgToImage(value)
+	image, err := NewImage(value, ImageHeights{})
 	if err != nil {
 		return "", err
 	}
