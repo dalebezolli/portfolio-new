@@ -10,6 +10,7 @@ import { Checkbox } from "../../components/Checkbox";
 import Select from "../../components/Select";
 import { selectTypes } from "../../utils/constants";
 import { FileUploader } from "../../components/FileUploader";
+import TextArea from "../../components/TextArea";
 
 export default function TabCollections() {
 	return (
@@ -420,7 +421,7 @@ function RecordEditor() {
 
 									updateRecord(base64Img, name)
 								}} />}
-								{type == "mdx" && <Input className="w-full" value={editingRecord[name]} onChange={(e) => updateRecord(e.currentTarget.value, name)} />}
+								{type == "mdx" && <TextArea className="w-full" value={editingRecord[name]} onChange={(e) => updateRecord(e.currentTarget.value, name)} />}
 							</div>
 						)
 					})
