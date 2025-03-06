@@ -398,7 +398,7 @@ function RecordEditor() {
 			<div className="overflow-hidden flex flex-col flex-1 gap-4 p-4 bg-gray-900 border-2 border-gray-800 rounded-2xl">
 				<p className="text-gray-200 font-bold text-xl mb-2">Record Information</p>
 
-				<div className="overflow-y-auto">
+				<div className="overflow-y-auto flex flex-col gap-4">
 				{
 					collections[selectedCollection].attributes.map(({name, type}) => {
 						if(name == null) return;
