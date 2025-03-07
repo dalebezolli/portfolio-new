@@ -5,8 +5,10 @@ import { ArticleRecord } from "../types";
 export default function Article({children, article}: ArticleProps) {
 	return (
 		<CenterContainer>
-			<h2>Article: {article.title}</h2>
-			{children}
+				<div className="w-[60ch]">
+					<h2 className="pb-16 text-3xl font-semibold capitalize">{article.title}</h2>
+					{children}
+				</div>
 		</CenterContainer>
 	);
 }

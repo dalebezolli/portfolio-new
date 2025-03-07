@@ -53,7 +53,7 @@ const routes: Record<string, JSX.Element | ((params: any) => Promise<JSX.Element
 
 		return (
 			<Article article={details}>
-				<Html />
+				<Html components={mdxProps} />
 			</Article>
 		)
 	},
@@ -97,6 +97,12 @@ function prepareRouteRegex(route: string): RegExp {
 
 	const regex = new RegExp(`^${routeChunks.join('/')}$`);
 	return regex;
+}
+
+var mdxProps = {
+	h2(props: any) {
+		return <h2 className="m-16 font-bold text-lg" {...props} />
+	},
 }
 
 async function compileMarkdown(markdown: string): Promise<(props: MDXProps) => JSX.Element> {

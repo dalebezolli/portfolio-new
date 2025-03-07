@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+@theme {
+	--breakpoint-xs: 30rem;
+	--font-primary: "Poppins", var(--default-font-family);
+	--font-heading: "Reem Kufi", var(--default-font-family);
+
+	--color-highlight: white;
+
+    --shadow-3xl: 0 0 48px 48px var(--tw-shadow-color, rgb(0 0 0 / 0.25));
+    --shadow-projectdisplay: 0 0 80px 80px var(--tw-shadow-color, rgb(0 0 0 / 0.25));
+    --shadow-projectdisplay-hover: 0 0 128px 128px var(--tw-shadow-color, rgb(0 0 0 / 0.25));
+
+	--animate-word-shimmer: word-shimmer 3s infinite alternate ease-in-out;
+	--animate-logo-block-1: pulse 0.5s infinite ease-in-out;
+	--animate-logo-block-2: pulse 0.5s 0.3s infinite ease-in-out;
+	--animate-logo-block-3: pulse 0.8s 0.2s infinite ease-in-out;
+	--animate-logo-block-4: pulse 1s infinite ease-in-out;
+
+	--animate-cta-highlight: cta-highlight 3s infinite linear;
+}
+
+@layer components {
+	.visually-hidden {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0); /* Legacy property for Internet Explorer */
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+}
+
+@keyframes word-bounce {
+	0%, 100% {transform: translateY(0%); }
+	40% {transform: translateY(-20%); }
+}
+
+@keyframes word-shimmer {
+	0%, 65% {left: -100%;}
+	100%    {left: 0%;}
+}
+
+@keyframes cta-highlight {
+	0%, 100% { bottom: 0; left: 0;}
+	25% { bottom: 100%; left: 0;}
+	50% { bottom: 100%; left: 100%;}
+	65% { bottom: 0%; left: 100%;}
+}
+
+.hljs {
+	display: block;
+	width: 100%;
+}
+
+::-webkit-scrollbar {
+	width: 4px;
+	height: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+	border-radius: 10000px;
+	background-color: var(--color-zinc-600, white);
+}

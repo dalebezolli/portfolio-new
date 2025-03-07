@@ -1,0 +1,70 @@
+export const metadata = {
+	title: "10x your developer speed and productivity?",
+	img: "",
+};
+
+TL;DR
+- Scale down images to their container's size
+- Reformat them to lossy if necessary (you can upload lossless versions if you want to keep things nicer)
+- Upload to a CDN for the sweet benefits of close proximity serving.
+
+The past few months I've been creating websites for my clients and myself but they all had one problem in common... image load times were abysmal, and oh man I hated it... partly because I'm hosting this website on my "fancy" raspberry pi 4 with barely enough memory (2GiB btw) to survive the node_modules cataclysm and partly because of my asymmetrical network connection with 10mbps upload speed.
+
+You know your screen cannot output more pixels than it has right?
+Let's look at an example:
+\<show image with high res and low res side by side in a 320p container\>
+
+You can see that these are perceptually almost identical... if you have a keen eye of course you'll see a slight difference and that's because they're different sizes.
+
+But the difference isn't at all worsening our user's experience and is saving us ~87.7% bandwith, nice!
+
+Now, the way we achieve this is pretty straightforward. Using ffmpeg we downscale our images like so:
+```shell
+ffmpeg -i <input> -vf scale=<width>:-1 <output>
+```
+
+Where:
+- input: is the input file's name
+- output: the output file's name
+- width: the width of our image
+
+In the scale option -1 retains the aspect ratio of the image.
+
+Imagine having a user upload his profile icon which will be displayed in a 64x64 div but displaying there the original image which could be anything from a small icon up to a 1080p or 2k image... that would be stupendously inefficient.
+
+Instead, with this trick we can create variations of the original for any situation.
+
+But wait, There's more!
+These images we were using so far are stored in a lossless format. What does this mean exactly?
+This means that compared to the real, or digital world these formats don't lose any quality making them store significantly more data to capture everything. Which is useful in some cases, but not in most.
+
+What we can do is convert any lossless image format to jpg or webp.
+This depending on the image will significantly drop the image size and if done right we can have it get really close to the identical.
+
+Some snippets that achieve this are the following:
+...
+
+As you can see the conversion to a lossy version is further reducing the size and helping us A TON. But what should we do first, compress and then downscale or downscale and then compress?
+Honestly, some people suggest compressing first and then resizing others the exact opposite as seen [here](https://stackoverflow.com/a/12012801). I would recommend to experiment and find out what works best for the current situation.
+
+> A note on GZIP
+> It's generally not recommended to gzip lossy images as they're already compressed enough. Quite possibly it might work agianst your intentions and increase the file size instead of reducing it. That'll happen because of our images already being compressed.
+
+So far we've seen how to manipulate our images to improve their load times, what if I could tell you we can improve load times regardless of our server setup, network speed or location.
+
+Imagine this, you've just ordered a pizza from two different shops, one is at the end of the street you live and the other on the other side of the city. Which one would reach you faster?
+Exactly! Keeping our information close to our users helps it reach faster to them. This is made possible using a Content Delivery Network (CDN) which has servers distributed across multiple locations (hopefully the entire globe) to get our data as close as we can to our users.
+
+The added benefit is that they also provide caching for frequently used data, meaning that the more requests we see from our users, the faster it will be for these services to retireve and show it to them.
+I'm currently using Cloudflare to store our data online but we can definitely use any other CDN available online.
+
+I'll upload my information to Cloudflare's object store, which can be done for free once you have a domain name, and have it available anywhere online. For anyone following the process is as simple as
+...
+
+And now we can see it using the following url:
+...
+
+As you can definitely see these steps quickly add up, but your user's experience will guaranteed be way snappier than before.
+
+Something that you should consider is automating this task with a script or even an entire API if necessary to manage this process. I've created a quick and simple API that converts, downscales and uploads these images to cloudflare using their AWS S3 compatibe SDK which on the cloudflare docs was a little outdated and misleading at times. If you want to set something similar up yourself, feel free to do so by looking at my code [here]()
+

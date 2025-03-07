@@ -8,6 +8,21 @@ services:
       - "./website:/home/node/app"
     depends_on:
       - cms_api
+  web_next:
+    build:
+      context: ./website-next
+      network: host
+      target: ${APP_ENV:-prod}
+    ports:
+      - "8001:80"
+    volumes:
+      - "./website-next/app:/app/app/"
+      - "./website-next/public:/app/public/"
+      - "./website-next/components:/app/components/"
+      - "./website-next/utils:/app/utils/"
+      - "./website-next/types:/app/types/"
+    depends_on:
+      - cms_api
   cms_frontend:
     build: ./cms_frontend
     ports:
