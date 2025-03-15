@@ -3,10 +3,13 @@
 import React, { Fragment, HTMLAttributes, useState } from "react";
 import Icon from "@/components/Icon";
 import { CenterContainer } from "@/components/CenterContainer";
+import { usePathname } from "next/navigation";
 
 export default function Header() {
 	const [mobileHidden, setMobileHidden] = useState(true);
+	const pathname = usePathname();
 
+	let MainLogoContainer: React.ElementType = pathname == "/" ? "h1" : "span";
 	return (
 		<Fragment>
 			<div className="
@@ -16,10 +19,10 @@ export default function Header() {
 				after:bg-radial after:from-zinc-400/20 after:to-transparent">
 				<CenterContainer>
 					<header className="flex justify-between items-center">
-						<h1><a href="/#top" className="group/logo flex gap-2 items-center w-fit text-lg font-semibold text-white pt-5 pb-4">
+						<MainLogoContainer><a href="/#top" className="group/logo flex gap-2 items-center w-fit text-lg font-semibold text-white pt-5 pb-4">
 							<Logo />
 							Dale Bezolli
-						</a></h1>
+						</a></MainLogoContainer>
 
 						<nav className="flex items-center">
 							<button className="md:hidden cursor-pointer" onClick={() => setMobileHidden(!mobileHidden)}>
