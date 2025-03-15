@@ -1,16 +1,18 @@
+import ArticleHero from "@/components/ArticleHero";
+
 export const metadata = {
-	title: "10x your developer speed and productivity?",
+	title: "10x Your Website Load Times",
 	img: "",
+	other: {
+		created: "2025-03-15T21:44:00Z",
+	}
 };
 
-# How to be cool
+<ArticleHero title={metadata.title} publishedAt={metadata?.other?.created} details={metadata?.details}>
+	Optimize your website images
+</ArticleHero>
 
-TL;DR
-- Scale down images to their container's size
-- Reformat them to lossy if necessary (you can upload lossless versions if you want to keep things nicer)
-- Upload to a CDN for the sweet benefits of close proximity serving.
-
-The past few months I've been creating websites for my clients and myself but they all had one problem in common... image load times were abysmal, and oh man I hated it... partly because I'm hosting this website on my "fancy" raspberry pi 4 with barely enough memory (2GiB btw) to survive the node_modules cataclysm and partly because of my asymmetrical network connection with 10mbps upload speed.
+The past few months I've been creating websites for my c and myself but they all had one problem in common... image load times were abysmal, and oh man I hated it... partly because I'm hosting this website on my "fancy" raspberry pi 4 with barely enough memory (2GiB btw) to survive the node_modules cataclysm and partly because of my asymmetrical network connection with 10mbps upload speed.
 
 You know your screen cannot output more pixels than it has right?
 Let's look at an example:
