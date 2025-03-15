@@ -6,7 +6,7 @@ const ARTICLE_BASEPATH = "blog";
 
 export async function getArticleData(): Promise<ArticleMetadata[]> {
 	let listArticle: ArticleMetadata[] = [];
-	let listArticleDirs = readdirSync(BLOG_ROOT);
+	let listArticleDirs = readdirSync(BLOG_ROOT).filter(file => isDir(file));
 
 	for(const articleDir of listArticleDirs) {
 		const {metadata} = (await import(`/app/blog/(articles)/${articleDir}/page.mdx`)) as {metadata: Omit<ArticleMetadata, 'url'>};
@@ -16,4 +16,8 @@ export async function getArticleData(): Promise<ArticleMetadata[]> {
 	console.log("Articles:", listArticle);
 
 	return listArticle;
+}
+
+function isDir(file: string): boolean {
+	return !file.includes(".");
 }
