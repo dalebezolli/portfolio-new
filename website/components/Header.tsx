@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, HTMLAttributes, useState } from "react";
+import React, { Fragment, HTMLAttributes, useState } from "react";
 import Icon from "@/components/Icon";
 import { CenterContainer } from "@/components/CenterContainer";
 
