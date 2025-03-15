@@ -3,7 +3,7 @@ services:
     build:
       context: ./website
       network: host
-      target: ${APP_ENV:-prod}
+      target: ${APP_ENV:-dev}
     ports:
       - "8000:80"
     volumes:
