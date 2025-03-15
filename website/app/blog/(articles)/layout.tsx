@@ -3,10 +3,10 @@ import { CenterContainer } from "@/components/CenterContainer";
 
 export default async function Article({children}: ArticleProps) {
 	return (
-		<CenterContainer>
-				<div className="w-[60ch]">
+		<CenterContainer className="pb-32">
+				<main className="w-[70ch]">
 					{children}
-				</div>
+				</main>
 		</CenterContainer>
 	);
 }
