@@ -14,6 +14,8 @@ export const metadata = {
 
 The past few months I've been creating websites for my c and myself but they all had one problem in common... image load times were abysmal, and oh man I hated it... partly because I'm hosting this website on my "fancy" raspberry pi 4 with barely enough memory (2GiB btw) to survive the node_modules cataclysm and partly because of my asymmetrical network connection with 10mbps upload speed.
 
+## Downscaling images
+
 You know your screen cannot output more pixels than it has right?
 Let's look at an example:
 \<show image with high res and low res side by side in a 320p container\>
@@ -38,6 +40,8 @@ Imagine having a user upload his profile icon which will be displayed in a 64x64
 
 Instead, with this trick we can create variations of the original for any situation.
 
+## Compressing images
+
 But wait, There's more!
 These images we were using so far are stored in a lossless format. What does this mean exactly?
 This means that compared to the real, or digital world these formats don't lose any quality making them store significantly more data to capture everything. Which is useful in some cases, but not in most.
@@ -54,13 +58,15 @@ Honestly, some people suggest compressing first and then resizing others the exa
 > A note on GZIP
 > It's generally not recommended to gzip lossy images as they're already compressed enough. Quite possibly it might work agianst your intentions and increase the file size instead of reducing it. That'll happen because of our images already being compressed.
 
+## Getting images as close to your customers as possible
+
 So far we've seen how to manipulate our images to improve their load times, what if I could tell you we can improve load times regardless of our server setup, network speed or location.
 
 Imagine this, you've just ordered a pizza from two different shops, one is at the end of the street you live and the other on the other side of the city. Which one would reach you faster?
 Exactly! Keeping our information close to our users helps it reach faster to them. This is made possible using a Content Delivery Network (CDN) which has servers distributed across multiple locations (hopefully the entire globe) to get our data as close as we can to our users.
 
 The added benefit is that they also provide caching for frequently used data, meaning that the more requests we see from our users, the faster it will be for these services to retireve and show it to them.
-I'm currently using Cloudflare to store our data online but we can definitely use any other CDN available online.
+I'm currently using Cloudflare to store our images and provide us the sweet benefits of caching but we can definitely use any other CDN available online.
 
 I'll upload my information to Cloudflare's object store, which can be done for free once you have a domain name, and have it available anywhere online. For anyone following the process is as simple as
 ...
