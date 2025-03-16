@@ -11,7 +11,7 @@ export default function ArticleHero({title, publishedAt, children}: ArticleHeroP
 	const dateTimePublishedAt = publishedAtDate.toISOString().split("T")[0];
 
 	return (
-		<>
+		<div id="article-hero">
 			<div className="h-16 md:h-24"></div>
 			<h1 className="w-fit md:pb-2 text-2xl md:text-4xl font-heading font-semibold text-transparent bg-clip-text bg-linear-to-r from-white to-white/40 transition-colors">{title}</h1>
 			{children}
@@ -20,7 +20,7 @@ export default function ArticleHero({title, publishedAt, children}: ArticleHeroP
 				<time dateTime={dateTimePublishedAt} className="max-lg text-zinc-200 not-italica font-bold">{cleanPublishedAt}</time>
 			</p>
 			<div className="h-12"></div>
-		</>
+		</div>
 	);
 }
 
