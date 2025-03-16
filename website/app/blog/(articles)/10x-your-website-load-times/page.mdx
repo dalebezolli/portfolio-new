@@ -26,11 +26,42 @@ export const metadata = {
 
 	<h2 id="introduction" className="visually-hidden">Introduction</h2>
 	<div className="max-w-[70ch] pt-20">
-		The past few months I've been creating websites for my c and myself but they all had one problem in common... image load times were abysmal, and oh man I hated it... partly because I'm hosting this website on my "fancy" raspberry pi 4 with barely enough memory (2GiB btw) to survive the node_modules cataclysm and partly because of my asymmetrical network connection with 10mbps upload speed.
+		Picture this, you just finished creating a website for a friend, family, or client with amazing images of their work plastered around the beautiful pages you've created.
+		You send them the url and once they open it up... they think they have internet issues. They try out any other website and everything just works, so why is their website loading so sloooooooow.
+
+		That's exactly what I was wondering a while back for a website I built. Page load times were abysmal, and oh man I hated it.
+		Probably because I was hosting everything on my "fancy" raspberry pi 4 with barely enough memory (2GB btw) to survive the node_modules cataclysm. Maybe it was because of my tragic network upload speeds of 10mbps. This speed didn't play nicely with the amount of data I needed to send over the wire for my website to work.
+		The index alone contained a total of 23mb worth of content (js, images, video) to load.
+
+		I'll give you a list of tricks that I used to make it work even on your local machine.
+
+		## SSG
+
+		I wanted:
+		- Easy development
+		- Fast testing
+		- Ability to write highly reactive components
+
+		without:
+		- Too much complexity and overhead
+
+		I ended up hating (React + Vite) it as it needed constant configuration and optimization
+
+		NextJS gave me SSG and some extra coolness that I'd have to write myself anyways
+
+		## Lazy loading content
+
+		## Prefetching
 
 		## Downscaling images
 
-		You know your screen cannot output more pixels than it has right?
+		You know your screen cannot show more pixels than it has right?
+
+		All device screens, from smartphones to desktop monitors, have a fixed number of pixels to show images to your eyes.
+		This means that if we try to squeeze an image that is small enough 
+
+		[Image resizing in browsers](https://stackoverflow.com/a/31078909)
+
 		Let's look at an example:
 		\<show image with high res and low res side by side in a 320p container\>
 
