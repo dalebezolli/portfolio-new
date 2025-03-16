@@ -15,7 +15,7 @@ export const metadata = {
 </ArticleHero>
 
 <div className="flex flex-row-reverse gap-28">
-	<div className="sticky top-[calc(80px+2rem)] mt-20 h-fit grow">
+	<div className="hidden md:block sticky top-[calc(80px+2rem)] mt-20 h-fit grow">
 		<TableOfContents headings={[
 			{text: "Introduction", depth: 0},
 			{text: "Downscaling images", depth: 0},
@@ -25,7 +25,7 @@ export const metadata = {
 	</div>
 
 	<h2 id="introduction" className="visually-hidden">Introduction</h2>
-	<div className="max-w-[70ch] pt-20">
+	<div className="min-w-0 max-w-[70ch] pt-20">
 		Picture this, you just finished creating a website for a friend, family, or client with amazing images of their work plastered around the beautiful pages you've created.
 		You send them the url and once they open it up... they think they have internet issues. They try out any other website and everything just works, so why is their website loading so sloooooooow.
 
