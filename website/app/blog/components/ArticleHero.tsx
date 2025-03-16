@@ -19,7 +19,6 @@ export default function ArticleHero({title, publishedAt, children}: ArticleHeroP
 				Last updated on{" "}
 				<time dateTime={dateTimePublishedAt} className="max-lg text-zinc-200 not-italica font-bold">{cleanPublishedAt}</time>
 			</p>
-			<div className="h-12"></div>
 		</div>
 	);
 }
