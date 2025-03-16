@@ -4,7 +4,7 @@ import { CenterContainer } from "@/components/CenterContainer";
 export default async function Article({children}: ArticleProps) {
 	return (
 		<CenterContainer className="pb-32">
-				<main className="w-[70ch]">
+				<main className="max-w-[70ch]">
 					{children}
 				</main>
 		</CenterContainer>
