@@ -18,7 +18,7 @@ export default function Header() {
 				after:contents-[''] after:relative after:block after:bottom-0 after:inset-x-0 after:h-px
 				after:bg-radial after:from-zinc-400/20 after:to-transparent">
 				<CenterContainer>
-					<header className="flex justify-between items-center">
+					<header className="flex items-center md:gap-8 max-md:justify-between">
 						<MainLogoContainer><a href="/#top" className="group/logo flex gap-2 items-center w-fit text-lg font-semibold text-white pt-5 pb-4">
 							<Logo />
 							Dale Bezolli
@@ -41,7 +41,7 @@ export default function Header() {
 							</ul>
 						</nav>
 
-						<CTAButton href="/#connect" className="max-md:hidden">
+						<CTAButton href="/#connect" className="ml-auto max-md:hidden">
 							Let's Talk
 						</CTAButton>
 					</header>
