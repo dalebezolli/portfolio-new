@@ -15,7 +15,7 @@ export const metadata = {
 </ArticleHero>
 
 <div className="flex flex-row-reverse gap-28">
-	<div className="sticky top-[calc(80px+2rem)] h-fit grow">
+	<div className="sticky top-[calc(80px+2rem)] mt-20 h-fit grow">
 		<TableOfContents headings={[
 			{text: "Introduction", depth: 0},
 			{text: "Downscaling images", depth: 0},
@@ -24,9 +24,8 @@ export const metadata = {
 			]} />
 	</div>
 
-	<div className="max-w-[70ch]">
-		<h2 id="introduction" className="visually-hidden">Introduction</h2>
-
+	<h2 id="introduction" className="visually-hidden">Introduction</h2>
+	<div className="max-w-[70ch] pt-20">
 		The past few months I've been creating websites for my c and myself but they all had one problem in common... image load times were abysmal, and oh man I hated it... partly because I'm hosting this website on my "fancy" raspberry pi 4 with barely enough memory (2GiB btw) to survive the node_modules cataclysm and partly because of my asymmetrical network connection with 10mbps upload speed.
 
 		## Downscaling images
