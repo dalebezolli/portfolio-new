@@ -7,7 +7,7 @@ export default function TableOfContents({headings} : TableOfContentsProps) {
 	useEffect(() => {
 		if(observer.current == null) {
 			observer.current = new IntersectionObserver(isIntersectingCallback, {
-				rootMargin: "0% 0% -50% 0%",
+				rootMargin: "0% 0% -70% 0%",
 			});
 		}
 
@@ -70,7 +70,7 @@ function TOCLink({heading}: {heading: Heading}) {
 		<li>
 			<a
 				href={id}
-				className="inline-block py-1 data-[current=true]:text-red-400 text-zinc-400 hover:text-zinc-200"
+				className="inline-block py-1 data-[current=true]:text-fuchsia-400 data-[current=true]:font-bold text-zinc-400 hover:text-zinc-200"
 				style={{paddingLeft: `${heading.depth}rem`}}>
 				{heading.text}
 			</a>
